@@ -26,6 +26,14 @@ const PropertiesGrid = () => {
     studio: "Apartaestudio",
   };
 
+  const defaultImages: Record<string, string> = {
+    apartment: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80",
+    house: "https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&q=80",
+    commercial: "https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80",
+    warehouse: "https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80",
+    studio: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80",
+  };
+
   return (
     <section id="propiedades" className="py-24 bg-background">
       <div className="container mx-auto px-4">
@@ -46,6 +54,7 @@ const PropertiesGrid = () => {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {properties.map((property) => {
               const images = property.images as string[] || [];
+              const defaultImage = defaultImages[property.property_type] || defaultImages.apartment;
               return (
                 <PropertyCard
                   key={property.id}
@@ -56,7 +65,7 @@ const PropertiesGrid = () => {
                   beds={property.bedrooms}
                   baths={property.bathrooms}
                   area={`${property.area_m2} m²`}
-                  imageUrl={images[0] || "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&q=80"}
+                  imageUrl={images[0] || defaultImage}
                   type={propertyTypes[property.property_type] || property.property_type}
                 />
               );
