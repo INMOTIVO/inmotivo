@@ -1,14 +1,78 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, MapPin } from "lucide-react";
+import { Search, MapPin, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import heroImage from "@/assets/hero-medellin.jpg";
+import { toast } from "sonner";
 
 const Hero = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [location, setLocation] = useState("Medellín");
+  const [municipality, setMunicipality] = useState("");
+  const [sector, setSector] = useState("");
+  const [loadingLocation, setLoadingLocation] = useState(false);
+
+  useEffect(() => {
+    // Get user's current location on component mount
+    const getCurrentLocation = () => {
+      if (!navigator.geolocation) {
+        toast.error("Geolocalización no disponible en tu navegador");
+        return;
+      }
+
+      setLoadingLocation(true);
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          
+          try {
+            // Use Nominatim API for reverse geocoding
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`,
+              {
+                headers: {
+                  'Accept-Language': 'es'
+                }
+              }
+            );
+            
+            if (!response.ok) throw new Error("Error al obtener la ubicación");
+            
+            const data = await response.json();
+            const address = data.address;
+            
+            // Extract municipality and sector
+            const municipalityName = address.city || address.town || address.municipality || address.county || "Medellín";
+            const sectorName = address.suburb || address.neighbourhood || address.quarter || address.village || "";
+            
+            setMunicipality(municipalityName);
+            setSector(sectorName);
+            setLocation(sectorName ? `${municipalityName}, ${sectorName}` : municipalityName);
+            
+            toast.success("Ubicación detectada");
+          } catch (error) {
+            console.error("Error getting location:", error);
+            toast.error("No se pudo obtener la ubicación exacta");
+          } finally {
+            setLoadingLocation(false);
+          }
+        },
+        (error) => {
+          console.error("Geolocation error:", error);
+          setLoadingLocation(false);
+          if (error.code === error.PERMISSION_DENIED) {
+            toast.error("Permiso de ubicación denegado");
+          } else {
+            toast.error("No se pudo obtener tu ubicación");
+          }
+        }
+      );
+    };
+
+    getCurrentLocation();
+  }, []);
 
   const handleSearch = () => {
     navigate("/mapa");
@@ -47,14 +111,27 @@ const Hero = () => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              <div className="flex items-center gap-2 px-4 border-t md:border-t-0 md:border-l pt-2 md:pt-0">
-                <MapPin className="h-5 w-5 text-muted-foreground" />
-                <Input
-                  placeholder="Medellín"
-                  className="border-0 focus-visible:ring-0 text-base w-full md:w-32"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                />
+              <div className="flex items-center gap-2 px-4 border-t md:border-t-0 md:border-l pt-2 md:pt-0 min-w-[200px]">
+                {loadingLocation ? (
+                  <Loader2 className="h-5 w-5 text-muted-foreground animate-spin" />
+                ) : (
+                  <MapPin className="h-5 w-5 text-muted-foreground" />
+                )}
+                <div className="flex flex-col flex-1">
+                  {municipality && sector ? (
+                    <>
+                      <div className="text-sm font-medium leading-tight">{municipality}</div>
+                      <div className="text-xs text-muted-foreground leading-tight">{sector}</div>
+                    </>
+                  ) : (
+                    <Input
+                      placeholder="Medellín"
+                      className="border-0 focus-visible:ring-0 text-base p-0 h-auto"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                    />
+                  )}
+                </div>
               </div>
               <Button 
                 variant="hero" 
