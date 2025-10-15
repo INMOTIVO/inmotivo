@@ -14,7 +14,235 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      agencies: {
+        Row: {
+          address: string | null
+          created_at: string | null
+          description: string | null
+          email: string | null
+          id: string
+          logo_url: string | null
+          name: string
+          phone: string | null
+          updated_at: string | null
+          user_id: string
+          verified: boolean | null
+          website: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string | null
+          description?: string | null
+          email?: string | null
+          id?: string
+          logo_url?: string | null
+          name: string
+          phone?: string | null
+          updated_at?: string | null
+          user_id: string
+          verified?: boolean | null
+          website?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string | null
+          description?: string | null
+          email?: string | null
+          id?: string
+          logo_url?: string | null
+          name?: string
+          phone?: string | null
+          updated_at?: string | null
+          user_id?: string
+          verified?: boolean | null
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agencies_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string
+          phone: string | null
+          updated_at: string | null
+          user_type: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id: string
+          phone?: string | null
+          updated_at?: string | null
+          user_type?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string | null
+          user_type?: string | null
+        }
+        Relationships: []
+      }
+      properties: {
+        Row: {
+          address: string
+          agency_id: string | null
+          amenities: Json | null
+          area_m2: number | null
+          bathrooms: number | null
+          bedrooms: number | null
+          city: string
+          created_at: string | null
+          currency: string | null
+          description: string | null
+          floor: number | null
+          furnished: boolean | null
+          id: string
+          images: Json | null
+          latitude: number | null
+          longitude: number | null
+          neighborhood: string | null
+          owner_id: string
+          parking_spaces: number | null
+          pets_allowed: boolean | null
+          price: number
+          property_type: string
+          status: string | null
+          title: string
+          updated_at: string | null
+          verified: boolean | null
+          views_count: number | null
+        }
+        Insert: {
+          address: string
+          agency_id?: string | null
+          amenities?: Json | null
+          area_m2?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          city: string
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          floor?: number | null
+          furnished?: boolean | null
+          id?: string
+          images?: Json | null
+          latitude?: number | null
+          longitude?: number | null
+          neighborhood?: string | null
+          owner_id: string
+          parking_spaces?: number | null
+          pets_allowed?: boolean | null
+          price: number
+          property_type: string
+          status?: string | null
+          title: string
+          updated_at?: string | null
+          verified?: boolean | null
+          views_count?: number | null
+        }
+        Update: {
+          address?: string
+          agency_id?: string | null
+          amenities?: Json | null
+          area_m2?: number | null
+          bathrooms?: number | null
+          bedrooms?: number | null
+          city?: string
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          floor?: number | null
+          furnished?: boolean | null
+          id?: string
+          images?: Json | null
+          latitude?: number | null
+          longitude?: number | null
+          neighborhood?: string | null
+          owner_id?: string
+          parking_spaces?: number | null
+          pets_allowed?: boolean | null
+          price?: number
+          property_type?: string
+          status?: string | null
+          title?: string
+          updated_at?: string | null
+          verified?: boolean | null
+          views_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "properties_agency_id_fkey"
+            columns: ["agency_id"]
+            isOneToOne: false
+            referencedRelation: "agencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "properties_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      searches: {
+        Row: {
+          created_at: string | null
+          filters: Json | null
+          id: string
+          location_lat: number | null
+          location_lng: number | null
+          query_text: string
+          results_count: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          filters?: Json | null
+          id?: string
+          location_lat?: number | null
+          location_lng?: number | null
+          query_text: string
+          results_count?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          filters?: Json | null
+          id?: string
+          location_lat?: number | null
+          location_lng?: number | null
+          query_text?: string
+          results_count?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "searches_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
