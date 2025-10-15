@@ -1,16 +1,17 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Search, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import heroImage from "@/assets/hero-medellin.jpg";
 
 const Hero = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
   const [location, setLocation] = useState("Medellín");
 
   const handleSearch = () => {
-    const element = document.getElementById("propiedades");
-    element?.scrollIntoView({ behavior: "smooth" });
+    navigate("/mapa");
   };
   return (
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">

@@ -35,8 +35,11 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
-            <a href="#propiedades" className="text-foreground hover:text-primary transition-colors font-medium">
+            <a href="/#propiedades" className="text-foreground hover:text-primary transition-colors font-medium">
               Propiedades
+            </a>
+            <a href="/mapa" className="text-foreground hover:text-primary transition-colors font-medium">
+              Mapa
             </a>
             {user ? (
               <>
