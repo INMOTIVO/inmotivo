@@ -115,3 +115,35 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom marker styles */
+.custom-property-marker,
+.custom-user-marker {
+  background: transparent !important;
+  border: none !important;
+}
+
+.custom-property-marker svg,
+.custom-user-marker svg {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  transition: transform 0.2s ease;
+}
+
+.custom-property-marker:hover svg {
+  transform: scale(1.1);
+}
+
+/* Leaflet popup custom styles */
+.leaflet-popup-content-wrapper {
+  border-radius: 12px !important;
+  padding: 0 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.leaflet-popup-content {
+  margin: 10px !important;
+}
+
+.leaflet-popup-tip {
+  display: none !important;
+}
