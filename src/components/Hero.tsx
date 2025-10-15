@@ -1,9 +1,17 @@
+import { useState } from "react";
 import { Search, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import heroImage from "@/assets/hero-medellin.jpg";
 
 const Hero = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [location, setLocation] = useState("Medellín");
+
+  const handleSearch = () => {
+    const element = document.getElementById("propiedades");
+    element?.scrollIntoView({ behavior: "smooth" });
+  };
   return (
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
       {/* Background image with gradient overlay */}
@@ -34,6 +42,8 @@ const Hero = () => {
                 <Input
                   placeholder="Ej: Apartamento con 2 habitaciones cerca del metro..."
                   className="border-0 focus-visible:ring-0 text-base"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
               <div className="flex items-center gap-2 px-4 border-t md:border-t-0 md:border-l pt-2 md:pt-0">
@@ -41,9 +51,16 @@ const Hero = () => {
                 <Input
                   placeholder="Medellín"
                   className="border-0 focus-visible:ring-0 text-base w-full md:w-32"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
                 />
               </div>
-              <Button variant="hero" size="xl" className="md:w-auto">
+              <Button 
+                variant="hero" 
+                size="xl" 
+                className="md:w-auto"
+                onClick={handleSearch}
+              >
                 Buscar
               </Button>
             </div>

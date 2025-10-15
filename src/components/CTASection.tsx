@@ -1,7 +1,18 @@
 import { Button } from "@/components/ui/button";
 import { Building2, TrendingUp, Users } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const CTASection = () => {
+  const navigate = useNavigate();
+
+  const handleDemo = () => {
+    toast.success("¡Pronto! Estamos preparando el demo para ti.");
+  };
+
+  const handlePlans = () => {
+    toast.info("Los planes estarán disponibles próximamente.");
+  };
   return (
     <section className="py-24 bg-gradient-to-br from-primary via-primary to-blue-600 text-white relative overflow-hidden">
       {/* Decorative elements */}
@@ -48,6 +59,7 @@ const CTASection = () => {
               size="xl" 
               variant="secondary"
               className="bg-white text-primary hover:bg-white/90"
+              onClick={handleDemo}
             >
               Solicitar Demo
             </Button>
@@ -55,6 +67,7 @@ const CTASection = () => {
               size="xl" 
               variant="outline"
               className="border-white/50 text-white hover:bg-white/10"
+              onClick={handlePlans}
             >
               Ver Planes
             </Button>

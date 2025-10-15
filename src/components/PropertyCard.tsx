@@ -1,8 +1,10 @@
 import { MapPin, Bed, Bath, Maximize } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useNavigate } from "react-router-dom";
 
 interface PropertyCardProps {
+  id: string;
   title: string;
   price: string;
   location: string;
@@ -13,9 +15,13 @@ interface PropertyCardProps {
   type: string;
 }
 
-const PropertyCard = ({ title, price, location, beds, baths, area, imageUrl, type }: PropertyCardProps) => {
+const PropertyCard = ({ id, title, price, location, beds, baths, area, imageUrl, type }: PropertyCardProps) => {
+  const navigate = useNavigate();
   return (
-    <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group">
+    <Card 
+      className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group"
+      onClick={() => navigate(`/property/${id}`)}
+    >
       <div className="relative h-56 overflow-hidden">
         <img 
           src={imageUrl} 
