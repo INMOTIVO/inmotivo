@@ -12,7 +12,7 @@ const MapSearch = () => {
     bedrooms?: number;
     propertyType?: string;
   }>({
-    radius: 5,
+    radius: 2,
   });
 
   return (
