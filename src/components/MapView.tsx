@@ -57,7 +57,9 @@ function MapController({ center }: { center: [number, number] }) {
   const map = useMap();
   
   useEffect(() => {
-    map.setView(center, 13);
+    if (map) {
+      map.setView(center, 13);
+    }
   }, [center, map]);
   
   return null;
@@ -146,49 +148,49 @@ const MapView = ({ radius, filters }: MapViewProps) => {
         className="h-full w-full"
         scrollWheelZoom={true}
       >
-        <MapController center={userLocation} />
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        
-        {/* Marcador de ubicación del usuario */}
-        <Marker position={userLocation}>
-          <Popup>Tu ubicación</Popup>
-        </Marker>
-
-        {/* Marcadores de propiedades */}
-        {properties?.map((property) => (
-          <Marker
-            key={property.id}
-            position={[property.latitude, property.longitude]}
-          >
-            <Popup>
-              <div className="min-w-[200px]">
-                <h3 className="font-semibold mb-1">{property.title}</h3>
-                <p className="text-sm text-muted-foreground mb-1">
-                  {property.neighborhood}, {property.city}
-                </p>
-                <p className="text-sm mb-1">
-                  {propertyTypes[property.property_type] || property.property_type}
-                </p>
-                <p className="font-bold text-primary mb-2">
-                  ${property.price.toLocaleString()}
-                </p>
-                <p className="text-xs text-muted-foreground mb-2">
-                  {property.bedrooms} hab • {property.bathrooms} baños • {property.area_m2} m²
-                </p>
-                <Button
-                  size="sm"
-                  onClick={() => navigate(`/property/${property.id}`)}
-                  className="w-full"
-                >
-                  Ver detalles
-                </Button>
-              </div>
-            </Popup>
+        <>
+          <MapController center={userLocation} />
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          
+          <Marker position={userLocation}>
+            <Popup>Tu ubicación</Popup>
           </Marker>
-        ))}
+
+          {properties?.map((property) => (
+            <Marker
+              key={property.id}
+              position={[property.latitude, property.longitude]}
+            >
+              <Popup>
+                <div className="min-w-[200px]">
+                  <h3 className="font-semibold mb-1">{property.title}</h3>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    {property.neighborhood}, {property.city}
+                  </p>
+                  <p className="text-sm mb-1">
+                    {propertyTypes[property.property_type] || property.property_type}
+                  </p>
+                  <p className="font-bold text-primary mb-2">
+                    ${property.price.toLocaleString()}
+                  </p>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    {property.bedrooms} hab • {property.bathrooms} baños • {property.area_m2} m²
+                  </p>
+                  <Button
+                    size="sm"
+                    onClick={() => navigate(`/property/${property.id}`)}
+                    className="w-full"
+                  >
+                    Ver detalles
+                  </Button>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
+        </>
       </MapContainer>
     </div>
   );
