@@ -1,10 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import MapView from '@/components/MapView';
 import MapFilters from '@/components/MapFilters';
 
 const MapSearch = () => {
+  const [searchParams] = useSearchParams();
+  const typeParam = searchParams.get('type');
+  
   const [filters, setFilters] = useState<{
     radius: number;
     minPrice?: number;
@@ -13,7 +17,14 @@ const MapSearch = () => {
     propertyType?: string;
   }>({
     radius: 2,
+    propertyType: typeParam || undefined,
   });
+
+  useEffect(() => {
+    if (typeParam) {
+      setFilters(prev => ({ ...prev, propertyType: typeParam }));
+    }
+  }, [typeParam]);
 
   return (
     <div className="min-h-screen">

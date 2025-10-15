@@ -147,12 +147,18 @@ const Hero = () => {
 
           {/* Quick filters */}
           <div className="flex flex-wrap justify-center gap-3">
-            {["Apartamentos", "Casas", "Locales", "Bodegas"].map((type) => (
+            {[
+              { label: "Apartamentos", type: "apartment" },
+              { label: "Casas", type: "house" },
+              { label: "Locales", type: "commercial" },
+              { label: "Bodegas", type: "warehouse" }
+            ].map(({ label, type }) => (
               <button
                 key={type}
+                onClick={() => navigate(`/mapa?type=${type}`)}
                 className="px-6 py-2 rounded-full bg-white/10 backdrop-blur-sm text-white border border-white/20 hover:bg-white/20 transition-all duration-300"
               >
-                {type}
+                {label}
               </button>
             ))}
           </div>
