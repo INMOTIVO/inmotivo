@@ -10,11 +10,12 @@ import { supabase } from '@/integrations/supabase/client';
 
 interface NavigationControlsProps {
   onStartNavigation: (destination: [number, number], criteria: string, filters: any) => void;
+  initialCriteria?: string;
 }
 
-const NavigationControls = ({ onStartNavigation }: NavigationControlsProps) => {
+const NavigationControls = ({ onStartNavigation, initialCriteria = '' }: NavigationControlsProps) => {
   const [destination, setDestination] = useState('');
-  const [criteria, setCriteria] = useState('');
+  const [criteria, setCriteria] = useState(initialCriteria);
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleStartNavigation = async () => {

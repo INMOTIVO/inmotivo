@@ -75,7 +75,7 @@ const Hero = () => {
   }, []);
 
   const handleSearch = () => {
-    navigate("/mapa");
+    navigate(`/navegacion${searchQuery ? `?query=${encodeURIComponent(searchQuery)}` : ''}`);
   };
   return (
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
@@ -105,10 +105,11 @@ const Hero = () => {
               <div className="flex-1 flex items-center gap-2 px-4">
                 <Search className="h-5 w-5 text-muted-foreground" />
                 <Input
-                  placeholder="Ej: Apartamento con 2 habitaciones cerca del metro..."
+                  placeholder="Cuéntame que buscas"
                   className="border-0 focus-visible:ring-0 text-base"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                 />
               </div>
               <div className="flex items-center gap-2 px-4 border-t md:border-t-0 md:border-l pt-2 md:pt-0 min-w-[200px]">

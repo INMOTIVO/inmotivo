@@ -16,6 +16,9 @@ const Navigate = () => {
   const [isNavigating, setIsNavigating] = useState(false);
   const [searchCriteria, setSearchCriteria] = useState('');
   const [filters, setFilters] = useState<any>({});
+  
+  // Get initial query from URL params
+  const initialQuery = searchParams.get('query') || '';
 
   const handleStartNavigation = (dest: [number, number], criteria: string, appliedFilters: any) => {
     setDestination(dest);
@@ -43,7 +46,10 @@ const Navigate = () => {
               <ArrowLeft className="mr-2 h-4 w-4" />
               Volver al mapa
             </Button>
-            <NavigationControls onStartNavigation={handleStartNavigation} />
+            <NavigationControls 
+              onStartNavigation={handleStartNavigation}
+              initialCriteria={initialQuery}
+            />
           </div>
         ) : (
           <div className="relative h-[calc(100vh-5rem)]">
