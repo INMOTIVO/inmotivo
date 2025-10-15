@@ -68,7 +68,6 @@ const MapView: React.FC<MapViewProps> = ({ radius, filters }) => {
         setLocationError(null);
       },
       (err) => {
-        console.warn('Geolocation error', err);
         setLocationError('No se pudo obtener tu ubicación. Mostrando Medellín.');
       }
     );
@@ -139,17 +138,25 @@ const MapView: React.FC<MapViewProps> = ({ radius, filters }) => {
     // Marcadores de propiedades
     properties?.forEach((p) => {
       const marker = L.marker([p.latitude, p.longitude]).addTo(layer);
+      
+      // Sanitize property data to prevent XSS
+      const sanitize = (str: string | number) => {
+        const div = document.createElement('div');
+        div.textContent = String(str);
+        return div.innerHTML;
+      };
+      
       const popupHtml = `
         <div style="min-width:220px">
-          <h3 style="margin:0 0 4px 0;font-weight:600;">${p.title}</h3>
-          <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">${p.neighborhood}, ${p.city}</div>
-          <div style="font-size:12px;margin-bottom:4px;">${p.bedrooms} hab • ${p.bathrooms} baños • ${p.area_m2} m²</div>
+          <h3 style="margin:0 0 4px 0;font-weight:600;">${sanitize(p.title)}</h3>
+          <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">${sanitize(p.neighborhood)}, ${sanitize(p.city)}</div>
+          <div style="font-size:12px;margin-bottom:4px;">${sanitize(p.bedrooms)} hab • ${sanitize(p.bathrooms)} baños • ${sanitize(p.area_m2)} m²</div>
           <div style="font-weight:700;color:#16a34a;margin-bottom:8px;">$${Number(p.price).toLocaleString()}</div>
-          <button data-prop-id="${p.id}" style="width:100%;padding:8px 10px;background:#22c55e;color:white;border:none;border-radius:6px;cursor:pointer;">Ver detalles</button>
+          <button data-prop-id="${sanitize(p.id)}" style="width:100%;padding:8px 10px;background:#22c55e;color:white;border:none;border-radius:6px;cursor:pointer;">Ver detalles</button>
         </div>`;
       marker.bindPopup(popupHtml);
       marker.on('popupopen', () => {
-        const btn = document.querySelector(`button[data-prop-id="${p.id}"]`);
+        const btn = document.querySelector(`button[data-prop-id="${sanitize(p.id)}"]`);
         btn?.addEventListener('click', () => navigate(`/property/${p.id}`), { once: true });
       });
     });

@@ -17,7 +17,26 @@ const PropertyDetail = () => {
       const { data, error } = await supabase
         .from("properties")
         .select(`
-          *,
+          id,
+          title,
+          description,
+          property_type,
+          address,
+          neighborhood,
+          city,
+          price,
+          currency,
+          bedrooms,
+          bathrooms,
+          area_m2,
+          floor,
+          parking_spaces,
+          furnished,
+          pets_allowed,
+          images,
+          amenities,
+          verified,
+          status,
           owner:profiles(full_name, phone),
           agency:agencies(name, phone, email)
         `)

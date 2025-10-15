@@ -8,6 +8,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { ArrowLeft } from "lucide-react";
+import { z } from "zod";
+
+const signInSchema = z.object({
+  email: z.string().email("Email inválido").max(255, "Email demasiado largo"),
+  password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres").max(100, "Contraseña demasiado larga"),
+});
+
+const signUpSchema = z.object({
+  fullName: z.string().trim().min(1, "El nombre es requerido").max(100, "Nombre demasiado largo"),
+  email: z.string().email("Email inválido").max(255, "Email demasiado largo"),
+  password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres").max(100, "Contraseña demasiado larga"),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Las contraseñas no coinciden",
+  path: ["confirmPassword"],
+});
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -28,6 +44,14 @@ const Auth = () => {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate input
+    const result = signInSchema.safeParse(signInData);
+    if (!result.success) {
+      toast.error(result.error.errors[0].message);
+      return;
+    }
+    
     setLoading(true);
 
     const { error } = await signIn(signInData.email, signInData.password);
@@ -45,8 +69,10 @@ const Auth = () => {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (signUpData.password !== signUpData.confirmPassword) {
-      toast.error("Las contraseñas no coinciden");
+    // Validate input
+    const result = signUpSchema.safeParse(signUpData);
+    if (!result.success) {
+      toast.error(result.error.errors[0].message);
       return;
     }
 

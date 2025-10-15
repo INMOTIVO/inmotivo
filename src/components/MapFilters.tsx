@@ -5,6 +5,7 @@ import { Slider } from './ui/slider';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Button } from './ui/button';
+import { toast } from 'sonner';
 
 interface MapFiltersProps {
   onFiltersChange: (filters: {
@@ -24,11 +25,36 @@ const MapFilters = ({ onFiltersChange }: MapFiltersProps) => {
   const [propertyType, setPropertyType] = useState('');
 
   const handleApplyFilters = () => {
+    // Validate numeric inputs
+    const minPriceNum = minPrice ? Number(minPrice) : undefined;
+    const maxPriceNum = maxPrice ? Number(maxPrice) : undefined;
+    const bedroomsNum = bedrooms ? Number(bedrooms) : undefined;
+    
+    if (minPrice && (isNaN(minPriceNum!) || minPriceNum! < 0)) {
+      toast.error("Precio mínimo inválido");
+      return;
+    }
+    
+    if (maxPrice && (isNaN(maxPriceNum!) || maxPriceNum! < 0)) {
+      toast.error("Precio máximo inválido");
+      return;
+    }
+    
+    if (minPriceNum && maxPriceNum && minPriceNum > maxPriceNum) {
+      toast.error("El precio mínimo no puede ser mayor al máximo");
+      return;
+    }
+    
+    if (bedrooms && (isNaN(bedroomsNum!) || bedroomsNum! < 0 || bedroomsNum! > 20)) {
+      toast.error("Número de habitaciones inválido");
+      return;
+    }
+    
     onFiltersChange({
       radius: radius[0],
-      minPrice: minPrice ? Number(minPrice) : undefined,
-      maxPrice: maxPrice ? Number(maxPrice) : undefined,
-      bedrooms: bedrooms ? Number(bedrooms) : undefined,
+      minPrice: minPriceNum,
+      maxPrice: maxPriceNum,
+      bedrooms: bedroomsNum,
       propertyType: propertyType || undefined,
     });
   };
