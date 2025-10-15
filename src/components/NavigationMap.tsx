@@ -1,0 +1,246 @@
+import { useEffect, useRef, useState } from 'react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import 'leaflet-routing-machine';
+import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import { X, Navigation } from 'lucide-react';
+import { toast } from 'sonner';
+
+interface NavigationMapProps {
+  destination: [number, number];
+  filters: any;
+  onStopNavigation: () => void;
+}
+
+const NavigationMap = ({ destination, filters, onStopNavigation }: NavigationMapProps) => {
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const map = useRef<L.Map | null>(null);
+  const routingControl = useRef<any>(null);
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const markers = useRef<L.Marker[]>([]);
+  const userMarker = useRef<L.Marker | null>(null);
+
+  // Fetch properties based on filters
+  const { data: properties } = useQuery({
+    queryKey: ['navigation-properties', filters],
+    queryFn: async () => {
+      let query = supabase
+        .from('properties')
+        .select('*')
+        .eq('status', 'available');
+
+      if (filters.minPrice) query = query.gte('price', filters.minPrice);
+      if (filters.maxPrice) query = query.lte('price', filters.maxPrice);
+      if (filters.bedrooms) query = query.gte('bedrooms', filters.bedrooms);
+      if (filters.propertyType) query = query.eq('property_type', filters.propertyType);
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data;
+    },
+    refetchInterval: 5000, // Refetch every 5 seconds
+  });
+
+  // Initialize map
+  useEffect(() => {
+    if (!mapContainer.current || map.current) return;
+
+    map.current = L.map(mapContainer.current, {
+      zoomControl: true,
+    }).setView([6.2476, -75.5658], 13);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors',
+    }).addTo(map.current);
+
+    return () => {
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
+    };
+  }, []);
+
+  // Track user location
+  useEffect(() => {
+    if (!map.current) return;
+
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const newLocation: [number, number] = [
+          position.coords.latitude,
+          position.coords.longitude,
+        ];
+        setUserLocation(newLocation);
+
+        if (userMarker.current) {
+          userMarker.current.setLatLng(newLocation);
+        } else {
+          const icon = L.divIcon({
+            html: `<div style="background: #3b82f6; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.3);"></div>`,
+            className: '',
+            iconSize: [20, 20],
+          });
+
+          userMarker.current = L.marker(newLocation, { icon }).addTo(map.current!);
+        }
+
+        map.current!.setView(newLocation, map.current!.getZoom());
+      },
+      (error) => {
+        console.error('Geolocation error:', error);
+        toast.error('Error obteniendo ubicación');
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 0,
+        timeout: 5000,
+      }
+    );
+
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+    };
+  }, []);
+
+  // Setup routing
+  useEffect(() => {
+    if (!map.current || !userLocation) return;
+
+    if (routingControl.current) {
+      map.current.removeControl(routingControl.current);
+    }
+
+    routingControl.current = (L as any).Routing.control({
+      waypoints: [L.latLng(userLocation[0], userLocation[1]), L.latLng(destination[0], destination[1])],
+      routeWhileDragging: false,
+      showAlternatives: false,
+      lineOptions: {
+        styles: [{ color: '#3b82f6', weight: 6, opacity: 0.7 }],
+      },
+      createMarker: () => null, // Don't create default markers
+    }).addTo(map.current!);
+
+    return () => {
+      if (routingControl.current && map.current) {
+        map.current.removeControl(routingControl.current);
+      }
+    };
+  }, [userLocation, destination]);
+
+  // Update property markers
+  useEffect(() => {
+    if (!map.current || !properties || !userLocation) return;
+
+    // Clear existing markers
+    markers.current.forEach((marker) => marker.remove());
+    markers.current = [];
+
+    const createPropertyIcon = (type: string) => {
+      const colors: Record<string, string> = {
+        apartment: '#10b981',
+        house: '#f59e0b',
+        commercial: '#8b5cf6',
+        warehouse: '#ef4444',
+        studio: '#06b6d4',
+      };
+      const color = colors[type] || '#6b7280';
+
+      return L.divIcon({
+        html: `<div style="background: ${color}; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
+          <span style="color: white; font-size: 18px;">🏠</span>
+        </div>`,
+        className: '',
+        iconSize: [30, 30],
+      });
+    };
+
+    // Calculate distance between two points
+    const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+      const R = 6371; // Earth's radius in km
+      const dLat = ((lat2 - lat1) * Math.PI) / 180;
+      const dLon = ((lon2 - lon1) * Math.PI) / 180;
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((lat1 * Math.PI) / 180) *
+          Math.cos((lat2 * Math.PI) / 180) *
+          Math.sin(dLon / 2) *
+          Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    };
+
+    // Only show properties within 5km of user
+    const nearbyProperties = properties.filter((property) => {
+      if (!property.latitude || !property.longitude) return false;
+      const distance = calculateDistance(
+        userLocation[0],
+        userLocation[1],
+        property.latitude,
+        property.longitude
+      );
+      return distance <= 5;
+    });
+
+    nearbyProperties.forEach((property) => {
+      if (!property.latitude || !property.longitude) return;
+
+      const icon = createPropertyIcon(property.property_type);
+      const marker = L.marker([property.latitude, property.longitude], { icon });
+
+      const priceFormatted = new Intl.NumberFormat('es-CO', {
+        style: 'currency',
+        currency: property.currency,
+        minimumFractionDigits: 0,
+      }).format(property.price);
+
+      marker.bindPopup(`
+        <div style="min-width: 200px;">
+          <h3 style="font-weight: bold; margin-bottom: 8px;">${property.title}</h3>
+          <p style="color: #059669; font-weight: bold; margin-bottom: 8px;">${priceFormatted}</p>
+          <p style="margin-bottom: 8px;">${property.neighborhood}, ${property.city}</p>
+          <p style="margin-bottom: 8px;">${property.bedrooms} hab • ${property.bathrooms} baños • ${property.area_m2} m²</p>
+          <a href="/property/${property.id}" style="color: #3b82f6; text-decoration: underline;">Ver detalles</a>
+        </div>
+      `);
+
+      marker.addTo(map.current!);
+      markers.current.push(marker);
+    });
+  }, [properties, userLocation]);
+
+  return (
+    <div className="relative w-full h-full">
+      <div ref={mapContainer} className="w-full h-full" />
+      
+      <div className="absolute top-4 right-4 z-[1000] space-y-2">
+        <Button
+          onClick={onStopNavigation}
+          variant="destructive"
+          size="lg"
+          className="shadow-lg"
+        >
+          <X className="mr-2 h-5 w-5" />
+          Detener navegación
+        </Button>
+      </div>
+
+      {userLocation && (
+        <div className="absolute bottom-4 left-4 right-4 z-[1000] bg-background/95 backdrop-blur p-4 rounded-lg shadow-lg">
+          <div className="flex items-center gap-2 mb-2">
+            <Navigation className="h-5 w-5 text-primary" />
+            <span className="font-semibold">Navegando hacia tu destino</span>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Las propiedades cercanas se actualizan en tiempo real mientras te desplazas
+          </p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default NavigationMap;
