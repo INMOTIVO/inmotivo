@@ -111,10 +111,10 @@ const Auth = () => {
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
               <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center">
-                <span className="text-white font-bold text-2xl">M</span>
+                <span className="text-white font-bold text-2xl">A</span>
               </div>
             </div>
-            <CardTitle className="text-2xl">Bienvenido a MULPROP</CardTitle>
+            <CardTitle className="text-2xl">Bienvenido a ARRENDO</CardTitle>
             <CardDescription>
               Inicia sesión o crea una cuenta para continuar
             </CardDescription>

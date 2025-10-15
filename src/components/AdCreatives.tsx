@@ -19,7 +19,7 @@ export const SocialAdTenant = () => (
       </p>
       <div className="pt-8">
         <div className="inline-block bg-white text-primary px-12 py-6 rounded-2xl text-4xl font-bold">
-          MULPROP.COM
+          ARRENDO.COM
         </div>
       </div>
     </div>
@@ -53,7 +53,7 @@ export const SocialAdOwner = () => (
           </div>
         </div>
         <div className="inline-block bg-white text-primary px-12 py-6 rounded-2xl text-4xl font-bold">
-          MULPROP.COM/PUBLICAR
+          ARRENDO.COM/PUBLICAR
         </div>
       </div>
     </div>
@@ -113,7 +113,7 @@ export const StoryAdTenant = () => (
           Desliza arriba
         </div>
         <div className="mt-6 text-3xl">
-          MULPROP.COM
+          ARRENDO.COM
         </div>
       </div>
     </div>
@@ -151,7 +151,7 @@ export const StoryAdOwner = () => (
           Desliza arriba
         </div>
         <div className="mt-6 text-3xl">
-          MULPROP.COM/PUBLICAR
+          ARRENDO.COM/PUBLICAR
         </div>
       </div>
     </div>

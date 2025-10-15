@@ -26,7 +26,7 @@ const CTASection = () => {
               ¿Eres inmobiliaria o propietario?
             </h2>
             <p className="text-xl md:text-2xl text-white/90">
-              Únete a MULPROP y llega a miles de clientes potenciales con tecnología de IA
+              Únete a ARRENDO y llega a miles de clientes potenciales con tecnología de IA
             </p>
           </div>
 
