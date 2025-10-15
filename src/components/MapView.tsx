@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import L from 'leaflet';
@@ -40,7 +40,7 @@ interface Property {
 }
 
 function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371; // Radio de la Tierra en km
+  const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLon = ((lon2 - lon1) * Math.PI) / 180;
   const a =
@@ -53,28 +53,19 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
   return R * c;
 }
 
-function MapController({ center }: { center: [number, number] }) {
-  const map = useMap();
-  
-  useEffect(() => {
-    if (map) {
-      map.setView(center, 13);
-    }
-  }, [center, map]);
-  
-  return null;
-}
-
 const MapView = ({ radius, filters }: MapViewProps) => {
   const navigate = useNavigate();
-  const [userLocation, setUserLocation] = useState<[number, number]>([6.2476, -75.5658]); // Medellín por defecto
+  const [userLocation, setUserLocation] = useState<[number, number]>([6.2476, -75.5658]);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [mapKey, setMapKey] = useState(0);
 
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setUserLocation([position.coords.latitude, position.coords.longitude]);
+          const newLocation: [number, number] = [position.coords.latitude, position.coords.longitude];
+          setUserLocation(newLocation);
+          setMapKey(prev => prev + 1);
           setLocationError(null);
         },
         (error) => {
@@ -85,8 +76,8 @@ const MapView = ({ radius, filters }: MapViewProps) => {
     }
   }, []);
 
-  const { data: properties } = useQuery({
-    queryKey: ['map-properties'],
+  const { data: properties, isLoading } = useQuery({
+    queryKey: ['map-properties', radius, filters, userLocation],
     queryFn: async () => {
       let query = supabase
         .from('properties')
@@ -104,14 +95,13 @@ const MapView = ({ radius, filters }: MapViewProps) => {
       if (filters.bedrooms) {
         query = query.gte('bedrooms', filters.bedrooms);
       }
-      if (filters.propertyType) {
+      if (filters.propertyType && filters.propertyType !== 'all') {
         query = query.eq('property_type', filters.propertyType);
       }
 
       const { data, error } = await query;
       if (error) throw error;
 
-      // Filtrar por radio de distancia
       const filtered = (data as Property[]).filter((property) => {
         const distance = calculateDistance(
           userLocation[0],
@@ -124,7 +114,6 @@ const MapView = ({ radius, filters }: MapViewProps) => {
 
       return filtered;
     },
-    enabled: !!userLocation,
   });
 
   const propertyTypes: Record<string, string> = {
@@ -136,22 +125,26 @@ const MapView = ({ radius, filters }: MapViewProps) => {
   };
 
   return (
-    <div className="w-full h-[600px] rounded-lg overflow-hidden border">
+    <div className="w-full h-[600px] rounded-lg overflow-hidden border bg-background">
       {locationError && (
         <div className="bg-yellow-500/10 text-yellow-600 px-4 py-2 text-sm">
           {locationError}
         </div>
       )}
-      <MapContainer
-        center={userLocation}
-        zoom={13}
-        className="h-full w-full"
-        scrollWheelZoom={true}
-      >
-        <>
-          <MapController center={userLocation} />
+      {isLoading ? (
+        <div className="flex items-center justify-center h-full">
+          <p className="text-muted-foreground">Cargando mapa...</p>
+        </div>
+      ) : (
+        <MapContainer
+          key={mapKey}
+          center={userLocation}
+          zoom={13}
+          className="h-full w-full"
+          scrollWheelZoom={true}
+        >
           <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           
@@ -190,8 +183,8 @@ const MapView = ({ radius, filters }: MapViewProps) => {
               </Popup>
             </Marker>
           ))}
-        </>
-      </MapContainer>
+        </MapContainer>
+      )}
     </div>
   );
 };
