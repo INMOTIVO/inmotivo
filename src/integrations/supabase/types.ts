@@ -116,7 +116,7 @@ export type Database = {
           latitude: number | null
           longitude: number | null
           neighborhood: string | null
-          owner_id: string
+          owner_id: string | null
           parking_spaces: number | null
           pets_allowed: boolean | null
           price: number
@@ -145,7 +145,7 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           neighborhood?: string | null
-          owner_id: string
+          owner_id?: string | null
           parking_spaces?: number | null
           pets_allowed?: boolean | null
           price: number
@@ -174,7 +174,7 @@ export type Database = {
           latitude?: number | null
           longitude?: number | null
           neighborhood?: string | null
-          owner_id?: string
+          owner_id?: string | null
           parking_spaces?: number | null
           pets_allowed?: boolean | null
           price?: number
