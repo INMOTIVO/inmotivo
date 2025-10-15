@@ -12,7 +12,7 @@ Allow: /
 
 User-agent: *
 Allow: /
-Sitemap: https://arrendo.com/sitemap.xml
+Sitemap: https://mulprop.com/sitemap.xml
 
 # Disallow admin or private pages
 Disallow: /auth

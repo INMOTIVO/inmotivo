@@ -1,8 +1,8 @@
-# Guía de Marketing y Captación de Leads - ARRENDO
+# Guía de Marketing y Captación de Leads - MULPROP
 
 ## 🎯 Estrategia Dual de Captación
 
-ARRENDO está optimizado para captar dos tipos de clientes:
+MULPROP está optimizado para captar dos tipos de clientes:
 
 ### 1. **INQUILINOS** - Personas buscando arrendar
 - **Página Principal**: `/` (Index)
@@ -58,7 +58,7 @@ ARRENDO está optimizado para captar dos tipos de clientes:
 - Arriendo Sabaneta
 - Arriendo Envigado
 
-**Landing Page**: `arrendo.com/` o `arrendo.com/mapa`
+**Landing Page**: `mulprop.com/` o `mulprop.com/mapa`
 
 **Copy Sugerido**:
 ```
@@ -75,7 +75,7 @@ Apartamentos, Casas, Locales. ¡Pruébalo Gratis!
 - Ubicación: Medellín y área metropolitana
 - Intereses: Inversión inmobiliaria, bienes raíces
 
-**Landing Page**: `arrendo.com/publicar`
+**Landing Page**: `mulprop.com/publicar`
 
 **Copy Sugerido**:
 ```
@@ -97,7 +97,7 @@ Empieza hoy mismo →
 - Agentes inmobiliarios
 - Empresas de construcción
 
-**Landing Page**: `arrendo.com/publicar#planes`
+**Landing Page**: `mulprop.com/publicar#planes`
 
 **Copy Sugerido**:
 ```
@@ -140,7 +140,7 @@ Prueba 30 días gratis →
 
 ## 🎨 Paleta de Colores para Branding
 
-Basada en el design system de ARRENDO:
+Basada en el design system de MULPROP:
 
 - **Primary Green**: `hsl(142, 76%, 36%)` - #1E9A54
 - **Primary Glow**: `hsl(142, 71%, 45%)` - #27B15F
@@ -218,7 +218,7 @@ Basada en el design system de ARRENDO:
 ### Secuencia para Propietarios
 1. **Bienvenida**: "Publica tu primera propiedad"
 2. **Día 3**: "5 tips para fotos perfectas"
-3. **Día 7**: "Tu primera semana en ARRENDO"
+3. **Día 7**: "Tu primera semana en MULPROP"
 4. **Día 14**: "Mejora tu listing con estos tips"
 5. **Día 30**: "Considera el plan Profesional"
 
@@ -232,11 +232,11 @@ Basada en el design system de ARRENDO:
 
 ## 🔗 Links Útiles
 
-- Landing Inquilinos: `https://arrendo.com/`
-- Landing Propietarios: `https://arrendo.com/publicar`
-- Búsqueda con Mapa: `https://arrendo.com/mapa`
-- Navegación GPS: `https://arrendo.com/navegacion`
-- Login/Registro: `https://arrendo.com/auth`
+- Landing Inquilinos: `https://mulprop.com/`
+- Landing Propietarios: `https://mulprop.com/publicar`
+- Búsqueda con Mapa: `https://mulprop.com/mapa`
+- Navegación GPS: `https://mulprop.com/navegacion`
+- Login/Registro: `https://mulprop.com/auth`
 
 ---
 
@@ -244,7 +244,7 @@ Basada en el design system de ARRENDO:
 
 Para consultas sobre planes empresariales o partnerships:
 - WhatsApp: [Agregar número]
-- Email: comercial@arrendo.com
+- Email: comercial@mulprop.com
 - LinkedIn: [Agregar perfil]
 
 ---

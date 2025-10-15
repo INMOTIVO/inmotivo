@@ -27,10 +27,10 @@ const Navbar = () => {
             className="flex items-center gap-2 cursor-pointer"
             onClick={() => navigate("/")}
           >
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center">
-              <span className="text-white font-bold text-xl">A</span>
+          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center">
+              <span className="text-white font-bold text-xl">M</span>
             </div>
-            <span className="text-2xl font-bold text-foreground">ARRENDO</span>
+            <span className="text-2xl font-bold text-foreground">MULPROP</span>
           </div>
 
           {/* Desktop Navigation */}
