@@ -44,13 +44,13 @@ const createUserIcon = () => {
 
 const getPropertyColor = (type: string): string => {
   const colors: Record<string, string> = {
-    apartment: '#22c55e',
-    house: '#3b82f6',
-    commercial: '#f59e0b',
-    warehouse: '#8b5cf6',
+    apartment: '#ef4444',
+    house: '#f97316',
+    commercial: '#eab308',
+    warehouse: '#a855f7',
     studio: '#ec4899',
   };
-  return colors[type] || '#22c55e';
+  return colors[type] || '#ef4444';
 };
 
 interface MapViewProps {
