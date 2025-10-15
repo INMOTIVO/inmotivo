@@ -8,6 +8,8 @@ import Auth from "./pages/Auth";
 import PropertyDetail from "./pages/PropertyDetail";
 import MapSearch from "./pages/MapSearch";
 import Navigate from "./pages/Navigate";
+import PublishProperty from "./pages/PublishProperty";
+import AdCreativesPreview from "./pages/AdCreativesPreview";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +26,8 @@ const App = () => (
           <Route path="/property/:id" element={<PropertyDetail />} />
           <Route path="/mapa" element={<MapSearch />} />
           <Route path="/navegacion" element={<Navigate />} />
+          <Route path="/publicar" element={<PublishProperty />} />
+          <Route path="/marketing-preview" element={<AdCreativesPreview />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

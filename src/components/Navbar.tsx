@@ -44,6 +44,9 @@ const Navbar = () => {
             <a href="/navegacion" className="text-foreground hover:text-primary transition-colors font-medium">
               Navegación GPS
             </a>
+            <a href="/publicar" className="text-foreground hover:text-primary transition-colors font-medium">
+              Publicar
+            </a>
             {user ? (
               <>
                 <span className="text-sm text-muted-foreground">

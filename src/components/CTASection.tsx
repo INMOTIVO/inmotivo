@@ -7,11 +7,11 @@ const CTASection = () => {
   const navigate = useNavigate();
 
   const handleDemo = () => {
-    toast.success("¡Pronto! Estamos preparando el demo para ti.");
+    navigate('/publicar');
   };
 
   const handlePlans = () => {
-    toast.info("Los planes estarán disponibles próximamente.");
+    navigate('/publicar#planes');
   };
   return (
     <section className="py-24 bg-gradient-to-br from-primary via-primary to-blue-600 text-white relative overflow-hidden">
