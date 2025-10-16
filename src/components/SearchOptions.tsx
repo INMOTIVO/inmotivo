@@ -13,11 +13,11 @@ const SearchOptions = ({ searchQuery, municipality, sector }: SearchOptionsProps
   const navigate = useNavigate();
 
   const handleFixedView = () => {
-    navigate(`/mapa?query=${encodeURIComponent(searchQuery)}`);
+    navigate(`/catalogo?query=${encodeURIComponent(searchQuery)}`);
   };
 
   const handleGPSNavigation = () => {
-    navigate(`/navegacion?query=${encodeURIComponent(searchQuery)}`);
+    navigate(`/navegacion?query=${encodeURIComponent(searchQuery)}&autostart=true`);
   };
 
   return (

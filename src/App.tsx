@@ -9,6 +9,7 @@ import PropertyDetail from "./pages/PropertyDetail";
 import MapSearch from "./pages/MapSearch";
 import Navigate from "./pages/Navigate";
 import PublishProperty from "./pages/PublishProperty";
+import PropertiesCatalog from "./pages/PropertiesCatalog";
 import AdCreativesPreview from "./pages/AdCreativesPreview";
 import NotFound from "./pages/NotFound";
 
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/property/:id" element={<PropertyDetail />} />
           <Route path="/mapa" element={<MapSearch />} />
           <Route path="/navegacion" element={<Navigate />} />
+          <Route path="/catalogo" element={<PropertiesCatalog />} />
           <Route path="/publicar" element={<PublishProperty />} />
           <Route path="/marketing-preview" element={<AdCreativesPreview />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
