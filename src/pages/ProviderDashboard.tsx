@@ -254,6 +254,9 @@ const ProviderDashboard = () => {
       <main className="container mx-auto px-4 pt-24 pb-12">
         <div className="flex justify-between items-center mb-8">
           <div>
+            <p className="text-lg text-muted-foreground mb-2">
+              Bienvenido, <span className="text-foreground font-semibold">{profile?.full_name || user?.email?.split('@')[0] || 'Usuario'}</span>
+            </p>
             <h1 className="text-4xl font-bold">Dashboard de Proveedor</h1>
             <p className="text-muted-foreground mt-2">
               Gestiona tus propiedades y mensajes
