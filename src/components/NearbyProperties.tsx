@@ -34,7 +34,13 @@ const NearbyProperties = ({ filters, searchCriteria }: NearbyPropertiesProps) =>
   const { data: properties } = useQuery({
     queryKey: ['nearby-properties', filters, userLocation],
     queryFn: async () => {
-      if (!userLocation) return [];
+      if (!userLocation) {
+        console.log('NearbyProperties: No user location yet');
+        return [];
+      }
+
+      console.log('NearbyProperties: Fetching with filters:', filters);
+      console.log('NearbyProperties: User location:', userLocation);
 
       let query = supabase
         .from('properties')
@@ -48,7 +54,12 @@ const NearbyProperties = ({ filters, searchCriteria }: NearbyPropertiesProps) =>
       if (filters.propertyType) query = query.eq('property_type', filters.propertyType);
 
       const { data, error } = await query;
-      if (error) throw error;
+      if (error) {
+        console.error('NearbyProperties: Query error:', error);
+        throw error;
+      }
+
+      console.log('NearbyProperties: Raw properties fetched:', data?.length || 0);
 
       // Calculate distance and filter
       const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
@@ -85,11 +96,14 @@ const NearbyProperties = ({ filters, searchCriteria }: NearbyPropertiesProps) =>
             property.longitude!
           ),
         }))
-        .sort((a, b) => a.distance - b.distance);
+        .sort((a, b) => a.distance - b.distance)
+        .slice(0, 5) || []; // Always show max 5
     },
     enabled: !!userLocation,
     refetchInterval: 3000,
   });
+
+  console.log('NearbyProperties: Final properties:', properties?.length || 0);
 
   const togglePropertySelection = (id: string) => {
     setSelectedProperties((prev) =>
@@ -116,8 +130,25 @@ const NearbyProperties = ({ filters, searchCriteria }: NearbyPropertiesProps) =>
     selectedProperties.includes(p.id)
   );
 
+  console.log('NearbyProperties render - properties count:', properties?.length || 0);
+
   if (!properties || properties.length === 0) {
-    return null;
+    console.log('NearbyProperties: Not rendering - no properties found');
+    // Show empty state instead of returning null
+    return (
+      <div className="absolute top-4 right-4 z-[1000] max-w-sm">
+        <Card className="p-4 bg-background/95 backdrop-blur shadow-lg">
+          <div className="text-center py-4">
+            <p className="text-sm text-muted-foreground">
+              No hay propiedades cercanas disponibles en este momento.
+            </p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Muévete para descubrir más propiedades
+            </p>
+          </div>
+        </Card>
+      </div>
+    );
   }
 
   return (
