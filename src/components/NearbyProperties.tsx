@@ -159,8 +159,8 @@ const NearbyProperties = ({ filters, searchCriteria }: NearbyPropertiesProps) =>
   // Always show panel with loading or properties
   return (
     <>
-      <div className="absolute top-4 left-4 z-[1000] max-w-sm">
-        <Card className="p-4 bg-background/95 backdrop-blur shadow-lg">
+      <div className="absolute top-4 left-4 z-[1000] max-w-xs">
+        <Card className="p-3 bg-background/95 backdrop-blur shadow-lg">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold">Propiedades cercanas</h3>
             {selectedProperties.length > 0 && (
@@ -218,14 +218,14 @@ const NearbyProperties = ({ filters, searchCriteria }: NearbyPropertiesProps) =>
                       </div>
                       <Button
                         size="sm"
-                        variant={selectedProperties.includes(property.id) ? 'default' : 'outline'}
+                        variant="default"
                         onClick={(e) => {
                           e.stopPropagation();
-                          togglePropertySelection(property.id);
+                          navigate(`/property/${property.id}`);
                         }}
                         className="mt-2 w-full text-xs h-7"
                       >
-                        {selectedProperties.includes(property.id) ? 'Seleccionada' : 'Seleccionar'}
+                        Ver detalles
                       </Button>
                     </div>
                   </div>

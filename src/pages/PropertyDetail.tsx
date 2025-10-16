@@ -99,11 +99,23 @@ const PropertyDetail = () => {
           <div className="grid lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-6">
               {images.length > 0 && (
-                <img
-                  src={images[0]}
-                  alt={property.title}
-                  className="w-full h-96 object-cover rounded-2xl"
-                />
+                <div className="space-y-4">
+                  <img
+                    src={images[0]}
+                    alt={property.title}
+                    className="w-full h-96 object-cover rounded-2xl"
+                  />
+                  <div className="grid grid-cols-3 gap-3">
+                    {images.slice(1, 7).map((image, index) => (
+                      <img
+                        key={index}
+                        src={image}
+                        alt={`${property.title} - ${index + 2}`}
+                        className="w-full h-32 object-cover rounded-lg"
+                      />
+                    ))}
+                  </div>
+                </div>
               )}
 
               <div>
