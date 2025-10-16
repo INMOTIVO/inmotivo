@@ -130,14 +130,17 @@ const PropertiesCatalog = () => {
             Volver
           </Button>
 
-          <div className="mb-8">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4">
-              Propiedades que coinciden con tu búsqueda
+          <div className="mb-12 text-center">
+            <h1 className="text-4xl md:text-6xl font-bold mb-4">
+              Propiedades que <span className="text-primary">coinciden</span>
+              <br />
+              con tu búsqueda
             </h1>
             {queryParam && (
-              <p className="text-xl text-muted-foreground">
-                "{queryParam}"
-              </p>
+              <div className="inline-flex items-center gap-2 px-6 py-3 bg-primary/10 rounded-full">
+                <span className="text-lg text-muted-foreground">Buscaste:</span>
+                <span className="text-lg font-semibold text-primary">"{queryParam}"</span>
+              </div>
             )}
           </div>
 
