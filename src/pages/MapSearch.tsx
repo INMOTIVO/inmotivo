@@ -8,6 +8,7 @@ import MapFilters from '@/components/MapFilters';
 const MapSearch = () => {
   const [searchParams] = useSearchParams();
   const typeParam = searchParams.get('type');
+  const queryParam = searchParams.get('query');
   
   const [filters, setFilters] = useState<{
     radius: number;
@@ -42,7 +43,10 @@ const MapSearch = () => {
 
           <div className="grid lg:grid-cols-[350px_1fr] gap-6">
             <aside>
-              <MapFilters onFiltersChange={setFilters} />
+              <MapFilters 
+                onFiltersChange={setFilters}
+                initialQuery={queryParam || undefined}
+              />
             </aside>
             <div>
               <MapView radius={filters.radius} filters={filters} />

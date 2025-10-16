@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { Search, MapPin, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import heroImage from "@/assets/hero-medellin.jpg";
 import { toast } from "sonner";
+import SearchOptions from './SearchOptions';
 
 const Hero = () => {
   const navigate = useNavigate();
@@ -13,6 +15,7 @@ const Hero = () => {
   const [municipality, setMunicipality] = useState("");
   const [sector, setSector] = useState("");
   const [loadingLocation, setLoadingLocation] = useState(false);
+  const [showOptions, setShowOptions] = useState(false);
 
   useEffect(() => {
     // Get user's current location on component mount
@@ -75,8 +78,36 @@ const Hero = () => {
   }, []);
 
   const handleSearch = () => {
-    navigate(`/navegacion${searchQuery ? `?query=${encodeURIComponent(searchQuery)}` : ''}`);
+    if (searchQuery.trim()) {
+      setShowOptions(true);
+    } else {
+      toast.error("Por favor describe qué buscas");
+    }
   };
+
+  if (showOptions) {
+    return (
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        <div className="absolute inset-0">
+          <div 
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${heroImage})` }}
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/50 via-primary/40 to-blue-600/50" />
+          </div>
+        </div>
+
+        <div className="relative z-10 container mx-auto px-4 py-20">
+          <SearchOptions 
+            searchQuery={searchQuery}
+            municipality={municipality || "Medellín"}
+            sector={sector}
+          />
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
       {/* Background image with gradient overlay */}
@@ -92,56 +123,65 @@ const Hero = () => {
         <div className="max-w-4xl mx-auto text-center space-y-8">
           <div className="space-y-4 animate-fade-in">
             <h1 className="text-5xl md:text-7xl font-bold text-white leading-tight">
-              Encuentra tu espacio ideal con <span className="text-primary-glow">IA</span>
+              Encuentra tu próximo <span className="text-primary-glow">arriendo</span>
+              <br />
+              con tecnología <span className="text-accent">inteligente</span>
             </h1>
-            <p className="text-xl md:text-2xl text-white/90 max-w-2xl mx-auto">
-              Búsqueda inteligente con lenguaje natural y geolocalización en tiempo real
+            <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto">
+              Describe lo que buscas y descubre propiedades cerca de ti o mientras navegas por la ciudad.
             </p>
           </div>
 
           {/* Search bar */}
-          <div className="bg-white rounded-2xl shadow-2xl p-2 max-w-3xl mx-auto">
-            <div className="flex flex-col md:flex-row gap-2">
-              <div className="flex-1 flex items-center gap-2 px-4">
-                <Search className="h-5 w-5 text-muted-foreground" />
-                <Input
-                  placeholder="Cuéntame que buscas"
-                  className="border-0 focus-visible:ring-0 text-base"
+          <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-3xl mx-auto">
+            <div className="space-y-4">
+              <div className="flex items-start gap-3">
+                <Search className="h-5 w-5 text-muted-foreground mt-3" />
+                <Textarea
+                  placeholder="Cuéntame qué buscas... Ej: Apartamento de 2 habitaciones, cerca del metro, con parqueadero, máximo 2 millones"
+                  className="border-0 focus-visible:ring-0 text-base resize-none min-h-[80px]"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSearch();
+                    }
+                  }}
                 />
               </div>
-              <div className="flex items-center gap-2 px-4 border-t md:border-t-0 md:border-l pt-2 md:pt-0 min-w-[200px]">
+              <div className="flex items-center gap-3 pt-3 border-t">
                 {loadingLocation ? (
-                  <Loader2 className="h-5 w-5 text-muted-foreground animate-spin" />
+                  <>
+                    <Loader2 className="h-5 w-5 text-muted-foreground animate-spin" />
+                    <span className="text-sm text-muted-foreground">Detectando ubicación...</span>
+                  </>
                 ) : (
-                  <MapPin className="h-5 w-5 text-muted-foreground" />
+                  <>
+                    <MapPin className="h-5 w-5 text-muted-foreground" />
+                    <div className="flex-1">
+                      {municipality && sector ? (
+                        <div>
+                          <div className="text-sm font-medium">{municipality}</div>
+                          <div className="text-xs text-muted-foreground">{sector}</div>
+                        </div>
+                      ) : municipality ? (
+                        <div className="text-sm font-medium">{municipality}</div>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">Ubicación actual</span>
+                      )}
+                    </div>
+                    <Button 
+                      variant="hero" 
+                      size="lg"
+                      onClick={handleSearch}
+                      disabled={!searchQuery.trim()}
+                    >
+                      Buscar
+                    </Button>
+                  </>
                 )}
-                <div className="flex flex-col flex-1">
-                  {municipality && sector ? (
-                    <>
-                      <div className="text-sm font-medium leading-tight">{municipality}</div>
-                      <div className="text-xs text-muted-foreground leading-tight">{sector}</div>
-                    </>
-                  ) : (
-                    <Input
-                      placeholder="Medellín"
-                      className="border-0 focus-visible:ring-0 text-base p-0 h-auto"
-                      value={location}
-                      onChange={(e) => setLocation(e.target.value)}
-                    />
-                  )}
-                </div>
               </div>
-              <Button 
-                variant="hero" 
-                size="xl" 
-                className="md:w-auto"
-                onClick={handleSearch}
-              >
-                Buscar
-              </Button>
             </div>
           </div>
 

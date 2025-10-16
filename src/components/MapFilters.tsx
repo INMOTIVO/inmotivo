@@ -14,14 +14,21 @@ interface MapFiltersProps {
     bedrooms?: number;
     propertyType?: string;
   }) => void;
+  initialQuery?: string;
 }
 
-const MapFilters = ({ onFiltersChange }: MapFiltersProps) => {
-  const [searchQuery, setSearchQuery] = useState('');
+const MapFilters = ({ onFiltersChange, initialQuery = '' }: MapFiltersProps) => {
+  const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+
+  useEffect(() => {
+    if (initialQuery) {
+      handleInterpretSearch(initialQuery);
+    }
+  }, [initialQuery]);
 
   const handleInterpretSearch = async (query: string) => {
     if (!query.trim()) {

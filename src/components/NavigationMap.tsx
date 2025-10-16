@@ -173,7 +173,7 @@ const NavigationMap = ({ destination, filters, onStopNavigation }: NavigationMap
       return R * c;
     };
 
-    // Only show properties within 5km of user
+    // Only show properties within 2km of user
     const nearbyProperties = properties.filter((property) => {
       if (!property.latitude || !property.longitude) return false;
       const distance = calculateDistance(
@@ -182,7 +182,7 @@ const NavigationMap = ({ destination, filters, onStopNavigation }: NavigationMap
         property.latitude,
         property.longitude
       );
-      return distance <= 5;
+      return distance <= 2;
     });
 
     nearbyProperties.forEach((property) => {
