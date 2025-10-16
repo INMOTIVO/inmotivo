@@ -136,7 +136,7 @@ const NearbyProperties = ({ filters, searchCriteria }: NearbyPropertiesProps) =>
     console.log('NearbyProperties: Not rendering - no properties found');
     // Show empty state instead of returning null
     return (
-      <div className="absolute top-4 right-4 z-[1000] max-w-sm">
+      <div className="absolute top-4 left-4 z-[1000] max-w-sm">
         <Card className="p-4 bg-background/95 backdrop-blur shadow-lg">
           <div className="text-center py-4">
             <p className="text-sm text-muted-foreground">
@@ -153,7 +153,7 @@ const NearbyProperties = ({ filters, searchCriteria }: NearbyPropertiesProps) =>
 
   return (
     <>
-      <div className="absolute top-4 right-4 z-[1000] max-w-sm">
+      <div className="absolute top-4 left-4 z-[1000] max-w-sm">
         <Card className="p-4 bg-background/95 backdrop-blur shadow-lg">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold">Propiedades cercanas</h3>
