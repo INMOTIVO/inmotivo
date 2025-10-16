@@ -6,9 +6,15 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import Navbar from '@/components/Navbar';
-import { Plus, Home, MessageCircle, Edit, Trash2, Eye } from 'lucide-react';
+import { Plus, Home, MessageCircle, Edit, Trash2, Eye, User } from 'lucide-react';
 import { toast } from 'sonner';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
 interface Property {
   id: string;
@@ -36,12 +42,33 @@ interface ContactMessage {
   };
 }
 
+interface Profile {
+  id: string;
+  full_name: string | null;
+  phone: string | null;
+}
+
+const profileSchema = z.object({
+  full_name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres').max(100),
+  phone: z.string().min(7, 'El teléfono debe tener al menos 7 dígitos').max(20).optional().or(z.literal('')),
+});
+
 const ProviderDashboard = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [properties, setProperties] = useState<Property[]>([]);
   const [messages, setMessages] = useState<ContactMessage[]>([]);
   const [loadingData, setLoadingData] = useState(true);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [savingProfile, setSavingProfile] = useState(false);
+
+  const form = useForm<z.infer<typeof profileSchema>>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      full_name: '',
+      phone: '',
+    },
+  });
 
   useEffect(() => {
     if (!loading && !user) {
@@ -53,6 +80,7 @@ const ProviderDashboard = () => {
     if (user) {
       fetchProperties();
       fetchMessages();
+      fetchProfile();
     }
   }, [user]);
 
@@ -89,6 +117,52 @@ const ProviderDashboard = () => {
       setMessages(data || []);
     } catch (error) {
       console.error('Error fetching messages:', error);
+    }
+  };
+
+  const fetchProfile = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, phone')
+        .eq('id', user?.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      
+      if (data) {
+        setProfile(data);
+        form.reset({
+          full_name: data.full_name || '',
+          phone: data.phone || '',
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
+
+  const onSubmitProfile = async (values: z.infer<typeof profileSchema>) => {
+    setSavingProfile(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user?.id,
+          full_name: values.full_name,
+          phone: values.phone || null,
+          updated_at: new Date().toISOString(),
+        });
+
+      if (error) throw error;
+      
+      toast.success('Perfil actualizado correctamente');
+      fetchProfile();
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error('Error al actualizar el perfil');
+    } finally {
+      setSavingProfile(false);
     }
   };
 
@@ -194,6 +268,10 @@ const ProviderDashboard = () => {
             <TabsTrigger value="properties">Mis Propiedades</TabsTrigger>
             <TabsTrigger value="messages">
               Mensajes ({messages.length})
+            </TabsTrigger>
+            <TabsTrigger value="profile">
+              <User className="mr-2 h-4 w-4" />
+              Mi Perfil
             </TabsTrigger>
           </TabsList>
 
@@ -360,6 +438,76 @@ const ProviderDashboard = () => {
                 ))}
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="profile">
+            <Card>
+              <CardHeader>
+                <CardTitle>Información Personal</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Actualiza tus datos de contacto. Esta información será visible para los clientes interesados en tus propiedades.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmitProfile)} className="space-y-6">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Correo Electrónico</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          value={user?.email || ''}
+                          disabled
+                          className="bg-muted"
+                        />
+                        <p className="text-xs text-muted-foreground">
+                          El correo no se puede modificar
+                        </p>
+                      </div>
+
+                      <FormField
+                        control={form.control}
+                        name="full_name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Nombre Completo *</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Juan Pérez" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="phone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Teléfono</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="+57 300 123 4567"
+                                {...field}
+                              />
+                            </FormControl>
+                            <p className="text-xs text-muted-foreground">
+                              Incluye código de país para WhatsApp
+                            </p>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <Button type="submit" disabled={savingProfile}>
+                      {savingProfile ? 'Guardando...' : 'Guardar Cambios'}
+                    </Button>
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </main>
