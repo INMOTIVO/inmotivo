@@ -11,6 +11,8 @@ import Navigate from "./pages/Navigate";
 import PublishProperty from "./pages/PublishProperty";
 import PropertiesCatalog from "./pages/PropertiesCatalog";
 import AdCreativesPreview from "./pages/AdCreativesPreview";
+import ProviderDashboard from "./pages/ProviderDashboard";
+import CreateProperty from "./pages/CreateProperty";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +31,9 @@ const App = () => (
           <Route path="/navegacion" element={<Navigate />} />
           <Route path="/catalogo" element={<PropertiesCatalog />} />
           <Route path="/publicar" element={<PublishProperty />} />
+          <Route path="/dashboard" element={<ProviderDashboard />} />
+          <Route path="/create-property" element={<CreateProperty />} />
+          <Route path="/edit-property/:id" element={<CreateProperty />} />
           <Route path="/marketing-preview" element={<AdCreativesPreview />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

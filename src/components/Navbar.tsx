@@ -40,9 +40,13 @@ const Navbar = () => {
             </a>
             {user ? (
               <>
-                <span className="text-sm text-muted-foreground">
-                  {user.email}
-                </span>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => navigate("/dashboard")}
+                >
+                  Mi Dashboard
+                </Button>
                 <Button 
                   variant="outline" 
                   size="sm"

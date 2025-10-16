@@ -4,9 +4,19 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Building2, TrendingUp, Users, Zap, Shield, BarChart3, CheckCircle, Phone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 const PublishProperty = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const handlePublishClick = () => {
+    if (user) {
+      navigate('/dashboard');
+    } else {
+      navigate('/auth');
+    }
+  };
 
   const benefits = [
     {
@@ -103,7 +113,7 @@ const PublishProperty = () => {
               <Button 
                 size="lg" 
                 className="text-lg px-8 py-6"
-                onClick={() => navigate('/auth')}
+                onClick={handlePublishClick}
               >
                 Publicar Ahora
               </Button>
@@ -261,7 +271,7 @@ const PublishProperty = () => {
                     className="w-full"
                     variant={plan.highlighted ? "default" : "outline"}
                     size="lg"
-                    onClick={() => navigate('/auth')}
+                    onClick={handlePublishClick}
                   >
                     {plan.cta}
                   </Button>
@@ -289,7 +299,7 @@ const PublishProperty = () => {
               size="lg" 
               variant="secondary"
               className="text-lg px-8 py-6"
-              onClick={() => navigate('/auth')}
+              onClick={handlePublishClick}
             >
               Publicar Gratis
             </Button>

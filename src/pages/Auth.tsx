@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -27,8 +27,15 @@ const signUpSchema = z.object({
 
 const Auth = () => {
   const navigate = useNavigate();
-  const { signIn, signUp } = useAuth();
+  const { user, loading: authLoading, signIn, signUp } = useAuth();
   const [loading, setLoading] = useState(false);
+
+  // Redirect logged-in users to dashboard
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate('/dashboard');
+    }
+  }, [user, authLoading, navigate]);
 
   const [signInData, setSignInData] = useState({
     email: "",
@@ -60,7 +67,7 @@ const Auth = () => {
       toast.error(error.message);
     } else {
       toast.success("¡Sesión iniciada exitosamente!");
-      navigate("/");
+      navigate("/dashboard");
     }
 
     setLoading(false);
