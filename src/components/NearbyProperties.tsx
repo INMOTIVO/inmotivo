@@ -46,7 +46,8 @@ const NearbyProperties = ({ filters, searchCriteria }: NearbyPropertiesProps) =>
         .from('properties')
         .select('*')
         .eq('status', 'available')
-        .lte('price', 25000000); // Max price 25M
+        .lte('price', 25000000) // Max price 25M
+        .limit(10); // Get more than we need
 
       if (filters.minPrice) query = query.gte('price', filters.minPrice);
       if (filters.maxPrice) query = query.lte('price', Math.min(filters.maxPrice, 25000000));
@@ -76,7 +77,8 @@ const NearbyProperties = ({ filters, searchCriteria }: NearbyPropertiesProps) =>
         return R * c;
       };
 
-      return data
+      // Filter and sort real properties
+      const nearbyProperties = data
         ?.filter((property) => {
           if (!property.latitude || !property.longitude) return false;
           const distance = calculateDistance(
@@ -96,8 +98,30 @@ const NearbyProperties = ({ filters, searchCriteria }: NearbyPropertiesProps) =>
             property.longitude!
           ),
         }))
-        .sort((a, b) => a.distance - b.distance)
-        .slice(0, 5) || []; // Always show max 5
+        .sort((a, b) => a.distance - b.distance) || [];
+
+      // Always ensure 5 properties for MVP
+      const propertiesNeeded = 5 - nearbyProperties.length;
+      
+      if (propertiesNeeded > 0 && data && data.length > 0) {
+        // Add more properties from the fetched list, distributed around user location
+        const additionalProperties = data
+          .filter(p => p.latitude && p.longitude && !nearbyProperties.find(np => np.id === p.id))
+          .slice(0, propertiesNeeded)
+          .map((property, index) => ({
+            ...property,
+            distance: calculateDistance(
+              userLocation[0],
+              userLocation[1],
+              property.latitude!,
+              property.longitude!
+            ),
+          }));
+        
+        nearbyProperties.push(...additionalProperties);
+      }
+
+      return nearbyProperties.slice(0, 5); // Always return exactly 5
     },
     enabled: !!userLocation,
     refetchInterval: 3000,
@@ -132,25 +156,7 @@ const NearbyProperties = ({ filters, searchCriteria }: NearbyPropertiesProps) =>
 
   console.log('NearbyProperties render - properties count:', properties?.length || 0);
 
-  if (!properties || properties.length === 0) {
-    console.log('NearbyProperties: Not rendering - no properties found');
-    // Show empty state instead of returning null
-    return (
-      <div className="absolute top-4 left-4 z-[1000] max-w-sm">
-        <Card className="p-4 bg-background/95 backdrop-blur shadow-lg">
-          <div className="text-center py-4">
-            <p className="text-sm text-muted-foreground">
-              No hay propiedades cercanas disponibles en este momento.
-            </p>
-            <p className="text-xs text-muted-foreground mt-2">
-              Muévete para descubrir más propiedades
-            </p>
-          </div>
-        </Card>
-      </div>
-    );
-  }
-
+  // Always show panel with loading or properties
   return (
     <>
       <div className="absolute top-4 left-4 z-[1000] max-w-sm">
@@ -168,7 +174,14 @@ const NearbyProperties = ({ filters, searchCriteria }: NearbyPropertiesProps) =>
             )}
           </div>
           <div className="space-y-2 max-h-[calc(100vh-20rem)] overflow-y-auto">
-            {properties.slice(0, 5).map((property) => {
+            {!properties || properties.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-sm text-muted-foreground">
+                  Buscando propiedades cercanas...
+                </p>
+              </div>
+            ) : (
+              properties.map((property) => {
               const images = (property.images as string[]) || [];
               const priceFormatted = new Intl.NumberFormat('es-CO', {
                 style: 'currency',
@@ -218,7 +231,7 @@ const NearbyProperties = ({ filters, searchCriteria }: NearbyPropertiesProps) =>
                   </div>
                 </Card>
               );
-            })}
+            }))}
           </div>
         </Card>
       </div>
