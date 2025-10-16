@@ -70,12 +70,48 @@ const PropertiesCatalog = () => {
     studio: 'Apartaestudio',
   };
 
-  const defaultImages: Record<string, string> = {
-    apartment: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80',
-    house: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&q=80',
-    commercial: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80',
-    warehouse: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80',
-    studio: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80',
+  // Array of varied images for each property type
+  const getPropertyImage = (type: string, index: number) => {
+    const imageCollections: Record<string, string[]> = {
+      apartment: [
+        'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=800&q=80',
+        'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80',
+        'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800&q=80',
+        'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80',
+        'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&q=80',
+      ],
+      house: [
+        'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800&q=80',
+        'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80',
+        'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80',
+        'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80',
+        'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&q=80',
+      ],
+      commercial: [
+        'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800&q=80',
+        'https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=800&q=80',
+        'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?w=800&q=80',
+        'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=800&q=80',
+        'https://images.unsplash.com/photo-1524758631624-e2822e304c36?w=800&q=80',
+      ],
+      warehouse: [
+        'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?w=800&q=80',
+        'https://images.unsplash.com/photo-1565610222536-ef125c59da2e?w=800&q=80',
+        'https://images.unsplash.com/photo-1553413077-190dd305871c?w=800&q=80',
+        'https://images.unsplash.com/photo-1584464491033-06628f3a6b7b?w=800&q=80',
+        'https://images.unsplash.com/photo-1609137144813-7d9921338f24?w=800&q=80',
+      ],
+      studio: [
+        'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800&q=80',
+        'https://images.unsplash.com/photo-1536376072261-38c75010e6c9?w=800&q=80',
+        'https://images.unsplash.com/photo-1595526114035-0d45ed16cfbf?w=800&q=80',
+        'https://images.unsplash.com/photo-1554995207-c18c203602cb?w=800&q=80',
+        'https://images.unsplash.com/photo-1540518614846-7eded433c457?w=800&q=80',
+      ],
+    };
+
+    const images = imageCollections[type] || imageCollections.apartment;
+    return images[index % images.length];
   };
 
   const isLoading = isLoadingFilters || isLoadingProperties;
@@ -111,9 +147,9 @@ const PropertiesCatalog = () => {
             </div>
           ) : properties && properties.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {properties.map((property) => {
+              {properties.map((property, index) => {
                 const images = property.images as string[] || [];
-                const defaultImage = defaultImages[property.property_type] || defaultImages.apartment;
+                const defaultImage = getPropertyImage(property.property_type, index);
                 return (
                   <PropertyCard
                     key={property.id}
