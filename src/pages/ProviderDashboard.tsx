@@ -50,8 +50,52 @@ interface Profile {
 
 const profileSchema = z.object({
   full_name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres').max(100),
-  phone: z.string().min(7, 'El teléfono debe tener al menos 7 dígitos').max(20).optional().or(z.literal('')),
+  phone: z.string()
+    .transform(val => {
+      if (!val) return '';
+      // Eliminar todos los caracteres no numéricos
+      const digits = val.replace(/\D/g, '');
+      // Si comienza con 57, usar esos dígitos; si no, agregar 57
+      const withCountryCode = digits.startsWith('57') ? digits : '57' + digits;
+      // Validar que tenga 12 dígitos en total (57 + 10 dígitos)
+      if (withCountryCode.length !== 12) {
+        throw new z.ZodError([{
+          code: 'custom',
+          path: ['phone'],
+          message: 'El teléfono debe tener 10 dígitos'
+        }]);
+      }
+      // Formatear: +57 XXX XXX XXXX
+      return `+${withCountryCode.slice(0, 2)} ${withCountryCode.slice(2, 5)} ${withCountryCode.slice(5, 8)} ${withCountryCode.slice(8)}`;
+    })
+    .optional()
+    .or(z.literal('')),
 });
+
+const formatPhoneInput = (value: string): string => {
+  if (!value) return '';
+  // Eliminar todos los caracteres no numéricos
+  let digits = value.replace(/\D/g, '');
+  
+  // Si empieza con 57, mantenerlo; si no, agregarlo
+  if (!digits.startsWith('57')) {
+    digits = '57' + digits;
+  }
+  
+  // Limitar a 12 dígitos (57 + 10)
+  digits = digits.slice(0, 12);
+  
+  // Formatear mientras escribe
+  if (digits.length <= 2) {
+    return `+${digits}`;
+  } else if (digits.length <= 5) {
+    return `+${digits.slice(0, 2)} ${digits.slice(2)}`;
+  } else if (digits.length <= 8) {
+    return `+${digits.slice(0, 2)} ${digits.slice(2, 5)} ${digits.slice(5)}`;
+  } else {
+    return `+${digits.slice(0, 2)} ${digits.slice(2, 5)} ${digits.slice(5, 8)} ${digits.slice(8)}`;
+  }
+};
 
 const ProviderDashboard = () => {
   const { user, loading } = useAuth();
@@ -485,15 +529,22 @@ const ProviderDashboard = () => {
                         name="phone"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Teléfono</FormLabel>
+                            <FormLabel>Teléfono Celular</FormLabel>
                             <FormControl>
                               <Input
                                 placeholder="+57 300 123 4567"
-                                {...field}
+                                value={field.value}
+                                onChange={(e) => {
+                                  const formatted = formatPhoneInput(e.target.value);
+                                  field.onChange(formatted);
+                                }}
+                                onBlur={field.onBlur}
+                                name={field.name}
+                                ref={field.ref}
                               />
                             </FormControl>
                             <p className="text-xs text-muted-foreground">
-                              Incluye código de país para WhatsApp
+                              Escribe el número y se formateará automáticamente
                             </p>
                             <FormMessage />
                           </FormItem>
