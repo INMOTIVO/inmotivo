@@ -1,15 +1,18 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Bed, Bath, Maximize, ArrowLeft, Phone, Mail } from "lucide-react";
+import { MapPin, Bed, Bath, Maximize, ArrowLeft } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import ContactDialog from "@/components/ContactDialog";
 
 const PropertyDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [showContactDialog, setShowContactDialog] = useState(false);
 
   const { data: property, isLoading } = useQuery({
     queryKey: ["property", id],
@@ -179,38 +182,11 @@ const PropertyDetail = () => {
                   <p className="text-muted-foreground">por mes</p>
                 </div>
 
-                <div className="space-y-3">
-                  <h3 className="font-semibold">Información de contacto</h3>
-                  {property.agency ? (
-                    <>
-                      <p className="font-medium">{property.agency.name}</p>
-                      {property.agency.phone && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Phone className="h-4 w-4" />
-                          <span>{property.agency.phone}</span>
-                        </div>
-                      )}
-                      {property.agency.email && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Mail className="h-4 w-4" />
-                          <span>{property.agency.email}</span>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <p className="font-medium">{property.owner?.full_name || "Propietario"}</p>
-                      {property.owner?.phone && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Phone className="h-4 w-4" />
-                          <span>{property.owner.phone}</span>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-
-                <Button className="w-full" size="lg">
+                <Button 
+                  className="w-full" 
+                  size="lg"
+                  onClick={() => setShowContactDialog(true)}
+                >
                   Contactar
                 </Button>
               </div>
@@ -219,6 +195,17 @@ const PropertyDetail = () => {
         </div>
       </main>
       <Footer />
+      
+      <ContactDialog
+        open={showContactDialog}
+        onOpenChange={setShowContactDialog}
+        property={{
+          id: property.id,
+          title: property.title,
+          agency: property.agency,
+          owner: property.owner,
+        }}
+      />
     </div>
   );
 };
