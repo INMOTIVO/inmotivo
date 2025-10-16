@@ -122,7 +122,7 @@ const NearbyProperties = ({ filters, searchCriteria }: NearbyPropertiesProps) =>
 
   return (
     <>
-      <div className="absolute top-4 left-4 z-[1000] max-w-sm">
+      <div className="absolute top-4 right-4 z-[1000] max-w-sm">
         <Card className="p-4 bg-background/95 backdrop-blur shadow-lg">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-semibold">Propiedades cercanas</h3>
@@ -136,7 +136,7 @@ const NearbyProperties = ({ filters, searchCriteria }: NearbyPropertiesProps) =>
               </Button>
             )}
           </div>
-          <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+          <div className="space-y-2 max-h-[calc(100vh-20rem)] overflow-y-auto">
             {properties.slice(0, 5).map((property) => {
               const images = (property.images as string[]) || [];
               const priceFormatted = new Intl.NumberFormat('es-CO', {
