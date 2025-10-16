@@ -36,10 +36,11 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
         .from('properties')
         .select('*')
         .eq('status', 'available')
+        .lte('price', 25000000) // Max price 25M
         .limit(5); // Always show max 5 properties
 
       if (filters.minPrice) query = query.gte('price', filters.minPrice);
-      if (filters.maxPrice) query = query.lte('price', filters.maxPrice);
+      if (filters.maxPrice) query = query.lte('price', Math.min(filters.maxPrice, 25000000));
       if (filters.bedrooms) query = query.gte('bedrooms', filters.bedrooms);
       if (filters.propertyType) query = query.eq('property_type', filters.propertyType);
 

@@ -10,6 +10,7 @@ const PropertiesGrid = () => {
         .from("properties")
         .select("*")
         .eq("status", "available")
+        .lte("price", 25000000) // Max price 25M
         .order("created_at", { ascending: false })
         .limit(6);
 

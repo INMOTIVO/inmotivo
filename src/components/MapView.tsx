@@ -143,11 +143,12 @@ const MapView: React.FC<MapViewProps> = ({ radius, filters }) => {
         .from('properties')
         .select('*')
         .eq('status', 'available')
+        .lte('price', 25000000) // Max price 25M
         .not('latitude', 'is', null)
         .not('longitude', 'is', null);
 
       if (filters.minPrice) query = query.gte('price', filters.minPrice);
-      if (filters.maxPrice) query = query.lte('price', filters.maxPrice);
+      if (filters.maxPrice) query = query.lte('price', Math.min(filters.maxPrice, 25000000));
       if (filters.bedrooms) query = query.gte('bedrooms', filters.bedrooms);
       if (filters.propertyType && filters.propertyType !== 'all')
         query = query.eq('property_type', filters.propertyType);
