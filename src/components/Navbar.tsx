@@ -35,17 +35,8 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
-            <a href="/#propiedades" className="text-foreground hover:text-primary transition-colors font-medium">
-              Propiedades
-            </a>
-            <a href="/mapa" className="text-foreground hover:text-primary transition-colors font-medium">
-              Mapa
-            </a>
-            <a href="/navegacion" className="text-foreground hover:text-primary transition-colors font-medium">
-              Navegación GPS
-            </a>
-            <a href="/publicar" className="text-foreground hover:text-primary transition-colors font-medium">
-              Publicar
+            <a href="/" className="text-foreground hover:text-primary transition-colors font-medium">
+              Home
             </a>
             {user ? (
               <>
@@ -62,21 +53,13 @@ const Navbar = () => {
                 </Button>
               </>
             ) : (
-              <>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => navigate("/auth")}
-                >
-                  Iniciar Sesión
-                </Button>
-                <Button 
-                  size="sm"
-                  onClick={() => navigate("/auth")}
-                >
-                  Publicar Propiedad
-                </Button>
-              </>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate("/auth")}
+              >
+                Iniciar Sesión
+              </Button>
             )}
           </div>
 
