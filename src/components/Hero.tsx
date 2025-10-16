@@ -128,7 +128,7 @@ const Hero = () => {
               de manera <span className="text-accent">inteligente</span>
             </h1>
             <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto">
-              Describe lo que buscas y descubre propiedades cerca de ti o mientras navegas por la ciudad.
+              Describe lo que buscas y descubre propiedades cerca a ti mientras navegas por la ciudad.
             </p>
           </div>
 
