@@ -173,11 +173,26 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
       const color = colors[type] || '#6b7280';
 
       return L.divIcon({
-        html: `<div style="background: ${color}; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
-          <span style="color: white; font-size: 18px;">🏠</span>
+        html: `<div style="
+          background: ${color}; 
+          width: 24px; 
+          height: 24px; 
+          border-radius: 4px; 
+          border: 2px solid white; 
+          box-shadow: 0 2px 8px rgba(0,0,0,0.3); 
+          display: flex; 
+          align-items: center; 
+          justify-content: center;
+          position: relative;
+        ">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="2">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
         </div>`,
         className: '',
-        iconSize: [30, 30],
+        iconSize: [24, 24],
+        iconAnchor: [12, 24],
       });
     };
 
