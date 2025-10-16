@@ -127,19 +127,15 @@ const ContactDialog = ({ open, onOpenChange, property }: ContactDialogProps) => 
             <div className="space-y-2">
               <p className="font-semibold">{contactName}</p>
               
-              {contactPhone && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Phone className="h-4 w-4" />
-                  <span>{contactPhone}</span>
-                </div>
-              )}
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Phone className="h-4 w-4" />
+                <span>{contactPhone || '+57 300 123 4567'}</span>
+              </div>
               
-              {contactEmail && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Mail className="h-4 w-4" />
-                  <span>{contactEmail}</span>
-                </div>
-              )}
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Mail className="h-4 w-4" />
+                <span>{contactEmail || 'contacto@ejemplo.com'}</span>
+              </div>
             </div>
 
             {contactPhone && (
@@ -152,6 +148,13 @@ const ContactDialog = ({ open, onOpenChange, property }: ContactDialogProps) => 
                 Contactar por WhatsApp
               </Button>
             )}
+          </div>
+
+          {/* Separador con texto */}
+          <div className="text-center">
+            <p className="text-sm font-medium text-muted-foreground">
+              Puedes contactarlo por la app
+            </p>
           </div>
 
           {/* Formulario de mensaje */}
