@@ -123,7 +123,10 @@ const PropertiesCatalog = () => {
         <div className="container mx-auto px-4">
           <Button
             variant="ghost"
-            onClick={() => navigate(-1)}
+            onClick={() => {
+              const query = searchParams.get('query');
+              navigate(`/?query=${encodeURIComponent(query || '')}&showOptions=true`);
+            }}
             className="mb-6"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />

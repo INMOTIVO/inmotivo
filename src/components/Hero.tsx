@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Search, MapPin, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,12 +10,24 @@ import SearchOptions from './SearchOptions';
 
 const Hero = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [location, setLocation] = useState("Medellín");
   const [municipality, setMunicipality] = useState("");
   const [sector, setSector] = useState("");
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
+
+  // Check if we should show options from URL params
+  useEffect(() => {
+    const query = searchParams.get('query');
+    const shouldShowOptions = searchParams.get('showOptions') === 'true';
+    
+    if (query && shouldShowOptions) {
+      setSearchQuery(query);
+      setShowOptions(true);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     // Get user's current location on component mount
