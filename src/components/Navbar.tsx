@@ -24,18 +24,18 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div 
-            className="flex items-center gap-1.5 cursor-pointer"
+            className="flex items-center gap-2 cursor-pointer"
             onClick={() => navigate("/")}
           >
-            <svg width="42" height="42" viewBox="0 0 180 180" className="transition-transform hover:scale-105">
+            <svg width="46" height="46" viewBox="0 0 180 180" className="transition-transform hover:scale-105 flex-shrink-0">
               {/* Isotipo M (planta) - Adaptado con colores del design system */}
-              <g transform="translate(20,20)" strokeWidth="8" fill="none">
+              <g transform="translate(20,25)" strokeWidth="8" fill="none">
                 <rect x="0" y="0" width="48" height="90" rx="6" className="stroke-primary"/>
                 <rect x="62" y="0" width="48" height="90" rx="6" className="stroke-primary"/>
                 <rect x="31" y="25" width="48" height="65" rx="6" className="stroke-accent"/>
               </g>
             </svg>
-            <span className="text-2xl font-bold text-foreground tracking-tight leading-none">INMOTIVO</span>
+            <span className="text-2xl font-bold text-foreground tracking-tight leading-none pt-0.5">INMOTIVO</span>
           </div>
 
           {/* Desktop Navigation */}
