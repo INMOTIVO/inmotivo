@@ -123,6 +123,7 @@ const Navigate = () => {
               destination={destination!}
               filters={filters}
               onStopNavigation={handleStopNavigation}
+              searchCriteria={searchCriteria}
             />
             <NearbyProperties filters={filters} searchCriteria={searchCriteria} />
           </div>

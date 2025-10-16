@@ -6,31 +6,37 @@ import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { X, Navigation } from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { X, Navigation, Edit2, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 interface NavigationMapProps {
   destination: [number, number];
   filters: any;
   onStopNavigation: () => void;
+  searchCriteria?: string;
 }
 
-const NavigationMap = ({ destination, filters, onStopNavigation }: NavigationMapProps) => {
+const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria = '' }: NavigationMapProps) => {
+  const navigate = useNavigate();
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const routingControl = useRef<any>(null);
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const markers = useRef<L.Marker[]>([]);
   const userMarker = useRef<L.Marker | null>(null);
+  const radiusCircle = useRef<L.Circle | null>(null);
 
-  // Fetch properties based on filters
+  // Fetch properties based on filters - limit to 5 for MVP
   const { data: properties } = useQuery({
     queryKey: ['navigation-properties', filters],
     queryFn: async () => {
       let query = supabase
         .from('properties')
         .select('*')
-        .eq('status', 'available');
+        .eq('status', 'available')
+        .limit(5); // Always show max 5 properties
 
       if (filters.minPrice) query = query.gte('price', filters.minPrice);
       if (filters.maxPrice) query = query.lte('price', filters.maxPrice);
@@ -64,7 +70,7 @@ const NavigationMap = ({ destination, filters, onStopNavigation }: NavigationMap
     };
   }, []);
 
-  // Track user location
+  // Track user location and draw 2km radius circle
   useEffect(() => {
     if (!map.current) return;
 
@@ -88,6 +94,20 @@ const NavigationMap = ({ destination, filters, onStopNavigation }: NavigationMap
           userMarker.current = L.marker(newLocation, { icon }).addTo(map.current!);
         }
 
+        // Update or create 2km radius circle
+        if (radiusCircle.current) {
+          radiusCircle.current.setLatLng(newLocation);
+        } else {
+          radiusCircle.current = L.circle(newLocation, {
+            radius: 2000, // 2km in meters
+            color: '#10b981',
+            fillColor: '#10b981',
+            fillOpacity: 0.1,
+            weight: 2,
+            dashArray: '5, 10',
+          }).addTo(map.current!);
+        }
+
         map.current!.setView(newLocation, map.current!.getZoom());
       },
       (error) => {
@@ -103,6 +123,9 @@ const NavigationMap = ({ destination, filters, onStopNavigation }: NavigationMap
 
     return () => {
       navigator.geolocation.clearWatch(watchId);
+      if (radiusCircle.current && map.current) {
+        radiusCircle.current.remove();
+      }
     };
   }, []);
 
@@ -229,15 +252,55 @@ const NavigationMap = ({ destination, filters, onStopNavigation }: NavigationMap
       </div>
 
       {userLocation && (
-        <div className="absolute bottom-4 left-4 right-4 z-[1000] bg-background/95 backdrop-blur p-4 rounded-lg shadow-lg">
-          <div className="flex items-center gap-2 mb-2">
-            <Navigation className="h-5 w-5 text-primary" />
-            <span className="font-semibold">Navegando hacia tu destino</span>
+        <>
+          <div className="absolute bottom-4 left-4 right-4 z-[1000] bg-background/95 backdrop-blur p-4 rounded-lg shadow-lg">
+            <div className="flex items-center gap-2 mb-2">
+              <Navigation className="h-5 w-5 text-primary" />
+              <span className="font-semibold">Navegando hacia tu destino</span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Las propiedades cercanas se actualizan en tiempo real mientras te desplazas
+            </p>
           </div>
-          <p className="text-sm text-muted-foreground">
-            Las propiedades cercanas se actualizan en tiempo real mientras te desplazas
-          </p>
-        </div>
+
+          {/* Search Criteria Card - Bottom Right */}
+          <Card className="absolute bottom-4 right-4 z-[1000] bg-background/90 backdrop-blur-md p-4 max-w-xs">
+            <div className="space-y-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <MapPin className="h-4 w-4 text-primary" />
+                    <span className="text-xs font-semibold text-muted-foreground uppercase">
+                      Buscando
+                    </span>
+                  </div>
+                  <p className="text-sm font-medium leading-tight">
+                    {searchCriteria || 'Propiedades cerca de ti'}
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 w-8 p-0 shrink-0"
+                  onClick={() => navigate(`/?query=${encodeURIComponent(searchCriteria)}&showOptions=true`)}
+                >
+                  <Edit2 className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <div className="pt-3 border-t space-y-1">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Radio de búsqueda</span>
+                  <span className="font-semibold text-primary">2 km</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Propiedades cercanas</span>
+                  <span className="font-semibold text-primary">{properties?.length || 0}</span>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </>
       )}
     </div>
   );
