@@ -20,18 +20,29 @@ const NearbyProperties = ({ filters, searchCriteria }: NearbyPropertiesProps) =>
   const navigate = useNavigate();
 
   useEffect(() => {
+    let lastUpdate = 0;
+    const UPDATE_INTERVAL = 10000; // Actualizar solo cada 10 segundos
+    
     const watchId = navigator.geolocation.watchPosition(
       (position) => {
-        setUserLocation([position.coords.latitude, position.coords.longitude]);
+        const now = Date.now();
+        if (now - lastUpdate >= UPDATE_INTERVAL) {
+          setUserLocation([position.coords.latitude, position.coords.longitude]);
+          lastUpdate = now;
+        }
       },
       (error) => console.error('Geolocation error:', error),
-      { enableHighAccuracy: true }
+      { 
+        enableHighAccuracy: false, // Menos preciso pero más estable
+        maximumAge: 10000,
+        timeout: 5000
+      }
     );
 
     return () => navigator.geolocation.clearWatch(watchId);
   }, []);
 
-  const { data: properties } = useQuery({
+  const { data: properties, isLoading } = useQuery({
     queryKey: ['nearby-properties', filters, userLocation],
     queryFn: async () => {
       if (!userLocation) {
@@ -124,8 +135,9 @@ const NearbyProperties = ({ filters, searchCriteria }: NearbyPropertiesProps) =>
       return nearbyProperties.slice(0, 5); // Always return exactly 5
     },
     enabled: !!userLocation,
-    staleTime: 30000, // Datos frescos por 30 segundos
-    refetchInterval: 60000, // Refetch cada 60 segundos en lugar de 3
+    staleTime: 30000,
+    refetchInterval: false, // Deshabilitar refetch automático
+    gcTime: 5 * 60 * 1000, // Mantener en caché 5 minutos
   });
 
   console.log('NearbyProperties: Final properties:', properties?.length || 0);
@@ -160,26 +172,26 @@ const NearbyProperties = ({ filters, searchCriteria }: NearbyPropertiesProps) =>
   // Always show panel with loading or properties
   return (
     <>
-      <div className="absolute top-4 left-4 z-[1000] w-[240px] md:w-[260px]">
-        <Card className="p-2 md:p-3 bg-background/95 backdrop-blur shadow-lg">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="font-semibold text-sm md:text-base">Cercanas</h3>
+      <div className="absolute top-4 left-4 z-[1000] w-[180px] md:w-[260px]">
+        <Card className="p-1.5 md:p-3 bg-background/95 backdrop-blur shadow-lg">
+          <div className="flex items-center justify-between mb-1.5 md:mb-2">
+            <h3 className="font-semibold text-xs md:text-base">Cercanas</h3>
             {selectedProperties.length > 0 && (
               <Button
                 size="sm"
                 variant="outline"
                 onClick={() => setShowSelected(true)}
-                className="text-xs h-7"
+                className="text-[10px] md:text-xs h-6 md:h-7 px-2"
               >
                 Ver ({selectedProperties.length})
               </Button>
             )}
           </div>
-          <div className="space-y-1.5 md:space-y-2 max-h-[calc(100vh-16rem)] md:max-h-[calc(100vh-20rem)] overflow-y-auto">
-            {!properties || properties.length === 0 ? (
-              <div className="text-center py-4 md:py-8">
-                <p className="text-xs md:text-sm text-muted-foreground">
-                  Buscando...
+          <div className="space-y-1 md:space-y-2 max-h-[calc(100vh-14rem)] md:max-h-[calc(100vh-20rem)] overflow-y-auto">
+            {isLoading || !properties || properties.length === 0 ? (
+              <div className="text-center py-3 md:py-8">
+                <p className="text-[10px] md:text-sm text-muted-foreground">
+                  {isLoading ? 'Buscando...' : 'No hay propiedades'}
                 </p>
               </div>
             ) : (
@@ -194,26 +206,26 @@ const NearbyProperties = ({ filters, searchCriteria }: NearbyPropertiesProps) =>
               return (
                 <Card
                   key={property.id}
-                  className={`p-2 cursor-pointer transition-colors ${
+                  className={`p-1.5 md:p-2 cursor-pointer transition-colors ${
                     selectedProperties.includes(property.id)
                       ? 'border-primary bg-primary/5'
                       : 'hover:bg-accent'
                   }`}
                   onClick={() => navigate(`/property/${property.id}`)}
                 >
-                  <div className="flex gap-2">
+                  <div className="flex gap-1.5 md:gap-2">
                     {images[0] && (
                       <img
                         src={images[0]}
                         alt={property.title}
-                        className="w-16 h-16 md:w-20 md:h-20 object-cover rounded flex-shrink-0"
+                        className="w-12 h-12 md:w-20 md:h-20 object-cover rounded flex-shrink-0"
                       />
                     )}
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-xs md:text-sm truncate leading-tight">{property.title}</h4>
-                      <p className="text-primary font-semibold text-xs md:text-sm">{priceFormatted}</p>
-                      <div className="flex items-center gap-1 text-[10px] md:text-xs text-muted-foreground mt-0.5">
-                        <MapPin className="h-2.5 w-2.5 md:h-3 md:w-3 flex-shrink-0" />
+                      <h4 className="font-medium text-[10px] md:text-sm truncate leading-tight">{property.title}</h4>
+                      <p className="text-primary font-semibold text-[10px] md:text-sm">{priceFormatted}</p>
+                      <div className="flex items-center gap-0.5 text-[9px] md:text-xs text-muted-foreground mt-0.5">
+                        <MapPin className="h-2 w-2 md:h-3 md:w-3 flex-shrink-0" />
                         <span className="truncate">
                           {property.distance.toFixed(1)} km
                         </span>
@@ -225,9 +237,9 @@ const NearbyProperties = ({ filters, searchCriteria }: NearbyPropertiesProps) =>
                           e.stopPropagation();
                           navigate(`/property/${property.id}`);
                         }}
-                        className="mt-1.5 w-full text-[10px] md:text-xs h-6 md:h-7"
+                        className="mt-1 w-full text-[9px] md:text-xs h-5 md:h-7 py-0"
                       >
-                        Ver detalles
+                        Ver
                       </Button>
                     </div>
                   </div>
