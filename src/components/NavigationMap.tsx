@@ -48,7 +48,9 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
       if (error) throw error;
       return data;
     },
-    refetchInterval: 5000, // Refetch every 5 seconds
+    staleTime: 30000, // Datos frescos por 30 segundos
+    refetchInterval: false, // No refetch automático para evitar parpadeo
+    gcTime: 5 * 60 * 1000,
   });
 
   // Initialize map
@@ -71,12 +73,21 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
     };
   }, []);
 
-  // Track user location and draw 2km radius circle
+  // Track user location and draw 2km radius circle - Optimizado para evitar parpadeo
   useEffect(() => {
     if (!map.current) return;
 
+    let lastUpdate = 0;
+    const UPDATE_INTERVAL = 5000; // Solo actualizar cada 5 segundos
+
     const watchId = navigator.geolocation.watchPosition(
       (position) => {
+        const now = Date.now();
+        if (now - lastUpdate < UPDATE_INTERVAL) {
+          return; // Ignorar actualizaciones muy frecuentes
+        }
+        lastUpdate = now;
+
         const newLocation: [number, number] = [
           position.coords.latitude,
           position.coords.longitude,
@@ -109,16 +120,24 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
           }).addTo(map.current!);
         }
 
-        map.current!.setView(newLocation, map.current!.getZoom());
+        // Solo centrar el mapa si se movió significativamente
+        const currentCenter = map.current!.getCenter();
+        const distance = currentCenter.distanceTo(L.latLng(newLocation[0], newLocation[1]));
+        if (distance > 50) { // Solo si se movió más de 50 metros
+          map.current!.panTo(newLocation, { animate: true, duration: 1 });
+        }
       },
       (error) => {
         console.error('Geolocation error:', error);
-        toast.error('Error obteniendo ubicación');
+        // No mostrar toast en cada error para evitar spam
+        if (error.code === 1) {
+          toast.error('Permiso de ubicación denegado', { id: 'geo-error' });
+        }
       },
       {
-        enableHighAccuracy: true,
-        maximumAge: 0,
-        timeout: 5000,
+        enableHighAccuracy: false, // Menos preciso pero más estable
+        maximumAge: 5000, // Aceptar ubicaciones de hasta 5 segundos
+        timeout: 10000,
       }
     );
 
@@ -130,18 +149,24 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
     };
   }, []);
 
-  // Setup routing
+  // Setup routing - Optimizado para evitar re-calcular constantemente
   useEffect(() => {
     if (!map.current || !userLocation) return;
 
     if (routingControl.current) {
-      map.current.removeControl(routingControl.current);
+      try {
+        map.current.removeControl(routingControl.current);
+      } catch (e) {
+        // Ignorar error si ya fue removido
+        console.log('Routing control already removed');
+      }
     }
 
     routingControl.current = (L as any).Routing.control({
       waypoints: [L.latLng(userLocation[0], userLocation[1]), L.latLng(destination[0], destination[1])],
       routeWhileDragging: false,
       showAlternatives: false,
+      addWaypoints: false, // Evitar agregar waypoints al hacer click
       lineOptions: {
         styles: [{ color: '#3b82f6', weight: 6, opacity: 0.7 }],
       },
@@ -150,7 +175,12 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
 
     return () => {
       if (routingControl.current && map.current) {
-        map.current.removeControl(routingControl.current);
+        try {
+          map.current.removeControl(routingControl.current);
+        } catch (e) {
+          // Ignorar error si ya fue removido
+          console.log('Cleanup: routing control already removed');
+        }
       }
     };
   }, [userLocation, destination]);
