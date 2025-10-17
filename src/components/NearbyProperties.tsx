@@ -124,7 +124,8 @@ const NearbyProperties = ({ filters, searchCriteria }: NearbyPropertiesProps) =>
       return nearbyProperties.slice(0, 5); // Always return exactly 5
     },
     enabled: !!userLocation,
-    refetchInterval: 3000,
+    staleTime: 30000, // Datos frescos por 30 segundos
+    refetchInterval: 60000, // Refetch cada 60 segundos en lugar de 3
   });
 
   console.log('NearbyProperties: Final properties:', properties?.length || 0);
@@ -159,25 +160,26 @@ const NearbyProperties = ({ filters, searchCriteria }: NearbyPropertiesProps) =>
   // Always show panel with loading or properties
   return (
     <>
-      <div className="absolute top-4 left-4 z-[1000] max-w-xs">
-        <Card className="p-3 bg-background/95 backdrop-blur shadow-lg">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold">Propiedades cercanas</h3>
+      <div className="absolute top-4 left-4 z-[1000] w-[240px] md:w-[260px]">
+        <Card className="p-2 md:p-3 bg-background/95 backdrop-blur shadow-lg">
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="font-semibold text-sm md:text-base">Cercanas</h3>
             {selectedProperties.length > 0 && (
               <Button
                 size="sm"
                 variant="outline"
                 onClick={() => setShowSelected(true)}
+                className="text-xs h-7"
               >
-                Ver seleccionadas ({selectedProperties.length})
+                Ver ({selectedProperties.length})
               </Button>
             )}
           </div>
-          <div className="space-y-2 max-h-[calc(100vh-20rem)] overflow-y-auto">
+          <div className="space-y-1.5 md:space-y-2 max-h-[calc(100vh-16rem)] md:max-h-[calc(100vh-20rem)] overflow-y-auto">
             {!properties || properties.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-sm text-muted-foreground">
-                  Buscando propiedades cercanas...
+              <div className="text-center py-4 md:py-8">
+                <p className="text-xs md:text-sm text-muted-foreground">
+                  Buscando...
                 </p>
               </div>
             ) : (
@@ -192,28 +194,28 @@ const NearbyProperties = ({ filters, searchCriteria }: NearbyPropertiesProps) =>
               return (
                 <Card
                   key={property.id}
-                  className={`p-3 cursor-pointer transition-colors ${
+                  className={`p-2 cursor-pointer transition-colors ${
                     selectedProperties.includes(property.id)
                       ? 'border-primary bg-primary/5'
                       : 'hover:bg-accent'
                   }`}
                   onClick={() => navigate(`/property/${property.id}`)}
                 >
-                  <div className="flex gap-3">
+                  <div className="flex gap-2">
                     {images[0] && (
                       <img
                         src={images[0]}
                         alt={property.title}
-                        className="w-20 h-20 object-cover rounded"
+                        className="w-16 h-16 md:w-20 md:h-20 object-cover rounded flex-shrink-0"
                       />
                     )}
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-sm truncate">{property.title}</h4>
-                      <p className="text-primary font-semibold text-sm">{priceFormatted}</p>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                        <MapPin className="h-3 w-3" />
+                      <h4 className="font-medium text-xs md:text-sm truncate leading-tight">{property.title}</h4>
+                      <p className="text-primary font-semibold text-xs md:text-sm">{priceFormatted}</p>
+                      <div className="flex items-center gap-1 text-[10px] md:text-xs text-muted-foreground mt-0.5">
+                        <MapPin className="h-2.5 w-2.5 md:h-3 md:w-3 flex-shrink-0" />
                         <span className="truncate">
-                          {property.distance.toFixed(1)} km • {property.neighborhood}
+                          {property.distance.toFixed(1)} km
                         </span>
                       </div>
                       <Button
@@ -223,7 +225,7 @@ const NearbyProperties = ({ filters, searchCriteria }: NearbyPropertiesProps) =>
                           e.stopPropagation();
                           navigate(`/property/${property.id}`);
                         }}
-                        className="mt-2 w-full text-xs h-7"
+                        className="mt-1.5 w-full text-[10px] md:text-xs h-6 md:h-7"
                       >
                         Ver detalles
                       </Button>
