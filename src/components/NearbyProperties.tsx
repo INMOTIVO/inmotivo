@@ -58,7 +58,8 @@ const NearbyProperties = ({ filters, searchCriteria }: NearbyPropertiesProps) =>
         .select('*')
         .eq('status', 'available')
         .lte('price', 25000000) // Max price 25M
-        .limit(10); // Get more than we need
+        .order('created_at', { ascending: false }) // Ordenar para obtener variedad
+        .limit(20); // Obtener más propiedades para tener variedad
 
       if (filters.minPrice) query = query.gte('price', filters.minPrice);
       if (filters.maxPrice) query = query.lte('price', Math.min(filters.maxPrice, 25000000));
@@ -115,11 +116,10 @@ const NearbyProperties = ({ filters, searchCriteria }: NearbyPropertiesProps) =>
       const propertiesNeeded = 5 - nearbyProperties.length;
       
       if (propertiesNeeded > 0 && data && data.length > 0) {
-        // Add more properties from the fetched list, distributed around user location
+        // Add more properties from the fetched list, ensuring variety
         const additionalProperties = data
           .filter(p => p.latitude && p.longitude && !nearbyProperties.find(np => np.id === p.id))
-          .slice(0, propertiesNeeded)
-          .map((property, index) => ({
+          .map((property) => ({
             ...property,
             distance: calculateDistance(
               userLocation[0],
@@ -127,12 +127,19 @@ const NearbyProperties = ({ filters, searchCriteria }: NearbyPropertiesProps) =>
               property.latitude!,
               property.longitude!
             ),
-          }));
+          }))
+          .sort((a, b) => a.distance - b.distance)
+          .slice(0, propertiesNeeded);
         
         nearbyProperties.push(...additionalProperties);
       }
 
-      return nearbyProperties.slice(0, 5); // Always return exactly 5
+      // Ensure we return unique properties with variety
+      const uniqueProperties = Array.from(
+        new Map(nearbyProperties.map(p => [p.id, p])).values()
+      );
+
+      return uniqueProperties.slice(0, 5); // Always return exactly 5 unique properties
     },
     enabled: !!userLocation,
     staleTime: 30000,
@@ -175,7 +182,7 @@ const NearbyProperties = ({ filters, searchCriteria }: NearbyPropertiesProps) =>
       <div className="absolute top-4 left-4 z-[1000] w-[180px] md:w-[260px]">
         <Card className="p-1.5 md:p-3 bg-background/95 backdrop-blur shadow-lg">
           <div className="flex items-center justify-between mb-1.5 md:mb-2">
-            <h3 className="font-semibold text-xs md:text-base">Cercanas</h3>
+            <h3 className="font-semibold text-xs md:text-base">Propiedades cercanas</h3>
             {selectedProperties.length > 0 && (
               <Button
                 size="sm"
