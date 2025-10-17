@@ -255,61 +255,62 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
     <div className="relative w-full h-full">
       <div ref={mapContainer} className="w-full h-full" />
       
-      <div className="absolute top-4 right-4 z-[1000] space-y-2">
+      <div className="absolute top-4 right-4 z-[1000]">
         <Button
           onClick={onStopNavigation}
           variant="destructive"
           size="lg"
-          className="shadow-lg"
+          className="shadow-lg text-sm md:text-base px-4 md:px-6"
         >
-          <X className="mr-2 h-5 w-5" />
+          <X className="mr-2 h-4 w-4 md:h-5 md:w-5" />
           Detener navegación
         </Button>
       </div>
 
       {userLocation && (
         <>
-          <div className="absolute bottom-4 left-4 right-4 z-[1000] bg-background/95 backdrop-blur p-4 rounded-lg shadow-lg">
-            <div className="flex items-center gap-2 mb-2">
-              <Navigation className="h-5 w-5 text-primary" />
-              <span className="font-semibold">Navegando hacia tu destino</span>
+          {/* Navigation Status - Bottom Left on Mobile, Top Left on Desktop */}
+          <div className="absolute bottom-4 left-4 md:bottom-auto md:top-20 md:left-4 z-[1000] bg-background/95 backdrop-blur p-3 md:p-4 rounded-lg shadow-lg max-w-[calc(100%-2rem)] md:max-w-sm">
+            <div className="flex items-center gap-2 mb-1 md:mb-2">
+              <Navigation className="h-4 w-4 md:h-5 md:w-5 text-primary flex-shrink-0" />
+              <span className="font-semibold text-sm md:text-base">Navegando hacia tu destino</span>
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs md:text-sm text-muted-foreground">
               Las propiedades cercanas se actualizan en tiempo real mientras te desplazas
             </p>
           </div>
 
           {/* Search Criteria Card - Bottom Right */}
-          <Card className="absolute bottom-4 right-4 z-[1000] bg-background/90 backdrop-blur-md p-4 max-w-xs">
-            <div className="space-y-3">
+          <Card className="absolute bottom-4 right-4 z-[1000] bg-background/90 backdrop-blur-md p-3 md:p-4 w-[calc(50%-1rem)] md:w-auto md:min-w-[280px] md:max-w-sm">
+            <div className="space-y-2 md:space-y-3">
               <div className="flex items-start justify-between gap-2">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <MapPin className="h-4 w-4 text-primary" />
-                    <span className="text-xs font-semibold text-muted-foreground uppercase">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 md:gap-2 mb-1 md:mb-2">
+                    <MapPin className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary flex-shrink-0" />
+                    <span className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase">
                       Buscando
                     </span>
                   </div>
-                  <p className="text-sm font-medium leading-tight">
+                  <p className="text-xs md:text-sm font-medium leading-tight truncate">
                     {searchCriteria || 'Propiedades cerca de ti'}
                   </p>
                 </div>
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="h-8 w-8 p-0 shrink-0"
+                  className="h-7 w-7 md:h-8 md:w-8 p-0 shrink-0"
                   onClick={() => navigate(`/?query=${encodeURIComponent(searchCriteria)}&showOptions=true`)}
                 >
-                  <Edit2 className="h-4 w-4" />
+                  <Edit2 className="h-3 w-3 md:h-4 md:w-4" />
                 </Button>
               </div>
 
-              <div className="pt-3 border-t space-y-1">
-                <div className="flex items-center justify-between text-xs">
+              <div className="pt-2 md:pt-3 border-t space-y-1 md:space-y-1.5">
+                <div className="flex items-center justify-between text-[10px] md:text-xs">
                   <span className="text-muted-foreground">Radio de búsqueda</span>
                   <span className="font-semibold text-primary">2 km</span>
                 </div>
-                <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center justify-between text-[10px] md:text-xs">
                   <span className="text-muted-foreground">Propiedades cercanas</span>
                   <span className="font-semibold text-primary">{properties?.length || 0}</span>
                 </div>
