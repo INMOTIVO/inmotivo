@@ -143,9 +143,74 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
           userMarker.current.setLatLng(newLocation);
         } else {
           const icon = L.divIcon({
-            html: `<div style="background: linear-gradient(135deg, #8b5cf6, #a78bfa); width: 24px; height: 24px; border-radius: 50%; border: 4px solid white; box-shadow: 0 0 16px rgba(139, 92, 246, 0.5);"></div>`,
+            html: `
+              <div style="
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                animation: bounce 1s ease-in-out infinite;
+              ">
+                <!-- Persona caminando -->
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 4px 12px rgba(139, 92, 246, 0.5));">
+                  <!-- Cabeza -->
+                  <circle cx="12" cy="5" r="2.5" fill="#8b5cf6" stroke="white" stroke-width="1.5"/>
+                  <!-- Cuerpo -->
+                  <path d="M12 7.5 L12 14" stroke="#8b5cf6" stroke-width="2.5" stroke-linecap="round"/>
+                  <!-- Brazo izquierdo -->
+                  <path d="M12 9 L9 11" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round">
+                    <animate attributeName="d" 
+                      values="M12 9 L9 11;M12 9 L9 13;M12 9 L9 11" 
+                      dur="1s" 
+                      repeatCount="indefinite"/>
+                  </path>
+                  <!-- Brazo derecho -->
+                  <path d="M12 9 L15 13" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round">
+                    <animate attributeName="d" 
+                      values="M12 9 L15 13;M12 9 L15 11;M12 9 L15 13" 
+                      dur="1s" 
+                      repeatCount="indefinite"/>
+                  </path>
+                  <!-- Pierna izquierda -->
+                  <path d="M12 14 L10 19" stroke="#8b5cf6" stroke-width="2.5" stroke-linecap="round">
+                    <animate attributeName="d" 
+                      values="M12 14 L10 19;M12 14 L11 20;M12 14 L10 19" 
+                      dur="1s" 
+                      repeatCount="indefinite"/>
+                  </path>
+                  <!-- Pierna derecha -->
+                  <path d="M12 14 L14 20" stroke="#8b5cf6" stroke-width="2.5" stroke-linecap="round">
+                    <animate attributeName="d" 
+                      values="M12 14 L14 20;M12 14 L13 19;M12 14 L14 20" 
+                      dur="1s" 
+                      repeatCount="indefinite"/>
+                  </path>
+                </svg>
+                <!-- Círculo de ubicación debajo -->
+                <div style="
+                  width: 16px;
+                  height: 16px;
+                  background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+                  border-radius: 50%;
+                  border: 3px solid white;
+                  box-shadow: 0 0 20px rgba(139, 92, 246, 0.6);
+                  animation: pulse 2s ease-in-out infinite;
+                "></div>
+              </div>
+              <style>
+                @keyframes bounce {
+                  0%, 100% { transform: translateY(0px); }
+                  50% { transform: translateY(-4px); }
+                }
+                @keyframes pulse {
+                  0%, 100% { transform: scale(1); opacity: 1; }
+                  50% { transform: scale(1.2); opacity: 0.8; }
+                }
+              </style>
+            `,
             className: '',
-            iconSize: [24, 24],
+            iconSize: [40, 60],
+            iconAnchor: [20, 60],
           });
 
           userMarker.current = L.marker(newLocation, { icon }).addTo(map.current!);
