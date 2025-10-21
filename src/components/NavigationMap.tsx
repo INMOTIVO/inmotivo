@@ -21,7 +21,7 @@ interface NavigationMapProps {
 // Generar propiedades de ejemplo alrededor de la ubicación del usuario
 const generateExampleProperties = (userLat: number, userLng: number) => {
   const properties = [];
-  const maxDistanceKm = 0.5; // 500 metros
+  const maxDistanceKm = 0.3; // 300 metros
   
   // Datos base para las propiedades
   const baseProperties = [
@@ -35,7 +35,7 @@ const generateExampleProperties = (userLat: number, userLng: number) => {
   // Generar 5 propiedades en diferentes ángulos alrededor del usuario
   for (let i = 0; i < 5; i++) {
     const angle = (360 / 5) * i; // Distribuir uniformemente en círculo
-    const distance = Math.random() * (maxDistanceKm - 0.1) + 0.1; // Entre 0.1km y 0.5km
+    const distance = Math.random() * (maxDistanceKm - 0.05) + 0.05; // Entre 0.05km y 0.3km
     
     // Convertir distancia y ángulo a coordenadas
     const earthRadius = 6371; // Radio de la Tierra en km
@@ -216,12 +216,12 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
           userMarker.current = L.marker(newLocation, { icon }).addTo(map.current!);
         }
 
-        // Update or create 500m radius circle
+        // Update or create 300m radius circle
         if (radiusCircle.current) {
           radiusCircle.current.setLatLng(newLocation);
         } else {
           radiusCircle.current = L.circle(newLocation, {
-            radius: 500, // 500 metros
+            radius: 300, // 300 metros
             color: '#8b5cf6',
             fillColor: '#a78bfa',
             fillOpacity: 0.15,
@@ -446,7 +446,7 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
               <div className="pt-1.5 md:pt-3 border-t space-y-0.5 md:space-y-1.5">
                 <div className="flex items-center justify-between text-[9px] md:text-xs">
                   <span className="text-muted-foreground">Radio</span>
-                  <span className="font-semibold text-primary">500 m</span>
+                  <span className="font-semibold text-primary">300 m</span>
                 </div>
                 <div className="flex items-center justify-between text-[9px] md:text-xs">
                   <span className="text-muted-foreground">Cercanas</span>
