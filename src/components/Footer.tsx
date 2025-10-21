@@ -1,8 +1,6 @@
 import { Mail, Phone, Instagram, Facebook } from "lucide-react";
-
 const Footer = () => {
-  return (
-    <footer className="bg-foreground text-background py-16">
+  return <footer className="bg-foreground text-background py-16">
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-4 gap-12 mb-12">
           {/* Brand */}
@@ -10,16 +8,15 @@ const Footer = () => {
             <div className="flex items-center gap-2">
               <svg width="46" height="46" viewBox="0 0 180 180" className="flex-shrink-0">
                 <g transform="translate(20,25)" strokeWidth="8" fill="none">
-                  <rect x="0" y="0" width="48" height="90" rx="6" className="stroke-primary"/>
-                  <rect x="62" y="0" width="48" height="90" rx="6" className="stroke-primary"/>
-                  <rect x="31" y="25" width="48" height="65" rx="6" className="stroke-accent"/>
+                  <rect x="0" y="0" width="48" height="90" rx="6" className="stroke-primary" />
+                  <rect x="62" y="0" width="48" height="90" rx="6" className="stroke-primary" />
+                  <rect x="31" y="25" width="48" height="65" rx="6" className="stroke-accent" />
                 </g>
               </svg>
               <span className="text-2xl font-bold">INMOTIVO</span>
             </div>
-            <p className="text-background/70">
-              La plataforma inteligente de arriendos con IA y geolocalización
-            </p>
+            <p className="text-background/70">La plataforma inteligente 
+de arriendos con IA y geolocalización</p>
           </div>
 
           {/* Quick Links */}
@@ -76,8 +73,6 @@ const Footer = () => {
           <p>&copy; 2025 INMOTIVO. Todos los derechos reservados.</p>
         </div>
       </div>
-    </footer>
-  );
+    </footer>;
 };
-
 export default Footer;
