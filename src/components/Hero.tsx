@@ -165,7 +165,7 @@ const Hero = () => {
 
   return (
     <>
-      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[70vh] md:min-h-[90vh] flex items-center justify-center overflow-hidden">
         {/* Background image with gradient overlay */}
         <div 
           className="absolute inset-0 bg-cover bg-center"
@@ -175,7 +175,7 @@ const Hero = () => {
         </div>
         
         {/* Content */}
-        <div className="relative z-10 container mx-auto px-4 py-20">
+        <div className="relative z-10 container mx-auto px-4 py-8 md:py-20">
           <div className="max-w-4xl mx-auto text-center space-y-8">
             <div className="space-y-4 animate-fade-in">
               <h1 className="text-5xl md:text-7xl font-bold text-white leading-tight">
