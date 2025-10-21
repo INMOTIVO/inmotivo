@@ -18,51 +18,6 @@ interface NavigationMapProps {
   searchCriteria?: string;
 }
 
-// Generar propiedades de ejemplo alrededor de la ubicación del usuario
-const generateExampleProperties = (userLat: number, userLng: number) => {
-  const properties = [];
-  const maxDistanceKm = 0.2; // 200 metros
-  
-  // Datos base para las propiedades
-  const baseProperties = [
-    { title: 'Apartamento Moderno', price: 1800000, bedrooms: 3, bathrooms: 2, area_m2: 85 },
-    { title: 'Estudio Amoblado', price: 1200000, bedrooms: 1, bathrooms: 1, area_m2: 45 },
-    { title: 'Apartaestudio Nuevo', price: 950000, bedrooms: 1, bathrooms: 1, area_m2: 38 },
-    { title: 'Apartamento Familiar', price: 1500000, bedrooms: 2, bathrooms: 2, area_m2: 65 },
-    { title: 'Loft Contemporáneo', price: 1350000, bedrooms: 2, bathrooms: 1, area_m2: 55 },
-  ];
-
-  // Generar 5 propiedades en diferentes ángulos alrededor del usuario
-  for (let i = 0; i < 5; i++) {
-    const angle = (360 / 5) * i; // Distribuir uniformemente en círculo
-    const distance = Math.random() * (maxDistanceKm - 0.05) + 0.05; // Entre 0.05km y 0.2km
-    
-    // Convertir distancia y ángulo a coordenadas
-    const earthRadius = 6371; // Radio de la Tierra en km
-    const latOffset = (distance / earthRadius) * (180 / Math.PI) * Math.cos((angle * Math.PI) / 180);
-    const lngOffset = (distance / earthRadius) * (180 / Math.PI) * Math.sin((angle * Math.PI) / 180) / Math.cos((userLat * Math.PI) / 180);
-    
-    const baseProp = baseProperties[i];
-    properties.push({
-      id: `example-${i + 1}`,
-      title: baseProp.title,
-      price: baseProp.price,
-      currency: 'COP',
-      latitude: userLat + latOffset,
-      longitude: userLng + lngOffset,
-      neighborhood: 'Zona Cercana',
-      city: 'Medellín',
-      bedrooms: baseProp.bedrooms,
-      bathrooms: baseProp.bathrooms,
-      area_m2: baseProp.area_m2,
-      property_type: 'apartamento',
-      status: 'available'
-    });
-  }
-  
-  return properties;
-};
-
 const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria = '' }: NavigationMapProps) => {
   const navigate = useNavigate();
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -72,17 +27,21 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
   const markers = useRef<L.Marker[]>([]);
   const userMarker = useRef<L.Marker | null>(null);
   const radiusCircle = useRef<L.Circle | null>(null);
+  const directionArrow = useRef<L.Marker | null>(null);
+  const [heading, setHeading] = useState<number>(0);
 
-  // Fetch properties based on filters - limit to 5 for MVP
+  // Fetch real properties from database
   const { data: properties } = useQuery({
-    queryKey: ['navigation-properties', filters],
+    queryKey: ['navigation-properties', filters, userLocation],
     queryFn: async () => {
+      if (!userLocation) return [];
+      
       let query = supabase
         .from('properties')
         .select('*')
         .eq('status', 'available')
-        .lte('price', 25000000) // Max price 25M
-        .limit(5); // Always show max 5 properties
+        .lte('price', 25000000)
+        .limit(5);
 
       if (filters.minPrice) query = query.gte('price', filters.minPrice);
       if (filters.maxPrice) query = query.lte('price', Math.min(filters.maxPrice, 25000000));
@@ -91,10 +50,11 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
 
       const { data, error } = await query;
       if (error) throw error;
-      return data;
+      return data || [];
     },
-    staleTime: 30000, // Datos frescos por 30 segundos
-    refetchInterval: false, // No refetch automático para evitar parpadeo
+    enabled: !!userLocation,
+    staleTime: 30000,
+    refetchInterval: false,
     gcTime: 5 * 60 * 1000,
   });
 
@@ -118,18 +78,18 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
     };
   }, []);
 
-  // Track user location and draw 2km radius circle - Optimizado para evitar parpadeo
+  // Track user location and draw 200m radius circle + heading arrow
   useEffect(() => {
     if (!map.current) return;
 
     let lastUpdate = 0;
-    const UPDATE_INTERVAL = 5000; // Solo actualizar cada 5 segundos
+    const UPDATE_INTERVAL = 5000;
 
     const watchId = navigator.geolocation.watchPosition(
       (position) => {
         const now = Date.now();
         if (now - lastUpdate < UPDATE_INTERVAL) {
-          return; // Ignorar actualizaciones muy frecuentes
+          return;
         }
         lastUpdate = now;
 
@@ -138,6 +98,11 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
           position.coords.longitude,
         ];
         setUserLocation(newLocation);
+        
+        // Update heading if available
+        if (position.coords.heading !== null) {
+          setHeading(position.coords.heading);
+        }
 
         if (userMarker.current) {
           userMarker.current.setLatLng(newLocation);
@@ -215,13 +180,41 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
 
           userMarker.current = L.marker(newLocation, { icon }).addTo(map.current!);
         }
+        
+        // Update or create direction arrow
+        if (position.coords.heading !== null && position.coords.heading >= 0) {
+          const arrowIcon = L.divIcon({
+            html: `
+              <div style="transform: rotate(${position.coords.heading}deg); transform-origin: center;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 4px 8px rgba(16, 185, 129, 0.4));">
+                  <path d="M12 4 L18 12 L12 10 L6 12 Z" fill="#10b981" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
+                  <path d="M12 10 L12 20" stroke="#10b981" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+            `,
+            className: '',
+            iconSize: [48, 48],
+            iconAnchor: [24, 48],
+          });
+          
+          // Calculate position 30 meters in front of user
+          const arrowLat = newLocation[0] + (0.00027 * Math.cos(position.coords.heading * Math.PI / 180));
+          const arrowLng = newLocation[1] + (0.00027 * Math.sin(position.coords.heading * Math.PI / 180));
+          
+          if (directionArrow.current) {
+            directionArrow.current.setLatLng([arrowLat, arrowLng]);
+            directionArrow.current.setIcon(arrowIcon);
+          } else {
+            directionArrow.current = L.marker([arrowLat, arrowLng], { icon: arrowIcon }).addTo(map.current!);
+          }
+        }
 
         // Update or create 200m radius circle
         if (radiusCircle.current) {
           radiusCircle.current.setLatLng(newLocation);
         } else {
           radiusCircle.current = L.circle(newLocation, {
-            radius: 200, // 200 metros
+            radius: 200,
             color: '#8b5cf6',
             fillColor: '#a78bfa',
             fillOpacity: 0.15,
@@ -230,23 +223,21 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
           }).addTo(map.current!);
         }
 
-        // Solo centrar el mapa si se movió significativamente
         const currentCenter = map.current!.getCenter();
         const distance = currentCenter.distanceTo(L.latLng(newLocation[0], newLocation[1]));
-        if (distance > 50) { // Solo si se movió más de 50 metros
+        if (distance > 50) {
           map.current!.panTo(newLocation, { animate: true, duration: 1 });
         }
       },
       (error) => {
         console.error('Geolocation error:', error);
-        // No mostrar toast en cada error para evitar spam
         if (error.code === 1) {
           toast.error('Permiso de ubicación denegado', { id: 'geo-error' });
         }
       },
       {
-        enableHighAccuracy: false, // Menos preciso pero más estable
-        maximumAge: 5000, // Aceptar ubicaciones de hasta 5 segundos
+        enableHighAccuracy: true, // Enable for heading
+        maximumAge: 5000,
         timeout: 10000,
       }
     );
@@ -255,6 +246,9 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
       navigator.geolocation.clearWatch(watchId);
       if (radiusCircle.current && map.current) {
         radiusCircle.current.remove();
+      }
+      if (directionArrow.current && map.current) {
+        directionArrow.current.remove();
       }
     };
   }, []);
@@ -295,16 +289,13 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
     };
   }, [userLocation, destination]);
 
-  // Update property markers
+  // Update property markers with real data
   useEffect(() => {
-    if (!map.current || !userLocation) return;
+    if (!map.current || !userLocation || !properties) return;
 
     // Clear existing markers
     markers.current.forEach((marker) => marker.remove());
     markers.current = [];
-
-    // Generar propiedades de ejemplo alrededor de la ubicación del usuario
-    const propertiesToShow = generateExampleProperties(userLocation[0], userLocation[1]);
 
     const createPropertyIcon = (price: number) => {
       const priceFormatted = new Intl.NumberFormat('es-CO', {
@@ -341,23 +332,8 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
       });
     };
 
-    // Calculate distance between two points
-    const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
-      const R = 6371; // Earth's radius in km
-      const dLat = ((lat2 - lat1) * Math.PI) / 180;
-      const dLon = ((lon2 - lon1) * Math.PI) / 180;
-      const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos((lat1 * Math.PI) / 180) *
-          Math.cos((lat2 * Math.PI) / 180) *
-          Math.sin(dLon / 2) *
-          Math.sin(dLon / 2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      return R * c;
-    };
-
-    // Mostrar siempre las 5 propiedades de ejemplo
-    propertiesToShow.forEach((property) => {
+    // Show real properties from database
+    properties.forEach((property) => {
       if (!property.latitude || !property.longitude) return;
 
       const icon = createPropertyIcon(property.price);
@@ -365,24 +341,55 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
 
       const priceFormatted = new Intl.NumberFormat('es-CO', {
         style: 'currency',
-        currency: property.currency,
+        currency: property.currency || 'COP',
         minimumFractionDigits: 0,
       }).format(property.price);
 
+      const imageUrl = property.images && property.images[0] 
+        ? (typeof property.images[0] === 'string' ? property.images[0] : property.images[0])
+        : 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400&q=80';
+
       marker.bindPopup(`
-        <div style="min-width: 200px;">
-          <h3 style="font-weight: bold; margin-bottom: 8px;">${property.title}</h3>
-          <p style="color: hsl(142 76% 36%); font-weight: bold; margin-bottom: 8px;">${priceFormatted}</p>
-          <p style="margin-bottom: 8px;">${property.neighborhood}, ${property.city}</p>
-          <p style="margin-bottom: 8px;">${property.bedrooms} hab • ${property.bathrooms} baños • ${property.area_m2} m²</p>
-          <a href="/property/${property.id}" style="color: hsl(142 76% 36%); text-decoration: underline;">Ver detalles</a>
+        <div style="min-width: 280px; max-width: 320px;">
+          <img src="${imageUrl}" alt="${property.title}" 
+               style="width: 100%; height: 160px; object-fit: cover; border-radius: 8px; margin-bottom: 12px;" 
+               onerror="this.src='https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400&q=80'"/>
+          <h3 style="font-weight: bold; margin-bottom: 8px; font-size: 16px;">${property.title}</h3>
+          <p style="color: #10b981; font-weight: bold; margin-bottom: 8px; font-size: 18px;">${priceFormatted}</p>
+          <p style="margin-bottom: 8px; color: #666; font-size: 14px;">${property.neighborhood || 'N/A'}, ${property.city}</p>
+          <p style="margin-bottom: 12px; color: #666; font-size: 13px;">
+            ${property.bedrooms} hab • ${property.bathrooms} baños • ${property.area_m2} m²
+          </p>
+          <a href="/property/${property.id}" 
+             style="
+               display: block;
+               background: linear-gradient(135deg, #10b981, #059669);
+               color: white;
+               text-decoration: none;
+               padding: 12px 20px;
+               border-radius: 8px;
+               text-align: center;
+               font-weight: 600;
+               font-size: 14px;
+               border: 2px solid #10b981;
+               box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+               transition: all 0.2s;
+             "
+             onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 16px rgba(16, 185, 129, 0.4)';"
+             onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 12px rgba(16, 185, 129, 0.3)';"
+          >
+            Ver Detalles
+          </a>
         </div>
-      `);
+      `, {
+        maxWidth: 320,
+        className: 'custom-popup'
+      });
 
       marker.addTo(map.current!);
       markers.current.push(marker);
     });
-  }, [userLocation]);
+  }, [userLocation, properties]);
 
   return (
     <div className="relative w-full h-full">
