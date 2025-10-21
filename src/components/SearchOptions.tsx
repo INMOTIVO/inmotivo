@@ -30,46 +30,6 @@ const SearchOptions = ({ searchQuery, municipality, sector }: SearchOptionsProps
       </div>
 
       <div className="grid md:grid-cols-2 gap-3 md:gap-6">
-        {/* Vista Fija */}
-        <Card className="p-4 md:p-8 hover:shadow-xl transition-all duration-300 hover:border-primary/50 cursor-pointer group">
-          <div className="space-y-3 md:space-y-6">
-            <div className="inline-flex p-2 md:p-4 rounded-2xl bg-primary/10 text-primary group-hover:scale-110 transition-transform duration-300">
-              <Map className="h-6 w-6 md:h-10 md:w-10" />
-            </div>
-            
-            <div className="space-y-2 md:space-y-3">
-              <h3 className="text-lg md:text-2xl font-bold">Ver propiedades cerca</h3>
-              <p className="text-xs md:text-base text-muted-foreground line-clamp-2 md:line-clamp-none">
-                Explora un catálogo de propiedades disponibles en tu zona que coincidan con lo que buscas.
-              </p>
-            </div>
-
-            <ul className="space-y-1 md:space-y-2 text-xs md:text-sm text-muted-foreground hidden md:block">
-              <li className="flex items-center gap-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                Vista de mapa interactivo
-              </li>
-              <li className="flex items-center gap-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                Filtros avanzados
-              </li>
-              <li className="flex items-center gap-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                Información detallada
-              </li>
-            </ul>
-
-            <Button 
-              onClick={handleFixedView}
-              className="w-full"
-              size="default"
-            >
-              <Map className="mr-2 h-4 w-4 md:h-5 md:w-5" />
-              Ver Propiedades
-            </Button>
-          </div>
-        </Card>
-
         {/* Navegación GPS */}
         <Card className="p-4 md:p-8 hover:shadow-xl transition-all duration-300 hover:border-primary/50 cursor-pointer group border-primary/30">
           <div className="space-y-3 md:space-y-6">
@@ -107,6 +67,46 @@ const SearchOptions = ({ searchQuery, municipality, sector }: SearchOptionsProps
             >
               <Navigation className="mr-2 h-4 w-4 md:h-5 md:w-5" />
               Iniciar Navegación
+            </Button>
+          </div>
+        </Card>
+
+        {/* Vista Fija */}
+        <Card className="p-4 md:p-8 hover:shadow-xl transition-all duration-300 hover:border-primary/50 cursor-pointer group">
+          <div className="space-y-3 md:space-y-6">
+            <div className="inline-flex p-2 md:p-4 rounded-2xl bg-primary/10 text-primary group-hover:scale-110 transition-transform duration-300">
+              <Map className="h-6 w-6 md:h-10 md:w-10" />
+            </div>
+            
+            <div className="space-y-2 md:space-y-3">
+              <h3 className="text-lg md:text-2xl font-bold">Ver propiedades cerca</h3>
+              <p className="text-xs md:text-base text-muted-foreground line-clamp-2 md:line-clamp-none">
+                Explora un catálogo de propiedades disponibles en tu zona que coincidan con lo que buscas.
+              </p>
+            </div>
+
+            <ul className="space-y-1 md:space-y-2 text-xs md:text-sm text-muted-foreground hidden md:block">
+              <li className="flex items-center gap-2">
+                <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                Vista de mapa interactivo
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                Filtros avanzados
+              </li>
+              <li className="flex items-center gap-2">
+                <div className="h-1.5 w-1.5 rounded-full bg-primary" />
+                Información detallada
+              </li>
+            </ul>
+
+            <Button 
+              onClick={handleFixedView}
+              className="w-full"
+              size="default"
+            >
+              <Map className="mr-2 h-4 w-4 md:h-5 md:w-5" />
+              Ver Propiedades
             </Button>
           </div>
         </Card>
