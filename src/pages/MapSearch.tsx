@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import MapView from '@/components/MapView';
 import MapFilters from '@/components/MapFilters';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 
 const MapSearch = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const typeParam = searchParams.get('type');
   const queryParam = searchParams.get('query');
   
@@ -32,6 +35,15 @@ const MapSearch = () => {
       <Navbar />
       <main className="pt-24 pb-12">
         <div className="container mx-auto px-4">
+          <Button
+            variant="ghost"
+            onClick={() => navigate(-1)}
+            className="mb-4"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Volver
+          </Button>
+          
           <div className="mb-8 text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">
               Encuentra propiedades <span className="text-primary">cerca de ti</span>

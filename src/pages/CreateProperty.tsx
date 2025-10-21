@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import Navbar from '@/components/Navbar';
-import { Upload, X, Loader2, MapPin } from 'lucide-react';
+import { Upload, X, Loader2, MapPin, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
@@ -296,6 +296,15 @@ const CreateProperty = () => {
       <Navbar />
 
       <main className="container mx-auto px-4 pt-24 pb-12 max-w-4xl">
+        <Button
+          variant="ghost"
+          onClick={() => navigate('/dashboard')}
+          className="mb-4"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Volver al Dashboard
+        </Button>
+        
         <div className="mb-8">
           <h1 className="text-4xl font-bold">
             {id ? 'Editar Propiedad' : 'Publicar Nueva Propiedad'}

@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Navbar from '@/components/Navbar';
-import { Plus, Home, MessageCircle, Edit, Trash2, Eye, User } from 'lucide-react';
+import { Plus, Home, MessageCircle, Edit, Trash2, Eye, User, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -252,6 +252,15 @@ const ProviderDashboard = () => {
       <Navbar />
       
       <main className="container mx-auto px-4 pt-24 pb-12">
+        <Button
+          variant="ghost"
+          onClick={() => navigate('/')}
+          className="mb-4"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Volver al inicio
+        </Button>
+        
         <div className="flex justify-between items-center mb-8">
           <div>
             <p className="text-lg text-muted-foreground mb-2">

@@ -7,12 +7,15 @@ import {
   StoryAdOwner 
 } from "@/components/AdCreatives";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 // Esta página es solo para previsualizar y exportar las piezas publicitarias
 // No está pensada para usuarios finales, sino para el equipo de marketing
 
 const AdCreativesPreview = () => {
+  const navigate = useNavigate();
+  
   const downloadAd = (elementId: string, filename: string) => {
     // Esta función permitiría descargar las piezas como imagen
     // Requeriría implementar html2canvas o similar
@@ -22,6 +25,15 @@ const AdCreativesPreview = () => {
   return (
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto space-y-16">
+        <Button
+          variant="ghost"
+          onClick={() => navigate('/')}
+          className="mb-4"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Volver al inicio
+        </Button>
+        
         <div className="text-center space-y-4">
           <h1 className="text-4xl font-bold">Piezas Publicitarias INMOTIVO</h1>
           <p className="text-xl text-muted-foreground">
