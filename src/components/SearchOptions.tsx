@@ -30,7 +30,7 @@ const SearchOptions = ({
       <div className="grid md:grid-cols-2 gap-3 md:gap-6">
         {/* Navegación GPS */}
         <Card className="p-3 md:p-8 hover:shadow-xl transition-all duration-300 hover:border-primary/50 cursor-pointer group border-primary/30">
-          <div className="space-y-2 md:space-y-6">
+          <div className="flex flex-col h-full space-y-2 md:space-y-6">
             <div className="inline-flex p-2 md:p-4 rounded-2xl bg-accent/10 text-accent group-hover:scale-110 transition-transform duration-300">
               <Navigation className="h-6 w-6 md:h-10 md:w-10" />
             </div>
@@ -42,7 +42,7 @@ const SearchOptions = ({
               </p>
             </div>
 
-            <ul className="space-y-1 md:space-y-2 text-xs md:text-sm text-muted-foreground hidden md:block">
+            <ul className="space-y-1 md:space-y-2 text-xs md:text-sm text-muted-foreground hidden md:block flex-grow">
               <li className="flex items-center gap-2">
                 <div className="h-1.5 w-1.5 rounded-full bg-accent" />
                 Navegación en tiempo real
@@ -57,7 +57,7 @@ const SearchOptions = ({
               </li>
             </ul>
 
-            <Button onClick={handleGPSNavigation} variant="default" className="w-full bg-gradient-to-r from-accent to-accent/80" size="default">
+            <Button onClick={handleGPSNavigation} variant="default" className="w-full bg-gradient-to-r from-accent to-accent/80 mt-auto" size="default">
               <Navigation className="mr-2 h-4 w-4 md:h-5 md:w-5" />
               Iniciar Navegación
             </Button>
@@ -66,7 +66,7 @@ const SearchOptions = ({
 
         {/* Vista Fija */}
         <Card className="p-3 md:p-8 hover:shadow-xl transition-all duration-300 hover:border-primary/50 cursor-pointer group">
-          <div className="space-y-2 md:space-y-6">
+          <div className="flex flex-col h-full space-y-2 md:space-y-6">
             <div className="inline-flex p-2 md:p-4 rounded-2xl bg-primary/10 text-primary group-hover:scale-110 transition-transform duration-300">
               <Map className="h-6 w-6 md:h-10 md:w-10" />
             </div>
@@ -78,7 +78,7 @@ const SearchOptions = ({
               </p>
             </div>
 
-            <ul className="space-y-1 md:space-y-2 text-xs md:text-sm text-muted-foreground hidden md:block">
+            <ul className="space-y-1 md:space-y-2 text-xs md:text-sm text-muted-foreground hidden md:block flex-grow">
               <li className="flex items-center gap-2">
                 <div className="h-1.5 w-1.5 rounded-full bg-primary" />
                 Vista de mapa interactivo
@@ -93,7 +93,7 @@ const SearchOptions = ({
               </li>
             </ul>
 
-            <Button onClick={handleFixedView} variant="default" size="default" className="w-full">
+            <Button onClick={handleFixedView} variant="default" size="default" className="w-full mt-auto">
               <Map className="mr-2 h-4 w-4 md:h-5 md:w-5" />
               Ver Propiedades
             </Button>
