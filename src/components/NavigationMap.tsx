@@ -427,16 +427,16 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
 
       {userLocation && (
         <>
-          {/* Navigation Status - Reducido 50% */}
-          <div className="absolute bottom-20 left-4 md:bottom-auto md:top-20 md:left-4 z-[1000] bg-background/95 backdrop-blur p-1.5 md:p-2 rounded-lg shadow-lg w-[calc(22.5%-0.5rem)] md:w-auto md:max-w-xs">
-            <div className="flex items-center gap-0.5 md:gap-1 mb-0.5 md:mb-1">
-              <Navigation className="h-2 w-2 md:h-3 md:w-3 text-primary flex-shrink-0" />
-              <span className="font-semibold text-[8px] md:text-xs leading-tight">Navegando</span>
+          {/* Navigation Status - Ancho reducido 50% */}
+          <div className="absolute bottom-20 left-4 md:bottom-auto md:top-20 md:left-4 z-[1000] bg-background/95 backdrop-blur p-2 md:p-4 rounded-lg shadow-lg w-[calc(22.5%-0.5rem)] md:w-[140px]">
+            <div className="flex items-center gap-1 md:gap-2 mb-1 md:mb-2">
+              <Navigation className="h-3 w-3 md:h-5 md:w-5 text-primary flex-shrink-0" />
+              <span className="font-semibold text-[10px] md:text-base leading-tight">Navegando</span>
             </div>
-            <p className="text-[7px] md:text-xs text-muted-foreground leading-tight hidden md:block">
-              Las propiedades cercanas se actualizan en tiempo real mientras te desplazas
+            <p className="text-[8px] md:text-sm text-muted-foreground leading-tight hidden md:block">
+              Actualizando en tiempo real
             </p>
-            <p className="text-[6px] text-muted-foreground leading-tight md:hidden">
+            <p className="text-[8px] text-muted-foreground leading-tight md:hidden">
               Actualizando
             </p>
           </div>
