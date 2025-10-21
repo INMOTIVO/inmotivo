@@ -18,6 +18,85 @@ interface NavigationMapProps {
   searchCriteria?: string;
 }
 
+// Propiedades de ejemplo que siempre se muestran
+const EXAMPLE_PROPERTIES = [
+  {
+    id: 'example-1',
+    title: 'Apartamento Moderno en El Poblado',
+    price: 1800000,
+    currency: 'COP',
+    latitude: 6.2088,
+    longitude: -75.5694,
+    neighborhood: 'El Poblado',
+    city: 'Medellín',
+    bedrooms: 3,
+    bathrooms: 2,
+    area_m2: 85,
+    property_type: 'apartamento',
+    status: 'available'
+  },
+  {
+    id: 'example-2',
+    title: 'Estudio en Laureles',
+    price: 1200000,
+    currency: 'COP',
+    latitude: 6.2443,
+    longitude: -75.5901,
+    neighborhood: 'Laureles',
+    city: 'Medellín',
+    bedrooms: 1,
+    bathrooms: 1,
+    area_m2: 45,
+    property_type: 'apartamento',
+    status: 'available'
+  },
+  {
+    id: 'example-3',
+    title: 'Apartaestudio en Envigado',
+    price: 950000,
+    currency: 'COP',
+    latitude: 6.1701,
+    longitude: -75.5833,
+    neighborhood: 'Centro',
+    city: 'Envigado',
+    bedrooms: 1,
+    bathrooms: 1,
+    area_m2: 38,
+    property_type: 'apartamento',
+    status: 'available'
+  },
+  {
+    id: 'example-4',
+    title: 'Apartamento en Sabaneta',
+    price: 1500000,
+    currency: 'COP',
+    latitude: 6.1517,
+    longitude: -75.6169,
+    neighborhood: 'Sabaneta',
+    city: 'Sabaneta',
+    bedrooms: 2,
+    bathrooms: 2,
+    area_m2: 65,
+    property_type: 'apartamento',
+    status: 'available'
+  },
+  {
+    id: 'example-5',
+    title: 'Loft en Belén',
+    price: 1350000,
+    currency: 'COP',
+    latitude: 6.2322,
+    longitude: -75.6186,
+    neighborhood: 'Belén',
+    city: 'Medellín',
+    bedrooms: 2,
+    bathrooms: 1,
+    area_m2: 55,
+    property_type: 'apartamento',
+    status: 'available'
+  }
+];
+
 const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria = '' }: NavigationMapProps) => {
   const navigate = useNavigate();
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -187,11 +266,14 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
 
   // Update property markers
   useEffect(() => {
-    if (!map.current || !properties || !userLocation) return;
+    if (!map.current || !userLocation) return;
 
     // Clear existing markers
     markers.current.forEach((marker) => marker.remove());
     markers.current = [];
+
+    // Siempre usar las propiedades de ejemplo
+    const propertiesToShow = EXAMPLE_PROPERTIES;
 
     const createPropertyIcon = (price: number) => {
       const priceFormatted = new Intl.NumberFormat('es-CO', {
@@ -243,22 +325,8 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
       return R * c;
     };
 
-    // Only show properties within 2km of user
-    const nearbyProperties = properties.filter((property) => {
-      if (!property.latitude || !property.longitude) return false;
-      const distance = calculateDistance(
-        userLocation[0],
-        userLocation[1],
-        property.latitude,
-        property.longitude
-      );
-      return distance <= 2;
-    });
-
-    // Limit to exactly 5 properties
-    const limitedProperties = nearbyProperties.slice(0, 5);
-
-    limitedProperties.forEach((property) => {
+    // Mostrar siempre las 5 propiedades de ejemplo
+    propertiesToShow.forEach((property) => {
       if (!property.latitude || !property.longitude) return;
 
       const icon = createPropertyIcon(property.price);
@@ -283,7 +351,7 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
       marker.addTo(map.current!);
       markers.current.push(marker);
     });
-  }, [properties, userLocation]);
+  }, [userLocation]);
 
   return (
     <div className="relative w-full h-full">
