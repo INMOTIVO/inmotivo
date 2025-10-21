@@ -106,7 +106,7 @@ const PublishProperty = () => {
               Publica tus Propiedades
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto">
-              Llega a miles de clientes potenciales con tecnología de IA. La forma más inteligente de publicar y gestionar un inmueble.
+              Llega a miles de clientes potenciales con tecnología de IA. La forma más inteligente de publicar y gestionar inmuebles.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-6">
               <Button 
