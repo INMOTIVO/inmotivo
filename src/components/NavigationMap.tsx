@@ -30,33 +30,35 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
   const directionArrow = useRef<L.Marker | null>(null);
   const [heading, setHeading] = useState<number>(0);
 
-  // Fetch real properties from database
-  const { data: properties } = useQuery({
-    queryKey: ['navigation-properties', filters, userLocation],
-    queryFn: async () => {
-      if (!userLocation) return [];
-      
-      let query = supabase
-        .from('properties')
-        .select('*')
-        .eq('status', 'available')
-        .lte('price', 25000000)
-        .limit(5);
+  // Generate example properties around user location
+  const generateExampleProperties = (userLocation: [number, number]) => {
+    const examples = [
+      { title: 'Apartamento Moderno Centro', price: 1200000, bedrooms: 2, bathrooms: 2, area_m2: 65, neighborhood: 'El Poblado', city: 'Medellín', images: ['https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&q=80'] },
+      { title: 'Casa Campestre con Jardín', price: 2500000, bedrooms: 4, bathrooms: 3, area_m2: 180, neighborhood: 'Envigado', city: 'Medellín', images: ['https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&q=80'] },
+      { title: 'Loft Industrial', price: 950000, bedrooms: 1, bathrooms: 1, area_m2: 45, neighborhood: 'Laureles', city: 'Medellín', images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&q=80'] },
+      { title: 'Penthouse Vista Panorámica', price: 4500000, bedrooms: 3, bathrooms: 3, area_m2: 150, neighborhood: 'Manila', city: 'Medellín', images: ['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=400&q=80'] },
+      { title: 'Estudio Amoblado', price: 800000, bedrooms: 1, bathrooms: 1, area_m2: 35, neighborhood: 'Sabaneta', city: 'Medellín', images: ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&q=80'] },
+    ];
 
-      if (filters.minPrice) query = query.gte('price', filters.minPrice);
-      if (filters.maxPrice) query = query.lte('price', Math.min(filters.maxPrice, 25000000));
-      if (filters.bedrooms) query = query.gte('bedrooms', filters.bedrooms);
-      if (filters.propertyType) query = query.eq('property_type', filters.propertyType);
+    return examples.map((example, index) => {
+      // Generate positions in a 2km radius around user
+      const angle = (index / examples.length) * 2 * Math.PI;
+      const distance = 0.01 + Math.random() * 0.01; // ~1-2km radius
+      const lat = userLocation[0] + distance * Math.cos(angle);
+      const lng = userLocation[1] + distance * Math.sin(angle);
 
-      const { data, error } = await query;
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!userLocation,
-    staleTime: 30000,
-    refetchInterval: false,
-    gcTime: 5 * 60 * 1000,
-  });
+      return {
+        id: `example-${index}`,
+        ...example,
+        latitude: lat,
+        longitude: lng,
+        currency: 'COP',
+        status: 'available',
+      };
+    });
+  };
+
+  const properties = userLocation ? generateExampleProperties(userLocation) : [];
 
   // Initialize map
   useEffect(() => {
