@@ -18,84 +18,50 @@ interface NavigationMapProps {
   searchCriteria?: string;
 }
 
-// Propiedades de ejemplo que siempre se muestran
-const EXAMPLE_PROPERTIES = [
-  {
-    id: 'example-1',
-    title: 'Apartamento Moderno en El Poblado',
-    price: 1800000,
-    currency: 'COP',
-    latitude: 6.2088,
-    longitude: -75.5694,
-    neighborhood: 'El Poblado',
-    city: 'Medellín',
-    bedrooms: 3,
-    bathrooms: 2,
-    area_m2: 85,
-    property_type: 'apartamento',
-    status: 'available'
-  },
-  {
-    id: 'example-2',
-    title: 'Estudio en Laureles',
-    price: 1200000,
-    currency: 'COP',
-    latitude: 6.2443,
-    longitude: -75.5901,
-    neighborhood: 'Laureles',
-    city: 'Medellín',
-    bedrooms: 1,
-    bathrooms: 1,
-    area_m2: 45,
-    property_type: 'apartamento',
-    status: 'available'
-  },
-  {
-    id: 'example-3',
-    title: 'Apartaestudio en Envigado',
-    price: 950000,
-    currency: 'COP',
-    latitude: 6.1701,
-    longitude: -75.5833,
-    neighborhood: 'Centro',
-    city: 'Envigado',
-    bedrooms: 1,
-    bathrooms: 1,
-    area_m2: 38,
-    property_type: 'apartamento',
-    status: 'available'
-  },
-  {
-    id: 'example-4',
-    title: 'Apartamento en Sabaneta',
-    price: 1500000,
-    currency: 'COP',
-    latitude: 6.1517,
-    longitude: -75.6169,
-    neighborhood: 'Sabaneta',
-    city: 'Sabaneta',
-    bedrooms: 2,
-    bathrooms: 2,
-    area_m2: 65,
-    property_type: 'apartamento',
-    status: 'available'
-  },
-  {
-    id: 'example-5',
-    title: 'Loft en Belén',
-    price: 1350000,
-    currency: 'COP',
-    latitude: 6.2322,
-    longitude: -75.6186,
-    neighborhood: 'Belén',
-    city: 'Medellín',
-    bedrooms: 2,
-    bathrooms: 1,
-    area_m2: 55,
-    property_type: 'apartamento',
-    status: 'available'
+// Generar propiedades de ejemplo alrededor de la ubicación del usuario
+const generateExampleProperties = (userLat: number, userLng: number) => {
+  const properties = [];
+  const maxDistanceKm = 1.8; // Menos de 2km
+  
+  // Datos base para las propiedades
+  const baseProperties = [
+    { title: 'Apartamento Moderno', price: 1800000, bedrooms: 3, bathrooms: 2, area_m2: 85 },
+    { title: 'Estudio Amoblado', price: 1200000, bedrooms: 1, bathrooms: 1, area_m2: 45 },
+    { title: 'Apartaestudio Nuevo', price: 950000, bedrooms: 1, bathrooms: 1, area_m2: 38 },
+    { title: 'Apartamento Familiar', price: 1500000, bedrooms: 2, bathrooms: 2, area_m2: 65 },
+    { title: 'Loft Contemporáneo', price: 1350000, bedrooms: 2, bathrooms: 1, area_m2: 55 },
+  ];
+
+  // Generar 5 propiedades en diferentes ángulos alrededor del usuario
+  for (let i = 0; i < 5; i++) {
+    const angle = (360 / 5) * i; // Distribuir uniformemente en círculo
+    const distance = Math.random() * maxDistanceKm + 0.3; // Entre 0.3km y 1.8km
+    
+    // Convertir distancia y ángulo a coordenadas
+    const earthRadius = 6371; // Radio de la Tierra en km
+    const latOffset = (distance / earthRadius) * (180 / Math.PI) * Math.cos((angle * Math.PI) / 180);
+    const lngOffset = (distance / earthRadius) * (180 / Math.PI) * Math.sin((angle * Math.PI) / 180) / Math.cos((userLat * Math.PI) / 180);
+    
+    const baseProp = baseProperties[i];
+    properties.push({
+      id: `example-${i + 1}`,
+      title: baseProp.title,
+      price: baseProp.price,
+      currency: 'COP',
+      latitude: userLat + latOffset,
+      longitude: userLng + lngOffset,
+      neighborhood: 'Zona Cercana',
+      city: 'Medellín',
+      bedrooms: baseProp.bedrooms,
+      bathrooms: baseProp.bathrooms,
+      area_m2: baseProp.area_m2,
+      property_type: 'apartamento',
+      status: 'available'
+    });
   }
-];
+  
+  return properties;
+};
 
 const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria = '' }: NavigationMapProps) => {
   const navigate = useNavigate();
@@ -272,8 +238,8 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
     markers.current.forEach((marker) => marker.remove());
     markers.current = [];
 
-    // Siempre usar las propiedades de ejemplo
-    const propertiesToShow = EXAMPLE_PROPERTIES;
+    // Generar propiedades de ejemplo alrededor de la ubicación del usuario
+    const propertiesToShow = generateExampleProperties(userLocation[0], userLocation[1]);
 
     const createPropertyIcon = (price: number) => {
       const priceFormatted = new Intl.NumberFormat('es-CO', {
