@@ -291,6 +291,17 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
     };
   }, [userLocation, destination]);
 
+  // Setup navigation handler for property details
+  useEffect(() => {
+    (window as any).navigateToProperty = (propertyId: string) => {
+      navigate(`/property/${propertyId}`);
+    };
+    
+    return () => {
+      delete (window as any).navigateToProperty;
+    };
+  }, [navigate]);
+
   // Update property markers with real data
   useEffect(() => {
     if (!map.current || !userLocation || !properties) return;
@@ -362,8 +373,10 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
           <p style="margin-bottom: 12px; color: #666; font-size: 13px;">
             ${property.bedrooms} hab • ${property.bathrooms} baños • ${property.area_m2} m²
           </p>
-          <a href="/property/${property.id}" 
+          <button 
+             onclick="window.navigateToProperty('${property.id}')"
              style="
+               width: 100%;
                display: block;
                background: linear-gradient(135deg, #10b981, #059669);
                color: white;
@@ -376,12 +389,13 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
                border: 2px solid #10b981;
                box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
                transition: all 0.2s;
+               cursor: pointer;
              "
              onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 16px rgba(16, 185, 129, 0.4)';"
              onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 12px rgba(16, 185, 129, 0.3)';"
           >
             Ver Detalles
-          </a>
+          </button>
         </div>
       `, {
         maxWidth: 320,
@@ -413,17 +427,17 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
 
       {userLocation && (
         <>
-          {/* Navigation Status - Compacto en móvil, posicionado abajo izquierda */}
-          <div className="absolute bottom-20 left-4 md:bottom-auto md:top-20 md:left-4 z-[1000] bg-background/95 backdrop-blur p-2 md:p-4 rounded-lg shadow-lg w-[calc(45%-1rem)] md:w-auto md:max-w-sm">
-            <div className="flex items-center gap-1 md:gap-2 mb-1 md:mb-2">
-              <Navigation className="h-3 w-3 md:h-5 md:w-5 text-primary flex-shrink-0" />
-              <span className="font-semibold text-[10px] md:text-base leading-tight">Navegando</span>
+          {/* Navigation Status - Reducido 50% */}
+          <div className="absolute bottom-20 left-4 md:bottom-auto md:top-20 md:left-4 z-[1000] bg-background/95 backdrop-blur p-1.5 md:p-2 rounded-lg shadow-lg w-[calc(22.5%-0.5rem)] md:w-auto md:max-w-xs">
+            <div className="flex items-center gap-0.5 md:gap-1 mb-0.5 md:mb-1">
+              <Navigation className="h-2 w-2 md:h-3 md:w-3 text-primary flex-shrink-0" />
+              <span className="font-semibold text-[8px] md:text-xs leading-tight">Navegando</span>
             </div>
-            <p className="text-[8px] md:text-sm text-muted-foreground leading-tight hidden md:block">
+            <p className="text-[7px] md:text-xs text-muted-foreground leading-tight hidden md:block">
               Las propiedades cercanas se actualizan en tiempo real mientras te desplazas
             </p>
-            <p className="text-[8px] text-muted-foreground leading-tight md:hidden">
-              Actualizando en tiempo real
+            <p className="text-[6px] text-muted-foreground leading-tight md:hidden">
+              Actualizando
             </p>
           </div>
 
