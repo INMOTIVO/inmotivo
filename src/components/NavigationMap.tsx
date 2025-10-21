@@ -21,7 +21,7 @@ interface NavigationMapProps {
 // Generar propiedades de ejemplo alrededor de la ubicación del usuario
 const generateExampleProperties = (userLat: number, userLng: number) => {
   const properties = [];
-  const maxDistanceKm = 1.8; // Menos de 2km
+  const maxDistanceKm = 0.5; // 500 metros
   
   // Datos base para las propiedades
   const baseProperties = [
@@ -35,7 +35,7 @@ const generateExampleProperties = (userLat: number, userLng: number) => {
   // Generar 5 propiedades en diferentes ángulos alrededor del usuario
   for (let i = 0; i < 5; i++) {
     const angle = (360 / 5) * i; // Distribuir uniformemente en círculo
-    const distance = Math.random() * maxDistanceKm + 0.3; // Entre 0.3km y 1.8km
+    const distance = Math.random() * (maxDistanceKm - 0.1) + 0.1; // Entre 0.1km y 0.5km
     
     // Convertir distancia y ángulo a coordenadas
     const earthRadius = 6371; // Radio de la Tierra en km
@@ -143,25 +143,25 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
           userMarker.current.setLatLng(newLocation);
         } else {
           const icon = L.divIcon({
-            html: `<div style="background: #3b82f6; width: 20px; height: 20px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.3);"></div>`,
+            html: `<div style="background: linear-gradient(135deg, #8b5cf6, #a78bfa); width: 24px; height: 24px; border-radius: 50%; border: 4px solid white; box-shadow: 0 0 16px rgba(139, 92, 246, 0.5);"></div>`,
             className: '',
-            iconSize: [20, 20],
+            iconSize: [24, 24],
           });
 
           userMarker.current = L.marker(newLocation, { icon }).addTo(map.current!);
         }
 
-        // Update or create 2km radius circle
+        // Update or create 500m radius circle
         if (radiusCircle.current) {
           radiusCircle.current.setLatLng(newLocation);
         } else {
           radiusCircle.current = L.circle(newLocation, {
-            radius: 2000, // 2km in meters
-            color: '#10b981',
-            fillColor: '#10b981',
-            fillOpacity: 0.1,
-            weight: 2,
-            dashArray: '5, 10',
+            radius: 500, // 500 metros
+            color: '#8b5cf6',
+            fillColor: '#a78bfa',
+            fillOpacity: 0.15,
+            weight: 3,
+            dashArray: '8, 12',
           }).addTo(map.current!);
         }
 
@@ -213,7 +213,7 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
       showAlternatives: false,
       addWaypoints: false, // Evitar agregar waypoints al hacer click
       lineOptions: {
-        styles: [{ color: '#3b82f6', weight: 6, opacity: 0.7 }],
+        styles: [{ color: '#8b5cf6', weight: 7, opacity: 0.8 }],
       },
       createMarker: () => null, // Don't create default markers
     }).addTo(map.current!);
@@ -251,21 +251,21 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
           <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
             <!-- Price Label -->
             <div style="
-              background: hsl(220 13% 13%);
+              background: linear-gradient(135deg, #10b981, #059669);
               color: white;
               padding: 6px 12px;
-              border-radius: 8px;
+              border-radius: 10px;
               font-size: 14px;
-              font-weight: 600;
+              font-weight: 700;
               white-space: nowrap;
-              box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+              box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
             ">
               ${priceFormatted} $
             </div>
             <!-- Pin Marker -->
-            <svg width="32" height="40" viewBox="0 0 32 40" style="filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));">
+            <svg width="32" height="40" viewBox="0 0 32 40" style="filter: drop-shadow(0 6px 10px rgba(16, 185, 129, 0.4));">
               <path d="M16 0C7.163 0 0 7.163 0 16c0 12 16 24 16 24s16-12 16-24C32 7.163 24.837 0 16 0z" 
-                    fill="hsl(0 84% 60%)" />
+                    fill="#10b981" />
               <circle cx="16" cy="16" r="6" fill="white" />
             </svg>
           </div>
@@ -381,7 +381,7 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
               <div className="pt-1.5 md:pt-3 border-t space-y-0.5 md:space-y-1.5">
                 <div className="flex items-center justify-between text-[9px] md:text-xs">
                   <span className="text-muted-foreground">Radio</span>
-                  <span className="font-semibold text-primary">2 km</span>
+                  <span className="font-semibold text-primary">500 m</span>
                 </div>
                 <div className="flex items-center justify-between text-[9px] md:text-xs">
                   <span className="text-muted-foreground">Cercanas</span>
