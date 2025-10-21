@@ -44,6 +44,15 @@ const MapFilters = ({ onFiltersChange, initialQuery = '' }: MapFiltersProps) => 
 
       if (error) throw error;
 
+      // Verificar si la consulta no es válida
+      if (data?.error === 'invalid_query') {
+        toast.error(data.message, {
+          duration: 5000,
+          description: "💡 Ejemplo: 'Apartamento de 2 habitaciones cerca del metro'"
+        });
+        return;
+      }
+
       const filters = data.filters;
       onFiltersChange({
         radius: filters.radius || 5,

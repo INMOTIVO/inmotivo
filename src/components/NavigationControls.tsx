@@ -34,6 +34,15 @@ const NavigationControls = ({ onStartNavigation, initialCriteria = '' }: Navigat
 
       if (error) throw error;
 
+      // Verificar si la consulta no es válida
+      if (data?.error === 'invalid_query') {
+        toast.error(data.message, {
+          duration: 5000,
+          description: "💡 Ejemplo: 'Casa con jardín y parqueadero'"
+        });
+        return;
+      }
+
       const filters = data?.filters || {};
       
       // Geocode the destination

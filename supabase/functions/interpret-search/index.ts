@@ -18,6 +18,77 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
+    // Primero validar si la consulta es sobre inmuebles
+    const validationResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          {
+            role: "system",
+            content: "Eres un validador de consultas para un buscador de inmuebles. Determina si la consulta del usuario está relacionada con búsqueda de propiedades inmobiliarias (apartamentos, casas, apartaestudios, habitaciones, bodegas, oficinas, locales, estudios, lofts, fincas, etc.) o si está preguntando algo completamente diferente."
+          },
+          {
+            role: "user",
+            content: query
+          }
+        ],
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "validate_query",
+              description: "Valida si la consulta es sobre búsqueda de inmuebles",
+              parameters: {
+                type: "object",
+                properties: {
+                  is_valid: {
+                    type: "boolean",
+                    description: "true si la consulta es sobre búsqueda de propiedades inmobiliarias, false si es sobre otro tema"
+                  },
+                  reason: {
+                    type: "string",
+                    description: "Breve explicación de por qué es válida o no válida"
+                  }
+                },
+                required: ["is_valid", "reason"],
+                additionalProperties: false
+              }
+            }
+          }
+        ],
+        tool_choice: { type: "function", function: { name: "validate_query" } }
+      }),
+    });
+
+    if (!validationResponse.ok) {
+      throw new Error("Error en validación AI");
+    }
+
+    const validationData = await validationResponse.json();
+    const validationCall = validationData.choices[0]?.message?.tool_calls?.[0];
+    
+    if (!validationCall) {
+      throw new Error("No se pudo validar la consulta");
+    }
+
+    const validation = JSON.parse(validationCall.function.arguments);
+    
+    // Si la consulta no es válida, retornar error específico
+    if (!validation.is_valid) {
+      return new Response(
+        JSON.stringify({ 
+          error: "invalid_query",
+          message: "Lo siento, soy un buscador especializado en propiedades inmobiliarias. Por favor describe qué tipo de inmueble buscas (apartamento, casa, oficina, local, etc.) y sus características."
+        }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {

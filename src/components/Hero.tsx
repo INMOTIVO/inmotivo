@@ -8,6 +8,7 @@ import heroImage from "@/assets/hero-medellin.jpg";
 import { toast } from "sonner";
 import SearchOptions from './SearchOptions';
 import { useIsMobile } from "@/hooks/use-mobile";
+import { supabase } from "@/integrations/supabase/client";
 
 const Hero = () => {
   const navigate = useNavigate();
@@ -107,13 +108,35 @@ const Hero = () => {
     getCurrentLocation();
   }, []);
 
-  const handleSearch = () => {
-    if (searchQuery.trim()) {
-      setShowOptions(true);
-      // Scroll to top to show search options
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    } else {
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) {
       toast.error("Por favor describe qué buscas");
+      return;
+    }
+
+    // Validar que la búsqueda sea sobre inmuebles
+    try {
+      const { data, error } = await supabase.functions.invoke('interpret-search', {
+        body: { query: searchQuery.trim() }
+      });
+
+      if (error) throw error;
+
+      // Verificar si la consulta no es válida
+      if (data?.error === 'invalid_query') {
+        toast.error(data.message, {
+          duration: 5000,
+          description: "💡 Ejemplo: 'Apartamento de 2 habitaciones cerca del metro'"
+        });
+        return;
+      }
+
+      // Si es válida, continuar con el flujo normal
+      setShowOptions(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err) {
+      console.error('Error validating search:', err);
+      toast.error("Error al validar la búsqueda");
     }
   };
 
