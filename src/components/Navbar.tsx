@@ -90,45 +90,45 @@ const Navbar = () => {
           {/* Mobile menu */}
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild>
-              <button className="md:hidden p-2">
+              <button className="md:hidden p-2 hover:bg-accent/10 rounded-lg transition-colors">
                 <Menu className="h-6 w-6" />
               </button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-[300px]">
+            <SheetContent side="right" className="w-[300px] z-[100]">
               <SheetHeader>
                 <SheetTitle className="text-left">Menú</SheetTitle>
               </SheetHeader>
               <div className="flex flex-col gap-4 mt-6">
                 <Button
                   variant="ghost"
-                  className="justify-start"
+                  className="justify-start text-base h-12"
                   onClick={() => handleNavigation("/")}
                 >
-                  <Home className="h-4 w-4 mr-2" />
+                  <Home className="h-5 w-5 mr-3" />
                   Home
                 </Button>
                 {user ? (
                   <>
                     <Button
                       variant="ghost"
-                      className="justify-start"
+                      className="justify-start text-base h-12"
                       onClick={() => handleNavigation("/dashboard")}
                     >
                       Mi Dashboard
                     </Button>
                     <Button
                       variant="ghost"
-                      className="justify-start text-destructive hover:text-destructive"
+                      className="justify-start text-base h-12 text-destructive hover:text-destructive hover:bg-destructive/10"
                       onClick={handleSignOut}
                     >
-                      <LogOut className="h-4 w-4 mr-2" />
+                      <LogOut className="h-5 w-5 mr-3" />
                       Cerrar Sesión
                     </Button>
                   </>
                 ) : (
                   <Button
                     variant="ghost"
-                    className="justify-start"
+                    className="justify-start text-base h-12"
                     onClick={() => handleNavigation("/auth")}
                   >
                     Iniciar Sesión
