@@ -2,26 +2,24 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Map, Navigation } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-
 interface SearchOptionsProps {
   searchQuery: string;
   municipality: string;
   sector: string;
 }
-
-const SearchOptions = ({ searchQuery, municipality, sector }: SearchOptionsProps) => {
+const SearchOptions = ({
+  searchQuery,
+  municipality,
+  sector
+}: SearchOptionsProps) => {
   const navigate = useNavigate();
-
   const handleFixedView = () => {
     navigate(`/catalogo?query=${encodeURIComponent(searchQuery)}`);
   };
-
   const handleGPSNavigation = () => {
     navigate(`/navegacion?query=${encodeURIComponent(searchQuery)}&autostart=true`);
   };
-
-  return (
-    <div className="w-full max-w-4xl mx-auto space-y-3 md:space-y-6 animate-fade-in px-4 py-4">
+  return <div className="w-full max-w-4xl mx-auto space-y-3 md:space-y-6 animate-fade-in px-4 py-4">
       <div className="text-center space-y-1">
         <h2 className="text-lg md:text-2xl lg:text-3xl font-bold">¿Cómo quieres buscar?</h2>
         <p className="text-xs md:text-base text-muted-foreground">
@@ -59,12 +57,7 @@ const SearchOptions = ({ searchQuery, municipality, sector }: SearchOptionsProps
               </li>
             </ul>
 
-            <Button 
-              onClick={handleGPSNavigation}
-              variant="default"
-              className="w-full bg-gradient-to-r from-accent to-accent/80"
-              size="default"
-            >
+            <Button onClick={handleGPSNavigation} variant="default" className="w-full bg-gradient-to-r from-accent to-accent/80" size="default">
               <Navigation className="mr-2 h-4 w-4 md:h-5 md:w-5" />
               Iniciar Navegación
             </Button>
@@ -100,11 +93,7 @@ const SearchOptions = ({ searchQuery, municipality, sector }: SearchOptionsProps
               </li>
             </ul>
 
-            <Button 
-              onClick={handleFixedView}
-              className="w-full"
-              size="default"
-            >
+            <Button onClick={handleFixedView} size="default" className="w-full px-0 py-0 mx-0 my-[50px]">
               <Map className="mr-2 h-4 w-4 md:h-5 md:w-5" />
               Ver Propiedades
             </Button>
@@ -115,8 +104,6 @@ const SearchOptions = ({ searchQuery, municipality, sector }: SearchOptionsProps
       <p className="text-center text-[10px] md:text-sm text-muted-foreground">
         Tu búsqueda: "{searchQuery}"
       </p>
-    </div>
-  );
+    </div>;
 };
-
 export default SearchOptions;
