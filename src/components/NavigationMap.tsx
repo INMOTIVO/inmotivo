@@ -30,35 +30,39 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
   const directionArrow = useRef<L.Marker | null>(null);
   const [heading, setHeading] = useState<number>(0);
 
-  // Generate example properties around user location within 200m
-  const generateExampleProperties = (userLocation: [number, number]) => {
-    const examples = [
-      { title: 'Apartamento Moderno Centro', price: 1200000, bedrooms: 2, bathrooms: 2, area_m2: 65, neighborhood: 'El Poblado', city: 'Medellín', images: ['https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&q=80'] },
-      { title: 'Casa Campestre con Jardín', price: 2500000, bedrooms: 4, bathrooms: 3, area_m2: 180, neighborhood: 'Envigado', city: 'Medellín', images: ['https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&q=80'] },
-      { title: 'Loft Industrial', price: 950000, bedrooms: 1, bathrooms: 1, area_m2: 45, neighborhood: 'Laureles', city: 'Medellín', images: ['https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&q=80'] },
-      { title: 'Penthouse Vista Panorámica', price: 4500000, bedrooms: 3, bathrooms: 3, area_m2: 150, neighborhood: 'Manila', city: 'Medellín', images: ['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=400&q=80'] },
-      { title: 'Estudio Amoblado', price: 800000, bedrooms: 1, bathrooms: 1, area_m2: 35, neighborhood: 'Sabaneta', city: 'Medellín', images: ['https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&q=80'] },
-    ];
+  // Fetch real properties from database and position them around user location within 200m
+  const { data: properties } = useQuery({
+    queryKey: ['navigation-properties', userLocation],
+    queryFn: async () => {
+      if (!userLocation) return [];
 
-    return examples.map((example, index) => {
-      // Generate positions within 200m radius (0.0018 degrees ≈ 200m)
-      const angle = (index / examples.length) * 2 * Math.PI;
-      const distance = 0.0005 + Math.random() * 0.0013; // 50-180m radius
-      const lat = userLocation[0] + distance * Math.cos(angle);
-      const lng = userLocation[1] + distance * Math.sin(angle);
+      const { data, error } = await supabase
+        .from('properties')
+        .select('*')
+        .eq('status', 'available')
+        .limit(5);
 
-      return {
-        id: `example-${index}`,
-        ...example,
-        latitude: lat,
-        longitude: lng,
-        currency: 'COP',
-        status: 'available',
-      };
-    });
-  };
+      if (error) {
+        console.error('Error fetching navigation properties:', error);
+        return [];
+      }
 
-  const properties = userLocation ? generateExampleProperties(userLocation) : [];
+      // Position real properties within 200m radius around user
+      return (data || []).map((property, index) => {
+        const angle = (index / Math.max(data.length, 1)) * 2 * Math.PI;
+        const distance = 0.0005 + Math.random() * 0.0013; // 50-180m radius
+        const lat = userLocation[0] + distance * Math.cos(angle);
+        const lng = userLocation[1] + distance * Math.sin(angle);
+
+        return {
+          ...property,
+          latitude: lat,
+          longitude: lng,
+        };
+      });
+    },
+    enabled: !!userLocation,
+  });
 
   // Initialize map
   useEffect(() => {
