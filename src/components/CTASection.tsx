@@ -54,19 +54,19 @@ const CTASection = () => {
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-6 justify-center">
             <Button 
               size="xl" 
               variant="secondary"
-              className="bg-white text-primary hover:bg-white/90"
+              className="bg-white text-primary hover:bg-white/95 shadow-[0_0_30px_rgba(255,255,255,0.5)] hover:shadow-[0_0_40px_rgba(255,255,255,0.7)] transition-all duration-300 font-semibold"
               onClick={handleDemo}
             >
               Solicitar Demo
             </Button>
             <Button 
               size="xl" 
-              variant="outline"
-              className="border-white/50 text-white hover:bg-white/10"
+              variant="secondary"
+              className="bg-white text-primary hover:bg-white/95 shadow-[0_0_30px_rgba(255,255,255,0.5)] hover:shadow-[0_0_40px_rgba(255,255,255,0.7)] transition-all duration-300 font-semibold"
               onClick={handlePlans}
             >
               Ver Planes
