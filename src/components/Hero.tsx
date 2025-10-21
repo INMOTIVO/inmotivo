@@ -110,6 +110,8 @@ const Hero = () => {
   const handleSearch = () => {
     if (searchQuery.trim()) {
       setShowOptions(true);
+      // Scroll to top to show search options
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       toast.error("Por favor describe qué buscas");
     }
