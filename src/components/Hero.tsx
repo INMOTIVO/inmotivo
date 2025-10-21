@@ -165,7 +165,7 @@ const Hero = () => {
 
   return (
     <>
-      <section className="relative min-h-[70vh] md:min-h-[90vh] flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[60vh] md:min-h-[90vh] flex items-center justify-center overflow-hidden">
         {/* Background image with gradient overlay */}
         <div 
           className="absolute inset-0 bg-cover bg-center"
