@@ -4,7 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Bed, Bath, Maximize, ArrowLeft } from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { MapPin, Bed, Bath, Maximize, ArrowLeft, X } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ContactDialog from "@/components/ContactDialog";
@@ -13,6 +15,7 @@ const PropertyDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [showContactDialog, setShowContactDialog] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
 
   const { data: property, isLoading } = useQuery({
     queryKey: ["property", id],
@@ -106,7 +109,8 @@ const PropertyDetail = () => {
                   <img
                     src={images[0]}
                     alt={property.title}
-                    className="w-full h-96 object-cover rounded-2xl"
+                    className="w-full h-96 object-cover rounded-2xl cursor-pointer hover:opacity-90 transition-opacity"
+                    onClick={() => setSelectedImageIndex(0)}
                   />
                   <div className="grid grid-cols-3 gap-3">
                     {images.slice(1, 7).map((image, index) => (
@@ -114,7 +118,8 @@ const PropertyDetail = () => {
                         key={index}
                         src={image}
                         alt={`${property.title} - ${index + 2}`}
-                        className="w-full h-32 object-cover rounded-lg"
+                        className="w-full h-32 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                        onClick={() => setSelectedImageIndex(index + 1)}
                       />
                     ))}
                   </div>
@@ -206,6 +211,41 @@ const PropertyDetail = () => {
           owner: property.owner,
         }}
       />
+
+      <Dialog open={selectedImageIndex !== null} onOpenChange={() => setSelectedImageIndex(null)}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-black/95">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute right-4 top-4 z-50 text-white hover:bg-white/20"
+            onClick={() => setSelectedImageIndex(null)}
+          >
+            <X className="h-6 w-6" />
+          </Button>
+          
+          <Carousel
+            opts={{
+              startIndex: selectedImageIndex ?? 0,
+              loop: true,
+            }}
+            className="w-full h-full flex items-center justify-center"
+          >
+            <CarouselContent className="h-[90vh]">
+              {images.map((image, index) => (
+                <CarouselItem key={index} className="flex items-center justify-center">
+                  <img
+                    src={image}
+                    alt={`${property.title} - ${index + 1}`}
+                    className="max-h-[90vh] max-w-full object-contain"
+                  />
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="left-4 bg-white/20 border-0 text-white hover:bg-white/30" />
+            <CarouselNext className="right-4 bg-white/20 border-0 text-white hover:bg-white/30" />
+          </Carousel>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
