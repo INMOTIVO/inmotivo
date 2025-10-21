@@ -21,26 +21,26 @@ const SearchOptions = ({ searchQuery, municipality, sector }: SearchOptionsProps
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-4 md:space-y-6 animate-fade-in px-4">
-      <div className="text-center space-y-2">
-        <h2 className="text-xl md:text-2xl lg:text-3xl font-bold">¿Cómo quieres buscar?</h2>
-        <p className="text-sm md:text-base text-muted-foreground">
+    <div className="w-full max-w-4xl mx-auto space-y-3 md:space-y-6 animate-fade-in px-4 py-4">
+      <div className="text-center space-y-1">
+        <h2 className="text-lg md:text-2xl lg:text-3xl font-bold">¿Cómo quieres buscar?</h2>
+        <p className="text-xs md:text-base text-muted-foreground">
           Ubicación actual: {municipality}{sector && `, ${sector}`}
         </p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-3 md:gap-6">
         {/* Navegación GPS */}
-        <Card className="p-4 md:p-8 hover:shadow-xl transition-all duration-300 hover:border-primary/50 cursor-pointer group border-primary/30">
-          <div className="space-y-3 md:space-y-6">
+        <Card className="p-3 md:p-8 hover:shadow-xl transition-all duration-300 hover:border-primary/50 cursor-pointer group border-primary/30">
+          <div className="space-y-2 md:space-y-6">
             <div className="inline-flex p-2 md:p-4 rounded-2xl bg-accent/10 text-accent group-hover:scale-110 transition-transform duration-300">
               <Navigation className="h-6 w-6 md:h-10 md:w-10" />
             </div>
             
-            <div className="space-y-2 md:space-y-3">
-              <h3 className="text-lg md:text-2xl font-bold">Navegar con GPS</h3>
-              <p className="text-xs md:text-base text-muted-foreground line-clamp-2 md:line-clamp-none">
-                Descubre propiedades mientras te desplazas. Se actualizan en tiempo real según tu ubicación.
+            <div className="space-y-1 md:space-y-3">
+              <h3 className="text-base md:text-2xl font-bold">Navegar con GPS</h3>
+              <p className="text-[11px] md:text-base text-muted-foreground line-clamp-2">
+                Descubre propiedades mientras te desplazas en tiempo real.
               </p>
             </div>
 
@@ -72,16 +72,16 @@ const SearchOptions = ({ searchQuery, municipality, sector }: SearchOptionsProps
         </Card>
 
         {/* Vista Fija */}
-        <Card className="p-4 md:p-8 hover:shadow-xl transition-all duration-300 hover:border-primary/50 cursor-pointer group">
-          <div className="space-y-3 md:space-y-6">
+        <Card className="p-3 md:p-8 hover:shadow-xl transition-all duration-300 hover:border-primary/50 cursor-pointer group">
+          <div className="space-y-2 md:space-y-6">
             <div className="inline-flex p-2 md:p-4 rounded-2xl bg-primary/10 text-primary group-hover:scale-110 transition-transform duration-300">
               <Map className="h-6 w-6 md:h-10 md:w-10" />
             </div>
             
-            <div className="space-y-2 md:space-y-3">
-              <h3 className="text-lg md:text-2xl font-bold">Ver propiedades cerca</h3>
-              <p className="text-xs md:text-base text-muted-foreground line-clamp-2 md:line-clamp-none">
-                Explora un catálogo de propiedades disponibles en tu zona que coincidan con lo que buscas.
+            <div className="space-y-1 md:space-y-3">
+              <h3 className="text-base md:text-2xl font-bold">Ver propiedades cerca</h3>
+              <p className="text-[11px] md:text-base text-muted-foreground line-clamp-2">
+                Explora propiedades disponibles en tu zona.
               </p>
             </div>
 
@@ -112,7 +112,7 @@ const SearchOptions = ({ searchQuery, municipality, sector }: SearchOptionsProps
         </Card>
       </div>
 
-      <p className="text-center text-xs md:text-sm text-muted-foreground">
+      <p className="text-center text-[10px] md:text-sm text-muted-foreground">
         Tu búsqueda: "{searchQuery}"
       </p>
     </div>
