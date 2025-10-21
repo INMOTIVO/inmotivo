@@ -8,7 +8,6 @@ import { Phone, Mail, Building2, User } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { z } from 'zod';
-
 interface ContactDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -26,31 +25,30 @@ interface ContactDialogProps {
     } | null;
   };
 }
-
 const contactSchema = z.object({
   name: z.string().trim().min(1, 'El nombre es requerido').max(100, 'Máximo 100 caracteres'),
   email: z.string().trim().email('Email inválido').max(255, 'Máximo 255 caracteres'),
   phone: z.string().trim().max(20, 'Máximo 20 caracteres').optional(),
-  message: z.string().trim().min(1, 'El mensaje es requerido').max(1000, 'Máximo 1000 caracteres'),
+  message: z.string().trim().min(1, 'El mensaje es requerido').max(1000, 'Máximo 1000 caracteres')
 });
-
 type ContactFormData = z.infer<typeof contactSchema>;
-
-const ContactDialog = ({ open, onOpenChange, property }: ContactDialogProps) => {
+const ContactDialog = ({
+  open,
+  onOpenChange,
+  property
+}: ContactDialogProps) => {
   const [formData, setFormData] = useState<ContactFormData>({
     name: '',
     email: '',
     phone: '',
-    message: '',
+    message: ''
   });
   const [errors, setErrors] = useState<Partial<Record<keyof ContactFormData, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-
   const isAgency = !!property.agency;
   const contactName = isAgency ? property.agency?.name : property.owner?.full_name || 'Propietario';
   const contactPhone = isAgency ? property.agency?.phone : property.owner?.phone;
   const contactEmail = property.agency?.email;
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
@@ -59,7 +57,7 @@ const ContactDialog = ({ open, onOpenChange, property }: ContactDialogProps) => 
     const validation = contactSchema.safeParse(formData);
     if (!validation.success) {
       const fieldErrors: Partial<Record<keyof ContactFormData, string>> = {};
-      validation.error.errors.forEach((error) => {
+      validation.error.errors.forEach(error => {
         if (error.path[0]) {
           fieldErrors[error.path[0] as keyof ContactFormData] = error.message;
         }
@@ -67,22 +65,25 @@ const ContactDialog = ({ open, onOpenChange, property }: ContactDialogProps) => 
       setErrors(fieldErrors);
       return;
     }
-
     setIsSubmitting(true);
-
     try {
-      const { error } = await supabase.from('contact_messages').insert({
+      const {
+        error
+      } = await supabase.from('contact_messages').insert({
         property_id: property.id,
         sender_name: validation.data.name,
         sender_email: validation.data.email,
         sender_phone: validation.data.phone || null,
-        message: validation.data.message,
+        message: validation.data.message
       });
-
       if (error) throw error;
-
       toast.success('Mensaje enviado correctamente');
-      setFormData({ name: '', email: '', phone: '', message: '' });
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        message: ''
+      });
       onOpenChange(false);
     } catch (error) {
       console.error('Error al enviar mensaje:', error);
@@ -91,17 +92,12 @@ const ContactDialog = ({ open, onOpenChange, property }: ContactDialogProps) => 
       setIsSubmitting(false);
     }
   };
-
   const handleWhatsApp = () => {
     if (!contactPhone) return;
-    const message = encodeURIComponent(
-      `Hola, estoy interesado en la propiedad: ${property.title}`
-    );
+    const message = encodeURIComponent(`Hola, estoy interesado en la propiedad: ${property.title}`);
     window.open(`https://wa.me/${contactPhone.replace(/\D/g, '')}?text=${message}`, '_blank');
   };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+  return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>Contactar</DialogTitle>
@@ -109,19 +105,15 @@ const ContactDialog = ({ open, onOpenChange, property }: ContactDialogProps) => 
 
         <div className="space-y-6">
           {/* Información del publicador */}
-          <div className="bg-muted/50 p-4 rounded-lg space-y-3">
+          <div className="p-4 rounded-lg space-y-3 bg-slate-200">
             <div className="flex items-center gap-2 text-sm font-medium">
-              {isAgency ? (
-                <>
+              {isAgency ? <>
                   <Building2 className="h-4 w-4 text-primary" />
                   <span>Este inmueble fue publicado por una inmobiliaria</span>
-                </>
-              ) : (
-                <>
+                </> : <>
                   <User className="h-4 w-4 text-primary" />
                   <span>Este inmueble fue publicado por un propietario directo</span>
-                </>
-              )}
+                </>}
             </div>
 
             <div className="space-y-2">
@@ -138,16 +130,10 @@ const ContactDialog = ({ open, onOpenChange, property }: ContactDialogProps) => 
               </div>
             </div>
 
-            {contactPhone && (
-              <Button
-                onClick={handleWhatsApp}
-                className="w-full bg-[#25D366] hover:bg-[#20BA5A]"
-                size="sm"
-              >
+            {contactPhone && <Button onClick={handleWhatsApp} className="w-full bg-[#25D366] hover:bg-[#20BA5A]" size="sm">
                 <Phone className="mr-2 h-4 w-4" />
                 Contactar por WhatsApp
-              </Button>
-            )}
+              </Button>}
           </div>
 
           {/* Separador con texto */}
@@ -161,61 +147,40 @@ const ContactDialog = ({ open, onOpenChange, property }: ContactDialogProps) => 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <Label htmlFor="name">Nombre completo *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Tu nombre"
-                maxLength={100}
-              />
-              {errors.name && (
-                <p className="text-sm text-destructive mt-1">{errors.name}</p>
-              )}
+              <Input id="name" value={formData.name} onChange={e => setFormData({
+              ...formData,
+              name: e.target.value
+            })} placeholder="Tu nombre" maxLength={100} />
+              {errors.name && <p className="text-sm text-destructive mt-1">{errors.name}</p>}
             </div>
 
             <div>
               <Label htmlFor="email">Email *</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="tu@email.com"
-                maxLength={255}
-              />
-              {errors.email && (
-                <p className="text-sm text-destructive mt-1">{errors.email}</p>
-              )}
+              <Input id="email" type="email" value={formData.email} onChange={e => setFormData({
+              ...formData,
+              email: e.target.value
+            })} placeholder="tu@email.com" maxLength={255} />
+              {errors.email && <p className="text-sm text-destructive mt-1">{errors.email}</p>}
             </div>
 
             <div>
               <Label htmlFor="phone">Teléfono (opcional)</Label>
-              <Input
-                id="phone"
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="Tu teléfono"
-                maxLength={20}
-              />
+              <Input id="phone" type="tel" value={formData.phone} onChange={e => setFormData({
+              ...formData,
+              phone: e.target.value
+            })} placeholder="Tu teléfono" maxLength={20} />
             </div>
 
             <div>
               <Label htmlFor="message">Mensaje *</Label>
-              <Textarea
-                id="message"
-                value={formData.message}
-                onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                placeholder="Escribe tu mensaje aquí..."
-                rows={4}
-                maxLength={1000}
-              />
+              <Textarea id="message" value={formData.message} onChange={e => setFormData({
+              ...formData,
+              message: e.target.value
+            })} placeholder="Escribe tu mensaje aquí..." rows={4} maxLength={1000} />
               <p className="text-xs text-muted-foreground mt-1">
                 {formData.message.length}/1000 caracteres
               </p>
-              {errors.message && (
-                <p className="text-sm text-destructive mt-1">{errors.message}</p>
-              )}
+              {errors.message && <p className="text-sm text-destructive mt-1">{errors.message}</p>}
             </div>
 
             <Button type="submit" className="w-full" disabled={isSubmitting}>
@@ -224,8 +189,6 @@ const ContactDialog = ({ open, onOpenChange, property }: ContactDialogProps) => 
           </form>
         </div>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 };
-
 export default ContactDialog;
