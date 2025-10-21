@@ -1,12 +1,21 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, LogOut } from "lucide-react";
+import { Menu, LogOut, Home } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 const Navbar = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleSignOut = async () => {
     const { error } = await signOut();
@@ -14,8 +23,14 @@ const Navbar = () => {
       toast.error("Error al cerrar sesión");
     } else {
       toast.success("Sesión cerrada exitosamente");
+      setIsOpen(false);
       navigate("/");
     }
+  };
+
+  const handleNavigation = (path: string) => {
+    setIsOpen(false);
+    navigate(path);
   };
 
   return (
@@ -72,10 +87,56 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Mobile menu button */}
-          <button className="md:hidden p-2">
-            <Menu className="h-6 w-6" />
-          </button>
+          {/* Mobile menu */}
+          <Sheet open={isOpen} onOpenChange={setIsOpen}>
+            <SheetTrigger asChild>
+              <button className="md:hidden p-2">
+                <Menu className="h-6 w-6" />
+              </button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[300px]">
+              <SheetHeader>
+                <SheetTitle className="text-left">Menú</SheetTitle>
+              </SheetHeader>
+              <div className="flex flex-col gap-4 mt-6">
+                <Button
+                  variant="ghost"
+                  className="justify-start"
+                  onClick={() => handleNavigation("/")}
+                >
+                  <Home className="h-4 w-4 mr-2" />
+                  Home
+                </Button>
+                {user ? (
+                  <>
+                    <Button
+                      variant="ghost"
+                      className="justify-start"
+                      onClick={() => handleNavigation("/dashboard")}
+                    >
+                      Mi Dashboard
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="justify-start text-destructive hover:text-destructive"
+                      onClick={handleSignOut}
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Cerrar Sesión
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    className="justify-start"
+                    onClick={() => handleNavigation("/auth")}
+                  >
+                    Iniciar Sesión
+                  </Button>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </nav>
