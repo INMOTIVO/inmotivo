@@ -37,6 +37,7 @@ const CreateProperty = () => {
   const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [uploadingImages, setUploadingImages] = useState(false);
+  const [loadingCoordinates, setLoadingCoordinates] = useState(false);
   const [images, setImages] = useState<string[]>([]);
   const [errors, setErrors] = useState<Partial<Record<keyof PropertyFormData, string>>>({});
 
@@ -236,34 +237,66 @@ const CreateProperty = () => {
   };
 
   const getCoordinatesFromAddress = async () => {
-    const fullAddress = `${formData.address}, ${formData.neighborhood}, ${formData.city}, Colombia`;
+    // Validar que los campos necesarios estén completos
+    if (!formData.address || !formData.city) {
+      toast.error('Por favor completa la dirección y ciudad primero');
+      return;
+    }
+
+    setLoadingCoordinates(true);
+    
+    // Construir dirección completa
+    const addressParts = [
+      formData.address,
+      formData.neighborhood,
+      formData.city,
+      'Colombia'
+    ].filter(Boolean);
+    
+    const fullAddress = addressParts.join(', ');
     
     try {
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
           fullAddress
-        )}&limit=1`,
+        )}&limit=1&countrycodes=co`,
         {
           headers: {
             'Accept-Language': 'es',
+            'User-Agent': 'INMOTIVO-App/1.0'
           },
         }
       );
 
+      if (!response.ok) {
+        throw new Error('Error en la respuesta del servidor');
+      }
+
       const data = await response.json();
-      if (data && data[0]) {
-        setFormData({
-          ...formData,
-          latitude: parseFloat(data[0].lat),
-          longitude: parseFloat(data[0].lon),
-        });
-        toast.success('Coordenadas obtenidas');
+      
+      if (data && data.length > 0 && data[0].lat && data[0].lon) {
+        const lat = parseFloat(data[0].lat);
+        const lon = parseFloat(data[0].lon);
+        
+        // Validar que las coordenadas sean válidas para Colombia
+        if (lat >= -4.2 && lat <= 13.4 && lon >= -81.7 && lon <= -66.9) {
+          setFormData({
+            ...formData,
+            latitude: lat,
+            longitude: lon,
+          });
+          toast.success(`Coordenadas obtenidas: ${lat.toFixed(6)}, ${lon.toFixed(6)}`);
+        } else {
+          toast.error('Las coordenadas obtenidas están fuera de Colombia. Verifica la dirección.');
+        }
       } else {
-        toast.error('No se encontró la dirección');
+        toast.error('No se encontraron coordenadas para esta dirección. Verifica que sea correcta.');
       }
     } catch (error) {
       console.error('Error getting coordinates:', error);
-      toast.error('Error al obtener coordenadas');
+      toast.error('Error al obtener coordenadas. Intenta nuevamente.');
+    } finally {
+      setLoadingCoordinates(false);
     }
   };
 
@@ -498,10 +531,25 @@ const CreateProperty = () => {
                 variant="outline"
                 onClick={getCoordinatesFromAddress}
                 className="w-full"
+                disabled={loadingCoordinates || !formData.address || !formData.city}
               >
-                <MapPin className="mr-2 h-4 w-4" />
-                Obtener coordenadas desde dirección
+                {loadingCoordinates ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Obteniendo coordenadas...
+                  </>
+                ) : (
+                  <>
+                    <MapPin className="mr-2 h-4 w-4" />
+                    Obtener coordenadas desde dirección
+                  </>
+                )}
               </Button>
+              {(!formData.address || !formData.city) && (
+                <p className="text-xs text-muted-foreground">
+                  Completa la dirección y ciudad para obtener las coordenadas
+                </p>
+              )}
             </CardContent>
           </Card>
 
