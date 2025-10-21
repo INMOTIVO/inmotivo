@@ -117,9 +117,14 @@ const Auth = () => {
         <Card>
           <CardHeader className="text-center">
             <div className="flex justify-center mb-4">
-              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center">
-                <span className="text-white font-bold text-2xl">I</span>
-              </div>
+              <svg width="60" height="60" viewBox="0 0 180 180" className="transition-transform">
+                {/* Isotipo M (planta) - Logo oficial INMOTIVO */}
+                <g transform="translate(20,25)" strokeWidth="8" fill="none">
+                  <rect x="0" y="0" width="48" height="90" rx="6" className="stroke-primary"/>
+                  <rect x="62" y="0" width="48" height="90" rx="6" className="stroke-primary"/>
+                  <rect x="31" y="25" width="48" height="65" rx="6" className="stroke-accent"/>
+                </g>
+              </svg>
             </div>
             <CardTitle className="text-2xl">Bienvenido a INMOTIVO</CardTitle>
             <CardDescription>
