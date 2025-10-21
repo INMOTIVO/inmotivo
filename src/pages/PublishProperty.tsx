@@ -297,15 +297,15 @@ const PublishProperty = () => {
             <Button 
               size="lg" 
               variant="secondary"
-              className="text-lg px-8 py-6"
+              className="text-lg px-8 py-6 bg-white text-primary hover:bg-white/95 shadow-[0_0_30px_rgba(255,255,255,0.5)] hover:shadow-[0_0_40px_rgba(255,255,255,0.7)] transition-all duration-300 font-semibold"
               onClick={handlePublishClick}
             >
               Publicar Gratis
             </Button>
             <Button 
               size="lg" 
-              variant="outline"
-              className="text-lg px-8 py-6 border-white/50 text-white hover:bg-white/10"
+              variant="secondary"
+              className="text-lg px-8 py-6 bg-white text-primary hover:bg-white/95 shadow-[0_0_30px_rgba(255,255,255,0.5)] hover:shadow-[0_0_40px_rgba(255,255,255,0.7)] transition-all duration-300 font-semibold"
             >
               <Phone className="mr-2 h-5 w-5" />
               Llamar ahora
