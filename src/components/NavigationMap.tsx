@@ -30,7 +30,7 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
   const directionArrow = useRef<L.Marker | null>(null);
   const [heading, setHeading] = useState<number>(0);
 
-  // Generate example properties around user location
+  // Generate example properties around user location within 200m
   const generateExampleProperties = (userLocation: [number, number]) => {
     const examples = [
       { title: 'Apartamento Moderno Centro', price: 1200000, bedrooms: 2, bathrooms: 2, area_m2: 65, neighborhood: 'El Poblado', city: 'Medellín', images: ['https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&q=80'] },
@@ -41,9 +41,9 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
     ];
 
     return examples.map((example, index) => {
-      // Generate positions in a 2km radius around user
+      // Generate positions within 200m radius (0.0018 degrees ≈ 200m)
       const angle = (index / examples.length) * 2 * Math.PI;
-      const distance = 0.01 + Math.random() * 0.01; // ~1-2km radius
+      const distance = 0.0005 + Math.random() * 0.0013; // 50-180m radius
       const lat = userLocation[0] + distance * Math.cos(angle);
       const lng = userLocation[1] + distance * Math.sin(angle);
 
