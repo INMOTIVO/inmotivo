@@ -23,7 +23,7 @@ const AdCreativesPreview = () => {
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto space-y-16">
         <div className="text-center space-y-4">
-          <h1 className="text-4xl font-bold">Piezas Publicitarias ARRENDO</h1>
+          <h1 className="text-4xl font-bold">Piezas Publicitarias INMOTIVO</h1>
           <p className="text-xl text-muted-foreground">
             Previsualización de creatividades para campañas de marketing
           </p>
@@ -39,7 +39,7 @@ const AdCreativesPreview = () => {
               <h2 className="text-3xl font-bold">Posts Cuadrados - Inquilinos</h2>
               <p className="text-muted-foreground">1080x1080px - Instagram Feed, Facebook Post</p>
             </div>
-            <Button onClick={() => downloadAd('social-tenant', 'arrendo-post-inquilinos.png')}>
+            <Button onClick={() => downloadAd('social-tenant', 'inmotivo-post-inquilinos.png')}>
               <Download className="mr-2 h-4 w-4" />
               Descargar
             </Button>
@@ -58,7 +58,7 @@ const AdCreativesPreview = () => {
               <h2 className="text-3xl font-bold">Posts Cuadrados - Propietarios</h2>
               <p className="text-muted-foreground">1080x1080px - Instagram Feed, Facebook Post, LinkedIn</p>
             </div>
-            <Button onClick={() => downloadAd('social-owner', 'arrendo-post-propietarios.png')}>
+            <Button onClick={() => downloadAd('social-owner', 'inmotivo-post-propietarios.png')}>
               <Download className="mr-2 h-4 w-4" />
               Descargar
             </Button>
@@ -77,7 +77,7 @@ const AdCreativesPreview = () => {
               <h2 className="text-3xl font-bold">Stories - Inquilinos</h2>
               <p className="text-muted-foreground">1080x1920px - Instagram Stories, TikTok</p>
             </div>
-            <Button onClick={() => downloadAd('story-tenant', 'arrendo-story-inquilinos.png')}>
+            <Button onClick={() => downloadAd('story-tenant', 'inmotivo-story-inquilinos.png')}>
               <Download className="mr-2 h-4 w-4" />
               Descargar
             </Button>
@@ -96,7 +96,7 @@ const AdCreativesPreview = () => {
               <h2 className="text-3xl font-bold">Stories - Propietarios</h2>
               <p className="text-muted-foreground">1080x1920px - Instagram Stories, WhatsApp Status</p>
             </div>
-            <Button onClick={() => downloadAd('story-owner', 'arrendo-story-propietarios.png')}>
+            <Button onClick={() => downloadAd('story-owner', 'inmotivo-story-propietarios.png')}>
               <Download className="mr-2 h-4 w-4" />
               Descargar
             </Button>
@@ -117,7 +117,7 @@ const AdCreativesPreview = () => {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-semibold">Banner Inquilinos</h3>
-                <Button size="sm" onClick={() => downloadAd('banner-tenant', 'arrendo-banner-inquilinos.png')}>
+                <Button size="sm" onClick={() => downloadAd('banner-tenant', 'inmotivo-banner-inquilinos.png')}>
                   <Download className="mr-2 h-4 w-4" />
                   Descargar
                 </Button>
@@ -130,7 +130,7 @@ const AdCreativesPreview = () => {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-semibold">Banner Propietarios</h3>
-                <Button size="sm" onClick={() => downloadAd('banner-owner', 'arrendo-banner-propietarios.png')}>
+                <Button size="sm" onClick={() => downloadAd('banner-owner', 'inmotivo-banner-propietarios.png')}>
                   <Download className="mr-2 h-4 w-4" />
                   Descargar
                 </Button>

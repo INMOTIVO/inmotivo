@@ -164,7 +164,7 @@ const PublishProperty = () => {
       <section className="py-20 px-4 bg-card">
         <div className="container mx-auto max-w-6xl">
           <h2 className="text-4xl md:text-5xl font-bold text-center mb-4">
-            ¿Por qué publicar en ARRENDO?
+            ¿Por qué publicar en INMOTIVO?
           </h2>
           <p className="text-xl text-center text-muted-foreground mb-16">
             La plataforma inteligente que conecta tus propiedades con los inquilinos ideales
@@ -291,7 +291,7 @@ const PublishProperty = () => {
             Comienza a publicar hoy mismo
           </h2>
           <p className="text-xl md:text-2xl opacity-90">
-            Únete a cientos de propietarios que ya están generando leads con ARRENDO
+            Únete a cientos de propietarios que ya están generando leads con INMOTIVO
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 

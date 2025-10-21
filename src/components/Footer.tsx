@@ -9,9 +9,9 @@ const Footer = () => {
           <div className="space-y-4">
             <div className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary to-blue-600 flex items-center justify-center">
-              <span className="text-white font-bold text-xl">A</span>
+              <span className="text-white font-bold text-xl">I</span>
             </div>
-            <span className="text-2xl font-bold">ARRENDO</span>
+            <span className="text-2xl font-bold">INMOTIVO</span>
             </div>
             <p className="text-background/70">
               La plataforma inteligente de arriendos con IA y geolocalización
@@ -50,8 +50,8 @@ const Footer = () => {
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="h-4 w-4" />
-                <a href="mailto:info@arrendo.co" className="hover:text-primary transition-colors">
-                  info@arrendo.co
+                <a href="mailto:info@inmotivo.co" className="hover:text-primary transition-colors">
+                  info@inmotivo.co
                 </a>
               </li>
               <li className="flex items-center gap-2">
@@ -65,7 +65,7 @@ const Footer = () => {
         </div>
 
         <div className="pt-8 border-t border-background/20 text-center text-background/60">
-          <p>&copy; 2025 ARRENDO. Todos los derechos reservados.</p>
+          <p>&copy; 2025 INMOTIVO. Todos los derechos reservados.</p>
         </div>
       </div>
     </footer>
