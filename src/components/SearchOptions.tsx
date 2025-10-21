@@ -93,7 +93,7 @@ const SearchOptions = ({
               </li>
             </ul>
 
-            <Button onClick={handleFixedView} size="default" className="w-full px-0 py-0 mx-0 my-[50px]">
+            <Button onClick={handleFixedView} variant="default" size="default" className="w-full">
               <Map className="mr-2 h-4 w-4 md:h-5 md:w-5" />
               Ver Propiedades
             </Button>
