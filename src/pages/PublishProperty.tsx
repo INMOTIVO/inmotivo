@@ -167,7 +167,7 @@ const PublishProperty = () => {
             ¿Por qué publicar en INMOTIVO?
           </h2>
           <p className="text-xl text-center text-muted-foreground mb-16">
-            La plataforma inteligente que conecta tus propiedades con los inquilinos ideales
+            La plataforma inteligente que conecta personas con su lugar ideal
           </p>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
