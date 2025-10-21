@@ -193,37 +193,38 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
     markers.current.forEach((marker) => marker.remove());
     markers.current = [];
 
-    const createPropertyIcon = (type: string) => {
-      const colors: Record<string, string> = {
-        apartment: '#10b981',
-        house: '#f59e0b',
-        commercial: '#8b5cf6',
-        warehouse: '#ef4444',
-        studio: '#06b6d4',
-      };
-      const color = colors[type] || '#6b7280';
+    const createPropertyIcon = (price: number) => {
+      const priceFormatted = new Intl.NumberFormat('es-CO', {
+        minimumFractionDigits: 0,
+      }).format(price);
 
       return L.divIcon({
-        html: `<div style="
-          background: ${color}; 
-          width: 24px; 
-          height: 24px; 
-          border-radius: 4px; 
-          border: 2px solid white; 
-          box-shadow: 0 2px 8px rgba(0,0,0,0.3); 
-          display: flex; 
-          align-items: center; 
-          justify-content: center;
-          position: relative;
-        ">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="2">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-            <polyline points="9 22 9 12 15 12 15 22"></polyline>
-          </svg>
-        </div>`,
+        html: `
+          <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+            <!-- Price Label -->
+            <div style="
+              background: hsl(220 13% 13%);
+              color: white;
+              padding: 6px 12px;
+              border-radius: 8px;
+              font-size: 14px;
+              font-weight: 600;
+              white-space: nowrap;
+              box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            ">
+              ${priceFormatted} $
+            </div>
+            <!-- Pin Marker -->
+            <svg width="32" height="40" viewBox="0 0 32 40" style="filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));">
+              <path d="M16 0C7.163 0 0 7.163 0 16c0 12 16 24 16 24s16-12 16-24C32 7.163 24.837 0 16 0z" 
+                    fill="hsl(0 84% 60%)" />
+              <circle cx="16" cy="16" r="6" fill="white" />
+            </svg>
+          </div>
+        `,
         className: '',
-        iconSize: [24, 24],
-        iconAnchor: [12, 24],
+        iconSize: [120, 80],
+        iconAnchor: [60, 80],
       });
     };
 
@@ -254,10 +255,13 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
       return distance <= 2;
     });
 
-    nearbyProperties.forEach((property) => {
+    // Limit to exactly 5 properties
+    const limitedProperties = nearbyProperties.slice(0, 5);
+
+    limitedProperties.forEach((property) => {
       if (!property.latitude || !property.longitude) return;
 
-      const icon = createPropertyIcon(property.property_type);
+      const icon = createPropertyIcon(property.price);
       const marker = L.marker([property.latitude, property.longitude], { icon });
 
       const priceFormatted = new Intl.NumberFormat('es-CO', {
@@ -269,10 +273,10 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
       marker.bindPopup(`
         <div style="min-width: 200px;">
           <h3 style="font-weight: bold; margin-bottom: 8px;">${property.title}</h3>
-          <p style="color: #059669; font-weight: bold; margin-bottom: 8px;">${priceFormatted}</p>
+          <p style="color: hsl(142 76% 36%); font-weight: bold; margin-bottom: 8px;">${priceFormatted}</p>
           <p style="margin-bottom: 8px;">${property.neighborhood}, ${property.city}</p>
           <p style="margin-bottom: 8px;">${property.bedrooms} hab • ${property.bathrooms} baños • ${property.area_m2} m²</p>
-          <a href="/property/${property.id}" style="color: #3b82f6; text-decoration: underline;">Ver detalles</a>
+          <a href="/property/${property.id}" style="color: hsl(142 76% 36%); text-decoration: underline;">Ver detalles</a>
         </div>
       `);
 
@@ -347,7 +351,7 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
                 </div>
                 <div className="flex items-center justify-between text-[9px] md:text-xs">
                   <span className="text-muted-foreground">Cercanas</span>
-                  <span className="font-semibold text-primary">{properties?.length || 0}</span>
+                  <span className="font-semibold text-primary">5</span>
                 </div>
               </div>
             </div>

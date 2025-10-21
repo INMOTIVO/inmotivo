@@ -4,7 +4,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import NavigationMap from '@/components/NavigationMap';
 import NavigationControls from '@/components/NavigationControls';
-import NearbyProperties from '@/components/NearbyProperties';
+
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -125,7 +125,6 @@ const Navigate = () => {
               onStopNavigation={handleStopNavigation}
               searchCriteria={searchCriteria}
             />
-            <NearbyProperties filters={filters} searchCriteria={searchCriteria} />
           </div>
         )}
       </main>
