@@ -1,6 +1,6 @@
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
-import Features from "@/components/Features";
+import HowItWorksVideo from "@/components/HowItWorksVideo";
 import PropertiesGrid from "@/components/PropertiesGrid";
 import CTASection from "@/components/CTASection";
 import Footer from "@/components/Footer";
@@ -11,7 +11,7 @@ const Index = () => {
       <Navbar />
       <main className="pt-16">
         <Hero />
-        <Features />
+        <HowItWorksVideo />
         <PropertiesGrid />
         <CTASection />
       </main>
