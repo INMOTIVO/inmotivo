@@ -33,16 +33,16 @@ const PropertyCard = ({ id, title, price, location, beds, baths, area, imageUrl,
         </Badge>
       </div>
       
-      <div className="p-5 space-y-4">
-        <div>
-          <h3 className="font-semibold text-lg mb-2 line-clamp-1">{title}</h3>
-          <div className="flex items-center text-muted-foreground text-sm mb-3">
-            <MapPin className="h-4 w-4 mr-1" />
+      <div className="p-5 space-y-4 flex flex-col">
+        <div className="min-h-[72px] md:min-h-0">
+          <h3 className="font-semibold text-lg mb-2 line-clamp-2">{title}</h3>
+          <div className="flex items-center text-muted-foreground text-sm">
+            <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
             <span className="line-clamp-1">{location}</span>
           </div>
         </div>
 
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <div className="flex items-center justify-between text-sm text-muted-foreground py-2">
           <div className="flex items-center gap-1">
             <Bed className="h-4 w-4" />
             <span>{beds}</span>
@@ -57,7 +57,7 @@ const PropertyCard = ({ id, title, price, location, beds, baths, area, imageUrl,
           </div>
         </div>
 
-        <div className="pt-4 border-t">
+        <div className="pt-4 border-t mt-auto">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-2xl font-bold text-primary">{price}</p>

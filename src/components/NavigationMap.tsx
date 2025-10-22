@@ -283,23 +283,10 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
     };
   }, [searchRadius]);
 
-  // Update radius circle and map zoom when searchRadius changes
+  // Update radius circle when searchRadius changes - No auto zoom to prevent erratic behavior
   useEffect(() => {
     if (radiusCircle.current && userLocation) {
       radiusCircle.current.setRadius(searchRadius);
-    }
-    
-    // Adjust map zoom to fit the search radius
-    if (map.current && userLocation) {
-      // Calculate appropriate zoom level based on radius (200m-1km)
-      // Zoom levels: higher number = more zoomed in
-      let zoom;
-      if (searchRadius <= 300) zoom = 16;
-      else if (searchRadius <= 500) zoom = 15.5;
-      else if (searchRadius <= 700) zoom = 15;
-      else zoom = 14.5;
-      
-      map.current.setView(userLocation, zoom, { animate: true, duration: 0.5 });
     }
   }, [searchRadius, userLocation]);
 
@@ -483,26 +470,25 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
     <div className="relative w-full h-full">
       <div ref={mapContainer} className="w-full h-full" />
       
-      {/* Botón Pausar/Reanudar - Parte inferior izquierda */}
+      {/* Botón Pausar/Reanudar - Móvil: bottom left, Desktop: bottom left */}
       <div className="absolute bottom-4 left-4 z-[1000]">
         <Button
           onClick={handleToggleNavigation}
           variant={isPaused ? "default" : "destructive"}
           size="lg"
-          className={`shadow-lg text-xs md:text-base px-3 py-1.5 md:px-6 md:py-2 h-auto ${
+          className={`shadow-lg px-4 py-2 md:px-6 md:py-2.5 h-auto ${
             isPaused ? 'bg-green-600 hover:bg-green-700' : ''
           }`}
         >
           {isPaused ? (
             <>
-              <Navigation className="mr-1 md:mr-2 h-3 w-3 md:h-5 md:w-5" />
-              <span>Ir</span>
+              <Navigation className="mr-2 h-5 w-5" />
+              <span className="font-semibold">Ir</span>
             </>
           ) : (
             <>
-              <X className="mr-1 md:mr-2 h-3 w-3 md:h-5 md:w-5" />
-              <span className="hidden xs:inline">Detener</span>
-              <span className="xs:hidden">Stop</span>
+              <X className="mr-2 h-5 w-5" />
+              <span className="font-semibold">Detener</span>
             </>
           )}
         </Button>
@@ -510,51 +496,48 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
 
       {userLocation && (
         <>
-          {/* Navigation Status - Ancho reducido 50% */}
-          <div className="absolute bottom-20 left-4 md:bottom-auto md:top-20 md:left-4 z-[1000] bg-background/95 backdrop-blur p-2 md:p-4 rounded-lg shadow-lg w-[calc(22.5%-0.5rem)] md:w-[140px]">
-            <div className="flex items-center gap-1 md:gap-2 mb-1 md:mb-2">
-              <Navigation className="h-3 w-3 md:h-5 md:w-5 text-primary flex-shrink-0" />
-              <span className="font-semibold text-[10px] md:text-base leading-tight">Navegando</span>
+          {/* Navigation Status - Mobile: top left, Desktop: top left */}
+          <div className="absolute top-4 left-4 md:top-20 md:left-4 z-[1000] bg-background/95 backdrop-blur p-3 md:p-4 rounded-lg shadow-lg">
+            <div className="flex items-center gap-2 mb-1">
+              <Navigation className="h-4 w-4 md:h-5 md:w-5 text-primary flex-shrink-0" />
+              <span className="font-semibold text-sm md:text-base leading-tight">Navegando</span>
             </div>
-            <p className="text-[8px] md:text-sm text-muted-foreground leading-tight hidden md:block">
+            <p className="text-xs md:text-sm text-muted-foreground leading-tight">
               Actualizando en tiempo real
-            </p>
-            <p className="text-[8px] text-muted-foreground leading-tight md:hidden">
-              Actualizando
             </p>
           </div>
 
-          {/* Search Criteria Card - Más compacto en móvil */}
-          <Card className="absolute bottom-20 right-4 md:bottom-4 md:right-4 z-[1000] bg-background/90 backdrop-blur-md p-2 md:p-4 w-[calc(50%-1rem)] md:w-auto md:min-w-[280px] md:max-w-sm">
-            <div className="space-y-1.5 md:space-y-3">
-              <div className="flex items-start justify-between gap-1 md:gap-2">
+          {/* Search Criteria Card - Mobile: bottom right, Desktop: bottom right */}
+          <Card className="absolute bottom-20 md:bottom-4 right-4 z-[1000] bg-background/90 backdrop-blur-md p-3 md:p-4 w-[calc(60%-1rem)] md:w-auto md:min-w-[280px] md:max-w-sm">
+            <div className="space-y-2 md:space-y-3">
+              <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1 md:gap-2 mb-0.5 md:mb-2">
-                    <MapPin className="h-3 w-3 md:h-4 md:w-4 text-primary flex-shrink-0" />
-                    <span className="text-[8px] md:text-xs font-semibold text-muted-foreground uppercase">
+                  <div className="flex items-center gap-2 mb-1 md:mb-2">
+                    <MapPin className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary flex-shrink-0" />
+                    <span className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase">
                       Buscando
                     </span>
                   </div>
-                  <p className="text-[10px] md:text-sm font-medium leading-tight line-clamp-2">
+                  <p className="text-xs md:text-sm font-medium leading-tight line-clamp-2">
                     {searchCriteria || 'Propiedades cerca'}
                   </p>
                 </div>
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="h-6 w-6 md:h-8 md:w-8 p-0 shrink-0"
+                  className="h-7 w-7 md:h-8 md:w-8 p-0 shrink-0"
                   onClick={() => {
                     setEditSearchQuery(searchCriteria);
                     setIsEditDialogOpen(true);
                   }}
                 >
-                  <Edit2 className="h-2.5 w-2.5 md:h-4 md:w-4" />
+                  <Edit2 className="h-3 w-3 md:h-4 md:w-4" />
                 </Button>
               </div>
 
-              <div className="pt-1.5 md:pt-3 border-t space-y-2 md:space-y-3">
+              <div className="pt-2 md:pt-3 border-t space-y-2 md:space-y-3">
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between text-[9px] md:text-xs">
+                  <div className="flex items-center justify-between text-[10px] md:text-xs">
                     <span className="text-muted-foreground">Radio de búsqueda</span>
                     <span className="font-semibold text-primary">
                       {searchRadius >= 1000 ? `${(searchRadius / 1000).toFixed(1)} km` : `${searchRadius} m`}
@@ -568,12 +551,12 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
                     step={50}
                     className="w-full"
                   />
-                  <div className="flex justify-between text-[8px] md:text-[10px] text-muted-foreground">
+                  <div className="flex justify-between text-[9px] md:text-[10px] text-muted-foreground">
                     <span>200m</span>
                     <span>1km</span>
                   </div>
                 </div>
-                <div className="flex items-center justify-between text-[9px] md:text-xs pt-1 border-t">
+                <div className="flex items-center justify-between text-[10px] md:text-xs pt-1 border-t">
                   <span className="text-muted-foreground">Propiedades</span>
                   <span className="font-semibold text-primary">{properties?.length || 0}</span>
                 </div>
