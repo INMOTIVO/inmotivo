@@ -21,8 +21,8 @@ const SearchOptions = ({
   };
   return <div className="w-full max-w-4xl mx-auto space-y-3 md:space-y-6 animate-fade-in px-4 py-4">
       <div className="text-center space-y-1">
-        <h2 className="text-lg md:text-2xl lg:text-3xl font-bold">¿Cómo quieres buscar?</h2>
-        <p className="text-xs md:text-base text-muted-foreground">
+        <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold">¿Cómo quieres buscar?</h2>
+        <p className="text-sm md:text-lg text-white/90">
           Ubicación actual: {municipality}{sector && `, ${sector}`}
         </p>
       </div>
