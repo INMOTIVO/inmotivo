@@ -510,7 +510,7 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
 
       {/* Dialog para editar búsqueda */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md z-[10000]">
           <DialogHeader>
             <DialogTitle>Modificar búsqueda</DialogTitle>
             <DialogDescription>
