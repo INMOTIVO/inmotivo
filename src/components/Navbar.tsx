@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, LogOut, Home } from "lucide-react";
+import { Menu, LogOut, Home, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useRole } from "@/hooks/useRole";
 import { toast } from "sonner";
 import {
   Sheet,
@@ -15,6 +16,7 @@ import {
 const Navbar = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { isAdmin } = useRole();
   const [isOpen, setIsOpen] = useState(false);
 
   const handleSignOut = async () => {
@@ -60,6 +62,16 @@ const Navbar = () => {
             </a>
             {user ? (
               <>
+                {isAdmin && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => navigate("/admin")}
+                  >
+                    <Shield className="h-4 w-4 mr-2" />
+                    Admin
+                  </Button>
+                )}
                 <Button 
                   variant="outline" 
                   size="sm"
@@ -109,6 +121,16 @@ const Navbar = () => {
                 </Button>
                 {user ? (
                   <>
+                    {isAdmin && (
+                      <Button
+                        variant="ghost"
+                        className="justify-start text-base h-12"
+                        onClick={() => handleNavigation("/admin")}
+                      >
+                        <Shield className="h-5 w-5 mr-3" />
+                        Dashboard Admin
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       className="justify-start text-base h-12"

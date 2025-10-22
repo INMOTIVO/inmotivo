@@ -261,17 +261,17 @@ const ProviderDashboard = () => {
           Volver al inicio
         </Button>
         
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
           <div>
-            <p className="text-lg text-muted-foreground mb-2">
+            <p className="text-base sm:text-lg text-muted-foreground mb-2">
               Bienvenido, <span className="text-foreground font-semibold">{profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'Usuario'}</span>
             </p>
-            <h1 className="text-4xl font-bold">Dashboard de Proveedor</h1>
-            <p className="text-muted-foreground mt-2">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">Dashboard de Proveedor</h1>
+            <p className="text-sm sm:text-base text-muted-foreground mt-2">
               Gestiona tus propiedades y mensajes
             </p>
           </div>
-          <Button onClick={() => navigate('/create-property')} size="lg">
+          <Button onClick={() => navigate('/create-property')} size="lg" className="w-full sm:w-auto">
             <Plus className="mr-2 h-5 w-5" />
             Nueva Propiedad
           </Button>
@@ -320,14 +320,16 @@ const ProviderDashboard = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="properties" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="properties">Mis Propiedades</TabsTrigger>
-            <TabsTrigger value="messages">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="properties" className="text-xs sm:text-sm">
+              <span className="hidden sm:inline">Mis </span>Propiedades
+            </TabsTrigger>
+            <TabsTrigger value="messages" className="text-xs sm:text-sm">
               Mensajes ({messages.length})
             </TabsTrigger>
-            <TabsTrigger value="profile">
-              <User className="mr-2 h-4 w-4" />
-              Mi Perfil
+            <TabsTrigger value="profile" className="text-xs sm:text-sm">
+              <User className="mr-0 sm:mr-2 h-4 w-4" />
+              <span className="hidden sm:inline">Mi </span>Perfil
             </TabsTrigger>
           </TabsList>
 

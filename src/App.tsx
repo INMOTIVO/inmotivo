@@ -12,6 +12,7 @@ import PublishProperty from "./pages/PublishProperty";
 import PropertiesCatalog from "./pages/PropertiesCatalog";
 import AdCreativesPreview from "./pages/AdCreativesPreview";
 import ProviderDashboard from "./pages/ProviderDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import CreateProperty from "./pages/CreateProperty";
 import NotFound from "./pages/NotFound";
 
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/catalogo" element={<PropertiesCatalog />} />
           <Route path="/publicar" element={<PublishProperty />} />
           <Route path="/dashboard" element={<ProviderDashboard />} />
+          <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/create-property" element={<CreateProperty />} />
           <Route path="/edit-property/:id" element={<CreateProperty />} />
           <Route path="/marketing-preview" element={<AdCreativesPreview />} />
