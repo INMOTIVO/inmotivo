@@ -51,13 +51,15 @@ const HowItWorksVideo = () => {
               {/* Video Player */}
               {isPlaying && (
                 <div className="absolute inset-0">
-                  <iframe 
-                    src="/inmotivo-video-embed.html" 
-                    style={{width: '100%', height: '100%', border: 0, borderRadius: '24px', overflow: 'hidden'}}
-                    title="Video explicativo de INMOTIVO"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
+                  <video
+                    className="w-full h-full object-cover"
+                    autoPlay
+                    controls
+                    playsInline
+                  >
+                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4" />
+                    Tu navegador no soporta el elemento de video.
+                  </video>
                 </div>
               )}
             </div>
