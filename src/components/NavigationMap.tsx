@@ -38,12 +38,11 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
   const [searchRadius, setSearchRadius] = useState<number>(300); // Default 300 meters
 
   // Fetch real properties from database and position them around user location
-  // More radius = more properties
+  // More radius = more properties (200m-1km range)
   const getPropertyLimit = (radius: number) => {
-    if (radius <= 500) return 5;
-    if (radius <= 1000) return 10;
-    if (radius <= 1500) return 15;
-    return 20;
+    if (radius <= 400) return 5;
+    if (radius <= 700) return 8;
+    return 12;
   };
 
   const { data: properties } = useQuery({
@@ -288,15 +287,13 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
     
     // Adjust map zoom to fit the search radius
     if (map.current && userLocation) {
-      // Calculate appropriate zoom level based on radius
+      // Calculate appropriate zoom level based on radius (200m-1km)
       // Zoom levels: higher number = more zoomed in
       let zoom;
       if (searchRadius <= 300) zoom = 16;
       else if (searchRadius <= 500) zoom = 15.5;
-      else if (searchRadius <= 800) zoom = 15;
-      else if (searchRadius <= 1200) zoom = 14.5;
-      else if (searchRadius <= 1600) zoom = 14;
-      else zoom = 13.5;
+      else if (searchRadius <= 700) zoom = 15;
+      else zoom = 14.5;
       
       map.current.setView(userLocation, zoom, { animate: true, duration: 0.5 });
     }
@@ -543,13 +540,13 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
                     value={[searchRadius]}
                     onValueChange={(value) => setSearchRadius(value[0])}
                     min={200}
-                    max={2000}
+                    max={1000}
                     step={50}
                     className="w-full"
                   />
                   <div className="flex justify-between text-[8px] md:text-[10px] text-muted-foreground">
                     <span>200m</span>
-                    <span>2km</span>
+                    <span>1km</span>
                   </div>
                 </div>
                 <div className="flex items-center justify-between text-[9px] md:text-xs pt-1 border-t">
