@@ -19,7 +19,7 @@ const SearchOptions = ({
   const handleGPSNavigation = () => {
     navigate(`/navegacion?query=${encodeURIComponent(searchQuery)}&autostart=true`);
   };
-  return <div className="w-full max-w-4xl mx-auto space-y-4 md:space-y-6 animate-fade-in px-4">
+  return <div className="w-full max-w-4xl mx-auto space-y-3 md:space-y-4 animate-fade-in px-4">
       <div className="text-center space-y-1">
         <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold">¿Cómo quieres buscar?</h2>
         <p className="text-sm md:text-lg text-white/90">
@@ -27,22 +27,22 @@ const SearchOptions = ({
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-3 md:gap-6">
+      <div className="grid md:grid-cols-2 gap-3 md:gap-5">
         {/* Navegación GPS */}
-        <Card className="p-3 md:p-8 hover:shadow-xl transition-all duration-300 hover:border-primary/50 cursor-pointer group border-primary/30">
-          <div className="flex flex-col h-full space-y-2 md:space-y-6">
-            <div className="inline-flex p-2 md:p-4 rounded-2xl bg-accent/10 text-accent group-hover:scale-110 transition-transform duration-300">
-              <Navigation className="h-6 w-6 md:h-10 md:w-10" />
+        <Card className="p-3 md:p-6 hover:shadow-xl transition-all duration-300 hover:border-primary/50 cursor-pointer group border-primary/30">
+          <div className="flex flex-col h-full space-y-2 md:space-y-4">
+            <div className="inline-flex p-2 md:p-3 rounded-2xl bg-accent/10 text-accent group-hover:scale-110 transition-transform duration-300">
+              <Navigation className="h-6 w-6 md:h-8 md:w-8" />
             </div>
             
-            <div className="space-y-1 md:space-y-3">
-              <h3 className="text-base md:text-2xl font-bold">Navegar con GPS</h3>
-              <p className="text-[11px] md:text-base text-muted-foreground line-clamp-2">
+            <div className="space-y-1 md:space-y-2">
+              <h3 className="text-base md:text-xl font-bold">Navegar con GPS</h3>
+              <p className="text-[11px] md:text-sm text-muted-foreground line-clamp-2">
                 Descubre propiedades mientras te desplazas en tiempo real.
               </p>
             </div>
 
-            <ul className="space-y-1 md:space-y-2 text-xs md:text-sm text-muted-foreground hidden md:block flex-grow">
+            <ul className="space-y-1 md:space-y-1.5 text-xs md:text-xs text-muted-foreground hidden md:block flex-grow">
               <li className="flex items-center gap-2">
                 <div className="h-1.5 w-1.5 rounded-full bg-accent" />
                 Navegación en tiempo real
@@ -65,20 +65,20 @@ const SearchOptions = ({
         </Card>
 
         {/* Vista Fija */}
-        <Card className="p-3 md:p-8 hover:shadow-xl transition-all duration-300 hover:border-primary/50 cursor-pointer group">
-          <div className="flex flex-col h-full space-y-2 md:space-y-6">
-            <div className="inline-flex p-2 md:p-4 rounded-2xl bg-primary/10 text-primary group-hover:scale-110 transition-transform duration-300">
-              <Map className="h-6 w-6 md:h-10 md:w-10" />
+        <Card className="p-3 md:p-6 hover:shadow-xl transition-all duration-300 hover:border-primary/50 cursor-pointer group">
+          <div className="flex flex-col h-full space-y-2 md:space-y-4">
+            <div className="inline-flex p-2 md:p-3 rounded-2xl bg-primary/10 text-primary group-hover:scale-110 transition-transform duration-300">
+              <Map className="h-6 w-6 md:h-8 md:w-8" />
             </div>
             
-            <div className="space-y-1 md:space-y-3">
-              <h3 className="text-base md:text-2xl font-bold">Ver propiedades cerca</h3>
-              <p className="text-[11px] md:text-base text-muted-foreground line-clamp-2">
+            <div className="space-y-1 md:space-y-2">
+              <h3 className="text-base md:text-xl font-bold">Ver propiedades cerca</h3>
+              <p className="text-[11px] md:text-sm text-muted-foreground line-clamp-2">
                 Explora propiedades disponibles en tu zona.
               </p>
             </div>
 
-            <ul className="space-y-1 md:space-y-2 text-xs md:text-sm text-muted-foreground hidden md:block flex-grow">
+            <ul className="space-y-1 md:space-y-1.5 text-xs md:text-xs text-muted-foreground hidden md:block flex-grow">
               <li className="flex items-center gap-2">
                 <div className="h-1.5 w-1.5 rounded-full bg-primary" />
                 Vista de mapa interactivo
@@ -101,12 +101,12 @@ const SearchOptions = ({
         </Card>
       </div>
 
-      <div className="text-center pt-2 md:pt-4 animate-fade-in">
-        <div className="inline-block bg-white/95 px-3 md:px-4 py-1.5 md:py-2 rounded-lg border border-primary/20 shadow-lg">
-          <p className="text-[10px] md:text-xs text-muted-foreground mb-0.5">Tu búsqueda:</p>
-          <p className="text-xs md:text-sm font-semibold text-foreground">
+      <div className="text-center pt-2 animate-fade-in">
+        <div className="inline-flex items-center gap-2 bg-white/95 px-4 md:px-6 py-1.5 md:py-2 rounded-full border border-primary/20 shadow-lg max-w-full">
+          <span className="text-[10px] md:text-xs text-muted-foreground whitespace-nowrap">Tu búsqueda:</span>
+          <span className="text-xs md:text-sm font-semibold text-foreground truncate">
             "{searchQuery}"
-          </p>
+          </span>
         </div>
       </div>
     </div>;
