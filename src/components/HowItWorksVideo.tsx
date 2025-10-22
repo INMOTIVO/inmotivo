@@ -5,7 +5,7 @@ import videoThumbnail from "@/assets/video-thumbnail.jpg";
 
 const HowItWorksVideo = () => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isFlipped, setIsFlipped] = useState(false);
+  const [flippedCards, setFlippedCards] = useState([false, false, false]);
 
   const handlePlayVideo = () => {
     setIsPlaying(true);
@@ -13,9 +13,21 @@ const HowItWorksVideo = () => {
   };
 
   useEffect(() => {
+    const flipCard = (index: number) => {
+      setTimeout(() => {
+        setFlippedCards(prev => {
+          const newState = [...prev];
+          newState[index] = !newState[index];
+          return newState;
+        });
+      }, index * 1000); // Delay de 1 segundo entre cada tarjeta
+    };
+
     const interval = setInterval(() => {
-      setIsFlipped(prev => !prev);
-    }, 3000);
+      flipCard(0);
+      flipCard(1);
+      flipCard(2);
+    }, 6000); // Ciclo completo cada 6 segundos
 
     return () => clearInterval(interval);
   }, []);
@@ -79,7 +91,7 @@ const HowItWorksVideo = () => {
             {/* Card 1 */}
             <div className="relative h-48 md:h-64" style={{ perspective: '1000px' }}>
               <div 
-                className={`relative w-full h-full transition-transform duration-700 ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}
+                className={`relative w-full h-full transition-transform duration-700 ${flippedCards[0] ? '[transform:rotateY(180deg)]' : ''}`}
                 style={{ transformStyle: 'preserve-3d' }}
               >
                 {/* Front */}
@@ -90,8 +102,8 @@ const HowItWorksVideo = () => {
                   <h3 className="text-xs md:text-xl font-semibold">1. Describe tu búsqueda</h3>
                 </div>
                 {/* Back */}
-                <div className="absolute inset-0 text-center p-3 md:p-6 rounded-xl md:rounded-2xl bg-primary/10 border border-primary flex items-center justify-center [transform:rotateY(180deg)]" style={{ backfaceVisibility: 'hidden' }}>
-                  <p className="text-xs md:text-base text-foreground">
+                <div className="absolute inset-0 text-center p-3 md:p-6 rounded-xl md:rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 border-[3px] border-primary shadow-lg flex items-center justify-center [transform:rotateY(180deg)]" style={{ backfaceVisibility: 'hidden' }}>
+                  <p className="text-xs md:text-base text-foreground font-medium">
                     Usa lenguaje natural para describir el inmueble que buscas
                   </p>
                 </div>
@@ -101,7 +113,7 @@ const HowItWorksVideo = () => {
             {/* Card 2 */}
             <div className="relative h-48 md:h-64" style={{ perspective: '1000px' }}>
               <div 
-                className={`relative w-full h-full transition-transform duration-700 ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}
+                className={`relative w-full h-full transition-transform duration-700 ${flippedCards[1] ? '[transform:rotateY(180deg)]' : ''}`}
                 style={{ transformStyle: 'preserve-3d' }}
               >
                 {/* Front */}
@@ -112,8 +124,8 @@ const HowItWorksVideo = () => {
                   <h3 className="text-xs md:text-xl font-semibold">2. Ubicación en tiempo real</h3>
                 </div>
                 {/* Back */}
-                <div className="absolute inset-0 text-center p-3 md:p-6 rounded-xl md:rounded-2xl bg-accent/10 border border-accent flex items-center justify-center [transform:rotateY(180deg)]" style={{ backfaceVisibility: 'hidden' }}>
-                  <p className="text-xs md:text-base text-foreground">
+                <div className="absolute inset-0 text-center p-3 md:p-6 rounded-xl md:rounded-2xl bg-gradient-to-br from-accent/20 to-accent/10 border-[3px] border-accent shadow-lg flex items-center justify-center [transform:rotateY(180deg)]" style={{ backfaceVisibility: 'hidden' }}>
+                  <p className="text-xs md:text-base text-foreground font-medium">
                     INMOTIVO detecta tu ubicación y busca propiedades cercanas
                   </p>
                 </div>
@@ -123,7 +135,7 @@ const HowItWorksVideo = () => {
             {/* Card 3 */}
             <div className="relative h-48 md:h-64" style={{ perspective: '1000px' }}>
               <div 
-                className={`relative w-full h-full transition-transform duration-700 ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}
+                className={`relative w-full h-full transition-transform duration-700 ${flippedCards[2] ? '[transform:rotateY(180deg)]' : ''}`}
                 style={{ transformStyle: 'preserve-3d' }}
               >
                 {/* Front */}
@@ -134,8 +146,8 @@ const HowItWorksVideo = () => {
                   <h3 className="text-xs md:text-xl font-semibold">3. Navega y explora</h3>
                 </div>
                 {/* Back */}
-                <div className="absolute inset-0 text-center p-3 md:p-6 rounded-xl md:rounded-2xl bg-primary/10 border border-primary flex items-center justify-center [transform:rotateY(180deg)]" style={{ backfaceVisibility: 'hidden' }}>
-                  <p className="text-xs md:text-base text-foreground">
+                <div className="absolute inset-0 text-center p-3 md:p-6 rounded-xl md:rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 border-[3px] border-primary shadow-lg flex items-center justify-center [transform:rotateY(180deg)]" style={{ backfaceVisibility: 'hidden' }}>
+                  <p className="text-xs md:text-base text-foreground font-medium">
                     Ve propiedades mientras te desplazas por la ciudad
                   </p>
                 </div>
