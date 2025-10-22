@@ -189,13 +189,13 @@ const Hero = () => {
             </div>
 
             {/* Search bar */}
-            <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-3xl mx-auto">
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <Search className="h-5 w-5 text-muted-foreground mt-3" />
+            <div className="bg-white rounded-2xl shadow-2xl p-4 max-w-2xl mx-auto">
+              <div className="space-y-3">
+                <div className="flex items-start gap-2">
+                  <Search className="h-4 w-4 text-muted-foreground mt-2" />
                   <Textarea
-                    placeholder="Cuéntame qué buscas... Ej: Apartamento de 2 habitaciones, cerca del metro, con parqueadero, máximo 2 millones"
-                    className="border-0 focus-visible:ring-0 text-base resize-none min-h-[80px]"
+                    placeholder="Cuéntame qué buscas... Ej: Apartamento de 2 habitaciones, cerca del metro"
+                    className="border-0 focus-visible:ring-0 text-sm resize-none min-h-[50px]"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyDown={(e) => {
@@ -206,30 +206,30 @@ const Hero = () => {
                     }}
                   />
                 </div>
-                <div className="flex items-center gap-3 pt-3 border-t">
+                <div className="flex items-center gap-2 pt-2 border-t">
                   {loadingLocation ? (
                     <>
-                      <Loader2 className="h-5 w-5 text-muted-foreground animate-spin" />
-                      <span className="text-sm text-muted-foreground">Detectando ubicación...</span>
+                      <Loader2 className="h-4 w-4 text-muted-foreground animate-spin" />
+                      <span className="text-xs text-muted-foreground">Detectando ubicación...</span>
                     </>
                   ) : (
                     <>
-                      <MapPin className="h-5 w-5 text-muted-foreground" />
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
                       <div className="flex-1">
                         {municipality && sector ? (
                           <div>
-                            <div className="text-sm font-medium">{municipality}</div>
-                            <div className="text-xs text-muted-foreground">{sector}</div>
+                            <div className="text-xs font-medium">{municipality}</div>
+                            <div className="text-[10px] text-muted-foreground">{sector}</div>
                           </div>
                         ) : municipality ? (
-                          <div className="text-sm font-medium">{municipality}</div>
+                          <div className="text-xs font-medium">{municipality}</div>
                         ) : (
-                          <span className="text-sm text-muted-foreground">Ubicación actual</span>
+                          <span className="text-xs text-muted-foreground">Ubicación actual</span>
                         )}
                       </div>
                       <Button 
                         variant="hero" 
-                        size="lg"
+                        size="default"
                         onClick={handleSearch}
                         disabled={!searchQuery.trim()}
                       >
@@ -251,9 +251,9 @@ const Hero = () => {
       {/* Fixed search bar for mobile when scrolling */}
       {isMobile && showFixedSearch && (
         <div className="fixed bottom-0 left-0 right-0 z-50 bg-white shadow-2xl border-t border-border/50 animate-in slide-in-from-bottom-5 duration-300">
-          <div className="p-4">
-            <div className="flex items-center gap-3">
-              <Search className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+          <div className="p-3">
+            <div className="flex items-center gap-2">
+              <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
               <Input
                 placeholder="¿Qué buscas?"
                 className="flex-1 border-input"
