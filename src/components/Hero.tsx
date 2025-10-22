@@ -142,7 +142,7 @@ const Hero = () => {
 
   if (showOptions) {
     return (
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+      <section className="fixed inset-0 top-16 flex items-center justify-center overflow-hidden z-50">
         <div className="absolute inset-0">
           <div 
             className="absolute inset-0 bg-cover bg-center"
@@ -152,7 +152,7 @@ const Hero = () => {
           </div>
         </div>
 
-        <div className="relative z-10 container mx-auto px-4 py-20">
+        <div className="relative z-10 container mx-auto px-4 py-20 overflow-y-auto max-h-full">
           <SearchOptions 
             searchQuery={searchQuery}
             municipality={municipality || "Medellín"}
