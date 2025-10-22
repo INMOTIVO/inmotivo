@@ -62,22 +62,19 @@ const Navbar = () => {
             </a>
             {user ? (
               <>
-                {isAdmin && (
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => navigate("/admin")}
-                  >
-                    <Shield className="h-4 w-4 mr-2" />
-                    Admin
-                  </Button>
-                )}
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => navigate("/dashboard")}
+                  onClick={() => navigate(isAdmin ? "/admin" : "/dashboard")}
                 >
-                  Mi Dashboard
+                  {isAdmin ? (
+                    <>
+                      <Shield className="h-4 w-4 mr-2" />
+                      Dashboard Admin
+                    </>
+                  ) : (
+                    'Mi Dashboard'
+                  )}
                 </Button>
                 <Button 
                   variant="outline" 
@@ -121,22 +118,19 @@ const Navbar = () => {
                 </Button>
                 {user ? (
                   <>
-                    {isAdmin && (
-                      <Button
-                        variant="ghost"
-                        className="justify-start text-base h-12"
-                        onClick={() => handleNavigation("/admin")}
-                      >
-                        <Shield className="h-5 w-5 mr-3" />
-                        Dashboard Admin
-                      </Button>
-                    )}
                     <Button
                       variant="ghost"
                       className="justify-start text-base h-12"
-                      onClick={() => handleNavigation("/dashboard")}
+                      onClick={() => handleNavigation(isAdmin ? "/admin" : "/dashboard")}
                     >
-                      Mi Dashboard
+                      {isAdmin ? (
+                        <>
+                          <Shield className="h-5 w-5 mr-3" />
+                          Dashboard Admin
+                        </>
+                      ) : (
+                        'Mi Dashboard'
+                      )}
                     </Button>
                     <Button
                       variant="ghost"

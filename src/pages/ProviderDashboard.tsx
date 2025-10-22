@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useRole } from '@/hooks/useRole';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -99,6 +100,7 @@ const formatPhoneInput = (value: string): string => {
 
 const ProviderDashboard = () => {
   const { user, loading } = useAuth();
+  const { isAdmin, loading: roleLoading } = useRole();
   const navigate = useNavigate();
   const [properties, setProperties] = useState<Property[]>([]);
   const [messages, setMessages] = useState<ContactMessage[]>([]);
@@ -115,10 +117,14 @@ const ProviderDashboard = () => {
   });
 
   useEffect(() => {
-    if (!loading && !user) {
-      navigate('/auth');
+    if (!loading && !roleLoading) {
+      if (!user) {
+        navigate('/auth');
+      } else if (isAdmin) {
+        navigate('/admin');
+      }
     }
-  }, [user, loading, navigate]);
+  }, [user, isAdmin, loading, roleLoading, navigate]);
 
   useEffect(() => {
     if (user) {
@@ -228,7 +234,7 @@ const ProviderDashboard = () => {
     }
   };
 
-  if (loading || loadingData) {
+  if (loading || roleLoading || loadingData) {
     return (
       <div className="min-h-screen">
         <Navbar />
