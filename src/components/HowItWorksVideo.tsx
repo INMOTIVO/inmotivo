@@ -89,20 +89,23 @@ const HowItWorksVideo = () => {
           {/* Features Grid */}
           <div className="grid grid-cols-3 gap-2 md:gap-8">
             {/* Card 1 */}
-            <div className="relative h-48 md:h-64" style={{ perspective: '1000px' }}>
+            <div className="relative h-48 md:h-64 group" style={{ perspective: '1000px' }}>
+              {/* Animated border glow */}
+              <div className="absolute inset-0 rounded-xl md:rounded-2xl bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_100%] animate-[gradient-flow_3s_linear_infinite] opacity-75 blur-sm"></div>
+              
               <div 
                 className={`relative w-full h-full transition-transform duration-700 ${flippedCards[0] ? '[transform:rotateY(180deg)]' : ''}`}
                 style={{ transformStyle: 'preserve-3d' }}
               >
                 {/* Front */}
-                <div className="absolute inset-0 text-center p-3 md:p-6 rounded-xl md:rounded-2xl bg-card border border-border flex flex-col items-center justify-center" style={{ backfaceVisibility: 'hidden' }}>
+                <div className="absolute inset-0 text-center p-3 md:p-6 rounded-xl md:rounded-2xl bg-card border-2 border-primary/50 flex flex-col items-center justify-center shadow-[0_0_15px_rgba(var(--primary),0.3)]" style={{ backfaceVisibility: 'hidden' }}>
                   <div className="inline-flex p-2 md:p-4 rounded-lg md:rounded-xl bg-primary/10 text-primary mb-2 md:mb-4">
                     <Search className="h-4 w-4 md:h-8 md:w-8" />
                   </div>
                   <h3 className="text-xs md:text-xl font-semibold">1. Describe tu búsqueda</h3>
                 </div>
                 {/* Back */}
-                <div className="absolute inset-0 text-center p-3 md:p-6 rounded-xl md:rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 border-[3px] border-primary shadow-lg flex items-center justify-center [transform:rotateY(180deg)]" style={{ backfaceVisibility: 'hidden' }}>
+                <div className="absolute inset-0 text-center p-3 md:p-6 rounded-xl md:rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 border-[3px] border-primary shadow-[0_0_20px_rgba(var(--primary),0.5)] flex items-center justify-center [transform:rotateY(180deg)]" style={{ backfaceVisibility: 'hidden' }}>
                   <p className="text-xs md:text-base text-foreground font-medium">
                     Usa lenguaje natural para describir el inmueble que buscas
                   </p>
@@ -111,20 +114,23 @@ const HowItWorksVideo = () => {
             </div>
 
             {/* Card 2 */}
-            <div className="relative h-48 md:h-64" style={{ perspective: '1000px' }}>
+            <div className="relative h-48 md:h-64 group" style={{ perspective: '1000px' }}>
+              {/* Animated border glow with delay */}
+              <div className="absolute inset-0 rounded-xl md:rounded-2xl bg-gradient-to-r from-accent via-primary to-accent bg-[length:200%_100%] animate-[gradient-flow_3s_linear_infinite_1s] opacity-75 blur-sm"></div>
+              
               <div 
                 className={`relative w-full h-full transition-transform duration-700 ${flippedCards[1] ? '[transform:rotateY(180deg)]' : ''}`}
                 style={{ transformStyle: 'preserve-3d' }}
               >
                 {/* Front */}
-                <div className="absolute inset-0 text-center p-3 md:p-6 rounded-xl md:rounded-2xl bg-card border border-border flex flex-col items-center justify-center" style={{ backfaceVisibility: 'hidden' }}>
+                <div className="absolute inset-0 text-center p-3 md:p-6 rounded-xl md:rounded-2xl bg-card border-2 border-accent/50 flex flex-col items-center justify-center shadow-[0_0_15px_rgba(var(--accent),0.3)]" style={{ backfaceVisibility: 'hidden' }}>
                   <div className="inline-flex p-2 md:p-4 rounded-lg md:rounded-xl bg-accent/10 text-accent mb-2 md:mb-4">
                     <MapPin className="h-4 w-4 md:h-8 md:w-8" />
                   </div>
                   <h3 className="text-xs md:text-xl font-semibold">2. Ubicación en tiempo real</h3>
                 </div>
                 {/* Back */}
-                <div className="absolute inset-0 text-center p-3 md:p-6 rounded-xl md:rounded-2xl bg-gradient-to-br from-accent/20 to-accent/10 border-[3px] border-accent shadow-lg flex items-center justify-center [transform:rotateY(180deg)]" style={{ backfaceVisibility: 'hidden' }}>
+                <div className="absolute inset-0 text-center p-3 md:p-6 rounded-xl md:rounded-2xl bg-gradient-to-br from-accent/20 to-accent/10 border-[3px] border-accent shadow-[0_0_20px_rgba(var(--accent),0.5)] flex items-center justify-center [transform:rotateY(180deg)]" style={{ backfaceVisibility: 'hidden' }}>
                   <p className="text-xs md:text-base text-foreground font-medium">
                     INMOTIVO detecta tu ubicación y busca propiedades cercanas
                   </p>
@@ -133,20 +139,23 @@ const HowItWorksVideo = () => {
             </div>
 
             {/* Card 3 */}
-            <div className="relative h-48 md:h-64" style={{ perspective: '1000px' }}>
+            <div className="relative h-48 md:h-64 group" style={{ perspective: '1000px' }}>
+              {/* Animated border glow with delay */}
+              <div className="absolute inset-0 rounded-xl md:rounded-2xl bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_100%] animate-[gradient-flow_3s_linear_infinite_2s] opacity-75 blur-sm"></div>
+              
               <div 
                 className={`relative w-full h-full transition-transform duration-700 ${flippedCards[2] ? '[transform:rotateY(180deg)]' : ''}`}
                 style={{ transformStyle: 'preserve-3d' }}
               >
                 {/* Front */}
-                <div className="absolute inset-0 text-center p-3 md:p-6 rounded-xl md:rounded-2xl bg-card border border-border flex flex-col items-center justify-center" style={{ backfaceVisibility: 'hidden' }}>
+                <div className="absolute inset-0 text-center p-3 md:p-6 rounded-xl md:rounded-2xl bg-card border-2 border-primary/50 flex flex-col items-center justify-center shadow-[0_0_15px_rgba(var(--primary),0.3)]" style={{ backfaceVisibility: 'hidden' }}>
                   <div className="inline-flex p-2 md:p-4 rounded-lg md:rounded-xl bg-primary/10 text-primary mb-2 md:mb-4">
                     <Navigation className="h-4 w-4 md:h-8 md:w-8" />
                   </div>
                   <h3 className="text-xs md:text-xl font-semibold">3. Navega y explora</h3>
                 </div>
                 {/* Back */}
-                <div className="absolute inset-0 text-center p-3 md:p-6 rounded-xl md:rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 border-[3px] border-primary shadow-lg flex items-center justify-center [transform:rotateY(180deg)]" style={{ backfaceVisibility: 'hidden' }}>
+                <div className="absolute inset-0 text-center p-3 md:p-6 rounded-xl md:rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 border-[3px] border-primary shadow-[0_0_20px_rgba(var(--primary),0.5)] flex items-center justify-center [transform:rotateY(180deg)]" style={{ backfaceVisibility: 'hidden' }}>
                   <p className="text-xs md:text-base text-foreground font-medium">
                     Ve propiedades mientras te desplazas por la ciudad
                   </p>
