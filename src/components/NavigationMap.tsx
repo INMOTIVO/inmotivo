@@ -37,17 +37,27 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
   const [editSearchQuery, setEditSearchQuery] = useState(searchCriteria);
   const [searchRadius, setSearchRadius] = useState<number>(300); // Default 300 meters
 
-  // Fetch real properties from database and position them around user location within 200m
+  // Fetch real properties from database and position them around user location
+  // More radius = more properties
+  const getPropertyLimit = (radius: number) => {
+    if (radius <= 500) return 5;
+    if (radius <= 1000) return 10;
+    if (radius <= 1500) return 15;
+    return 20;
+  };
+
   const { data: properties } = useQuery({
     queryKey: ['navigation-properties', userLocation, searchRadius],
     queryFn: async () => {
       if (!userLocation) return [];
 
+      const limit = getPropertyLimit(searchRadius);
+
       const { data, error } = await supabase
         .from('properties')
         .select('*')
         .eq('status', 'available')
-        .limit(5);
+        .limit(limit);
 
       if (error) {
         console.error('Error fetching navigation properties:', error);
@@ -270,10 +280,25 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
     };
   }, []);
 
-  // Update radius circle when searchRadius changes
+  // Update radius circle and map zoom when searchRadius changes
   useEffect(() => {
     if (radiusCircle.current && userLocation) {
       radiusCircle.current.setRadius(searchRadius);
+    }
+    
+    // Adjust map zoom to fit the search radius
+    if (map.current && userLocation) {
+      // Calculate appropriate zoom level based on radius
+      // Zoom levels: higher number = more zoomed in
+      let zoom;
+      if (searchRadius <= 300) zoom = 16;
+      else if (searchRadius <= 500) zoom = 15.5;
+      else if (searchRadius <= 800) zoom = 15;
+      else if (searchRadius <= 1200) zoom = 14.5;
+      else if (searchRadius <= 1600) zoom = 14;
+      else zoom = 13.5;
+      
+      map.current.setView(userLocation, zoom, { animate: true, duration: 0.5 });
     }
   }, [searchRadius, userLocation]);
 
