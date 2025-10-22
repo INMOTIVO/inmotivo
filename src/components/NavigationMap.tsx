@@ -10,6 +10,7 @@ import { Card } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
 import { X, Navigation, Edit2, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
@@ -34,10 +35,11 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
   const [heading, setHeading] = useState<number>(0);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editSearchQuery, setEditSearchQuery] = useState(searchCriteria);
+  const [searchRadius, setSearchRadius] = useState<number>(300); // Default 300 meters
 
   // Fetch real properties from database and position them around user location within 200m
   const { data: properties } = useQuery({
-    queryKey: ['navigation-properties', userLocation],
+    queryKey: ['navigation-properties', userLocation, searchRadius],
     queryFn: async () => {
       if (!userLocation) return [];
 
@@ -52,10 +54,13 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
         return [];
       }
 
-      // Position real properties within 200m radius around user
+      // Position real properties within search radius around user
       return (data || []).map((property, index) => {
         const angle = (index / Math.max(data.length, 1)) * 2 * Math.PI;
-        const distance = 0.0005 + Math.random() * 0.0013; // 50-180m radius
+        // Convert meters to degrees (approximate: 1 degree ≈ 111km)
+        const maxDistanceDegrees = (searchRadius / 111000);
+        const minDistanceDegrees = (searchRadius * 0.3 / 111000); // Min 30% of radius
+        const distance = minDistanceDegrees + Math.random() * (maxDistanceDegrees - minDistanceDegrees);
         const lat = userLocation[0] + distance * Math.cos(angle);
         const lng = userLocation[1] + distance * Math.sin(angle);
 
@@ -220,12 +225,13 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
           }
         }
 
-        // Update or create 200m radius circle
+        // Update or create radius circle with current searchRadius
         if (radiusCircle.current) {
           radiusCircle.current.setLatLng(newLocation);
+          radiusCircle.current.setRadius(searchRadius);
         } else {
           radiusCircle.current = L.circle(newLocation, {
-            radius: 200,
+            radius: searchRadius,
             color: '#8b5cf6',
             fillColor: '#a78bfa',
             fillOpacity: 0.15,
@@ -262,7 +268,7 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
         directionArrow.current.remove();
       }
     };
-  }, []);
+  }, [searchRadius]);
 
   // Setup routing - Optimizado para evitar re-calcular constantemente
   useEffect(() => {
@@ -493,14 +499,30 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
                 </Button>
               </div>
 
-              <div className="pt-1.5 md:pt-3 border-t space-y-0.5 md:space-y-1.5">
-                <div className="flex items-center justify-between text-[9px] md:text-xs">
-                  <span className="text-muted-foreground">Radio</span>
-                  <span className="font-semibold text-primary">200 m</span>
+              <div className="pt-1.5 md:pt-3 border-t space-y-2 md:space-y-3">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-[9px] md:text-xs">
+                    <span className="text-muted-foreground">Radio de búsqueda</span>
+                    <span className="font-semibold text-primary">
+                      {searchRadius >= 1000 ? `${(searchRadius / 1000).toFixed(1)} km` : `${searchRadius} m`}
+                    </span>
+                  </div>
+                  <Slider
+                    value={[searchRadius]}
+                    onValueChange={(value) => setSearchRadius(value[0])}
+                    min={200}
+                    max={2000}
+                    step={50}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-[8px] md:text-[10px] text-muted-foreground">
+                    <span>200m</span>
+                    <span>2km</span>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between text-[9px] md:text-xs">
-                  <span className="text-muted-foreground">Cercanas</span>
-                  <span className="font-semibold text-primary">5</span>
+                <div className="flex items-center justify-between text-[9px] md:text-xs pt-1 border-t">
+                  <span className="text-muted-foreground">Propiedades</span>
+                  <span className="font-semibold text-primary">{properties?.length || 0}</span>
                 </div>
               </div>
             </div>
