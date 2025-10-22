@@ -7,6 +7,9 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { X, Navigation, Edit2, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
@@ -29,6 +32,8 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
   const radiusCircle = useRef<L.Circle | null>(null);
   const directionArrow = useRef<L.Marker | null>(null);
   const [heading, setHeading] = useState<number>(0);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [editSearchQuery, setEditSearchQuery] = useState(searchCriteria);
 
   // Fetch real properties from database and position them around user location within 200m
   const { data: properties } = useQuery({
@@ -411,6 +416,21 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
     });
   }, [userLocation, properties]);
 
+  const handleUpdateSearch = () => {
+    if (!editSearchQuery.trim()) {
+      toast.error("Por favor ingresa una búsqueda");
+      return;
+    }
+    
+    // Update URL with new search query
+    const currentParams = new URLSearchParams(window.location.search);
+    currentParams.set('query', editSearchQuery.trim());
+    
+    navigate(`/navegacion?${currentParams.toString()}`, { replace: true });
+    setIsEditDialogOpen(false);
+    toast.success("Búsqueda actualizada");
+  };
+
   return (
     <div className="relative w-full h-full">
       <div ref={mapContainer} className="w-full h-full" />
@@ -464,7 +484,10 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
                   size="sm"
                   variant="ghost"
                   className="h-6 w-6 md:h-8 md:w-8 p-0 shrink-0"
-                  onClick={() => navigate(`/?query=${encodeURIComponent(searchCriteria)}&showOptions=true`)}
+                  onClick={() => {
+                    setEditSearchQuery(searchCriteria);
+                    setIsEditDialogOpen(true);
+                  }}
                 >
                   <Edit2 className="h-2.5 w-2.5 md:h-4 md:w-4" />
                 </Button>
@@ -484,6 +507,45 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
           </Card>
         </>
       )}
+
+      {/* Dialog para editar búsqueda */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Modificar búsqueda</DialogTitle>
+            <DialogDescription>
+              Edita tu búsqueda actual para encontrar otras propiedades cercanas
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="search-query">¿Qué buscas?</Label>
+              <Input
+                id="search-query"
+                placeholder="Ej: Apartamento de 2 habitaciones"
+                value={editSearchQuery}
+                onChange={(e) => setEditSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleUpdateSearch();
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <div className="flex gap-2 justify-end">
+            <Button
+              variant="outline"
+              onClick={() => setIsEditDialogOpen(false)}
+            >
+              Cancelar
+            </Button>
+            <Button onClick={handleUpdateSearch}>
+              Actualizar búsqueda
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
