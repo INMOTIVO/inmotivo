@@ -57,7 +57,7 @@ const HowItWorksVideo = () => {
                     controls
                     playsInline
                   >
-                    <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4" />
+                    <source src="https://download.samplelib.com/mp4/sample-5s.mp4" type="video/mp4" />
                     Tu navegador no soporta el elemento de video.
                   </video>
                 </div>
