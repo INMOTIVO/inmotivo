@@ -48,16 +48,16 @@ const HowItWorksVideo = () => {
                 </div>
               )}
               
-              {/* Video Player Placeholder - Reemplazar con video real */}
+              {/* Video Player */}
               {isPlaying && (
-                <div className="absolute inset-0 bg-black flex items-center justify-center">
-                  <p className="text-white text-center px-4">
-                    Aquí se reproducirá el video explicativo de INMOTIVO
-                    <br />
-                    <span className="text-sm text-white/70">
-                      (Agregar URL del video en el componente HowItWorksVideo.tsx)
-                    </span>
-                  </p>
+                <div className="absolute inset-0">
+                  <iframe 
+                    src="/inmotivo-video-embed.html" 
+                    style={{width: '100%', height: '100%', border: 0, borderRadius: '24px', overflow: 'hidden'}}
+                    title="Video explicativo de INMOTIVO"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
                 </div>
               )}
             </div>
