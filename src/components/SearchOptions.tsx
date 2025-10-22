@@ -19,7 +19,7 @@ const SearchOptions = ({
   const handleGPSNavigation = () => {
     navigate(`/navegacion?query=${encodeURIComponent(searchQuery)}&autostart=true`);
   };
-  return <div className="w-full max-w-4xl mx-auto space-y-3 md:space-y-6 animate-fade-in px-4 py-4">
+  return <div className="w-full max-w-4xl mx-auto space-y-4 md:space-y-6 animate-fade-in px-4">
       <div className="text-center space-y-1">
         <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold">¿Cómo quieres buscar?</h2>
         <p className="text-sm md:text-lg text-white/90">
@@ -101,9 +101,14 @@ const SearchOptions = ({
         </Card>
       </div>
 
-      <p className="text-center text-[10px] md:text-sm text-muted-foreground">
-        Tu búsqueda: "{searchQuery}"
-      </p>
+      <div className="text-center pt-4 md:pt-6 animate-fade-in">
+        <p className="text-sm md:text-base text-white/70 mb-2">Tu búsqueda:</p>
+        <div className="inline-block bg-white/20 backdrop-blur-sm px-4 md:px-6 py-2 md:py-3 rounded-full border border-white/30 animate-pulse">
+          <p className="text-base md:text-lg font-medium text-white">
+            "{searchQuery}"
+          </p>
+        </div>
+      </div>
     </div>;
 };
 export default SearchOptions;
