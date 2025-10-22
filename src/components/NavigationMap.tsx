@@ -281,7 +281,7 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
         directionArrow.current.remove();
       }
     };
-  }, [isPaused]);
+  }, [searchRadius]);
 
   // Update radius circle and map zoom when searchRadius changes
   useEffect(() => {
