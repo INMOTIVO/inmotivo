@@ -120,7 +120,7 @@ const PropertiesCatalog = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1 pt-24 pb-12">
+      <main className="flex-1 pt-20 pb-12">
         <div className="container mx-auto px-4">
           <Button
             variant="ghost"
@@ -128,22 +128,22 @@ const PropertiesCatalog = () => {
               const query = searchParams.get('query');
               navigate(`/?query=${encodeURIComponent(query || '')}&showOptions=true`);
             }}
-            className="mb-6"
+            className="mb-3"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Volver
           </Button>
 
-          <div className="mb-12 text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-4">
+          <div className="mb-6 text-center">
+            <h1 className="text-3xl md:text-4xl font-bold mb-3">
               Propiedades que <span className="text-primary">coinciden</span>
               <br />
               con tu búsqueda
             </h1>
             {queryParam && (
-              <div className="inline-flex items-center gap-2 px-6 py-3 bg-primary/10 rounded-full">
-                <span className="text-lg text-muted-foreground">Buscaste:</span>
-                <span className="text-lg font-semibold text-primary">"{queryParam}"</span>
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full">
+                <span className="text-sm text-muted-foreground">Buscaste:</span>
+                <span className="text-sm font-semibold text-primary">"{queryParam}"</span>
               </div>
             )}
           </div>
@@ -153,7 +153,7 @@ const PropertiesCatalog = () => {
               <Loader2 className="h-12 w-12 animate-spin text-primary" />
             </div>
           ) : properties && properties.length > 0 ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
               {properties.map((property, index) => {
                 const images = property.images as string[] || [];
                 const defaultImage = getPropertyImage(property.property_type, index);
