@@ -101,10 +101,10 @@ const SearchOptions = ({
         </Card>
       </div>
 
-      <div className="text-center pt-4 md:pt-6 animate-fade-in">
-        <p className="text-sm md:text-base text-white/70 mb-2">Tu búsqueda:</p>
-        <div className="inline-block bg-white/20 backdrop-blur-sm px-4 md:px-6 py-2 md:py-3 rounded-full border border-white/30 animate-pulse">
-          <p className="text-base md:text-lg font-medium text-white">
+      <div className="text-center pt-2 md:pt-4 animate-fade-in">
+        <div className="inline-block bg-white/95 px-3 md:px-4 py-1.5 md:py-2 rounded-lg border border-primary/20 shadow-lg">
+          <p className="text-[10px] md:text-xs text-muted-foreground mb-0.5">Tu búsqueda:</p>
+          <p className="text-xs md:text-sm font-semibold text-foreground">
             "{searchQuery}"
           </p>
         </div>
