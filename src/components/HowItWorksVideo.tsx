@@ -1,15 +1,24 @@
 import { Play, MapPin, Search, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import videoThumbnail from "@/assets/video-thumbnail.jpg";
 
 const HowItWorksVideo = () => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isFlipped, setIsFlipped] = useState(false);
 
   const handlePlayVideo = () => {
     setIsPlaying(true);
     // Aquí se puede agregar la lógica para reproducir el video real
   };
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsFlipped(prev => !prev);
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <section className="py-16 md:py-24 bg-gradient-to-b from-background to-accent/20">
@@ -67,34 +76,70 @@ const HowItWorksVideo = () => {
 
           {/* Features Grid */}
           <div className="grid grid-cols-3 gap-2 md:gap-8">
-            <div className="text-center p-3 md:p-6 rounded-xl md:rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-lg animate-fade-in">
-              <div className="inline-flex p-2 md:p-4 rounded-lg md:rounded-xl bg-primary/10 text-primary mb-2 md:mb-4">
-                <Search className="h-4 w-4 md:h-8 md:w-8" />
+            {/* Card 1 */}
+            <div className="relative h-48 md:h-64" style={{ perspective: '1000px' }}>
+              <div 
+                className={`relative w-full h-full transition-transform duration-700 ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}
+                style={{ transformStyle: 'preserve-3d' }}
+              >
+                {/* Front */}
+                <div className="absolute inset-0 text-center p-3 md:p-6 rounded-xl md:rounded-2xl bg-card border border-border flex flex-col items-center justify-center" style={{ backfaceVisibility: 'hidden' }}>
+                  <div className="inline-flex p-2 md:p-4 rounded-lg md:rounded-xl bg-primary/10 text-primary mb-2 md:mb-4">
+                    <Search className="h-4 w-4 md:h-8 md:w-8" />
+                  </div>
+                  <h3 className="text-xs md:text-xl font-semibold">1. Describe tu búsqueda</h3>
+                </div>
+                {/* Back */}
+                <div className="absolute inset-0 text-center p-3 md:p-6 rounded-xl md:rounded-2xl bg-primary/10 border border-primary flex items-center justify-center [transform:rotateY(180deg)]" style={{ backfaceVisibility: 'hidden' }}>
+                  <p className="text-xs md:text-base text-foreground">
+                    Usa lenguaje natural para describir el inmueble que buscas
+                  </p>
+                </div>
               </div>
-              <h3 className="text-xs md:text-xl font-semibold mb-1 md:mb-2">1. Describe tu búsqueda</h3>
-              <p className="text-[10px] md:text-base text-muted-foreground hidden md:block">
-                Usa lenguaje natural para describir el inmueble que buscas
-              </p>
             </div>
 
-            <div className="text-center p-3 md:p-6 rounded-xl md:rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-lg animate-fade-in" style={{ animationDelay: '0.1s' }}>
-              <div className="inline-flex p-2 md:p-4 rounded-lg md:rounded-xl bg-accent/10 text-accent mb-2 md:mb-4">
-                <MapPin className="h-4 w-4 md:h-8 md:w-8" />
+            {/* Card 2 */}
+            <div className="relative h-48 md:h-64" style={{ perspective: '1000px' }}>
+              <div 
+                className={`relative w-full h-full transition-transform duration-700 ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}
+                style={{ transformStyle: 'preserve-3d' }}
+              >
+                {/* Front */}
+                <div className="absolute inset-0 text-center p-3 md:p-6 rounded-xl md:rounded-2xl bg-card border border-border flex flex-col items-center justify-center" style={{ backfaceVisibility: 'hidden' }}>
+                  <div className="inline-flex p-2 md:p-4 rounded-lg md:rounded-xl bg-accent/10 text-accent mb-2 md:mb-4">
+                    <MapPin className="h-4 w-4 md:h-8 md:w-8" />
+                  </div>
+                  <h3 className="text-xs md:text-xl font-semibold">2. Ubicación en tiempo real</h3>
+                </div>
+                {/* Back */}
+                <div className="absolute inset-0 text-center p-3 md:p-6 rounded-xl md:rounded-2xl bg-accent/10 border border-accent flex items-center justify-center [transform:rotateY(180deg)]" style={{ backfaceVisibility: 'hidden' }}>
+                  <p className="text-xs md:text-base text-foreground">
+                    INMOTIVO detecta tu ubicación y busca propiedades cercanas
+                  </p>
+                </div>
               </div>
-              <h3 className="text-xs md:text-xl font-semibold mb-1 md:mb-2">2. Ubicación en tiempo real</h3>
-              <p className="text-[10px] md:text-base text-muted-foreground hidden md:block">
-                INMOTIVO detecta tu ubicación y busca propiedades cercanas
-              </p>
             </div>
 
-            <div className="text-center p-3 md:p-6 rounded-xl md:rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-lg animate-fade-in" style={{ animationDelay: '0.2s' }}>
-              <div className="inline-flex p-2 md:p-4 rounded-lg md:rounded-xl bg-primary/10 text-primary mb-2 md:mb-4">
-                <Navigation className="h-4 w-4 md:h-8 md:w-8" />
+            {/* Card 3 */}
+            <div className="relative h-48 md:h-64" style={{ perspective: '1000px' }}>
+              <div 
+                className={`relative w-full h-full transition-transform duration-700 ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}
+                style={{ transformStyle: 'preserve-3d' }}
+              >
+                {/* Front */}
+                <div className="absolute inset-0 text-center p-3 md:p-6 rounded-xl md:rounded-2xl bg-card border border-border flex flex-col items-center justify-center" style={{ backfaceVisibility: 'hidden' }}>
+                  <div className="inline-flex p-2 md:p-4 rounded-lg md:rounded-xl bg-primary/10 text-primary mb-2 md:mb-4">
+                    <Navigation className="h-4 w-4 md:h-8 md:w-8" />
+                  </div>
+                  <h3 className="text-xs md:text-xl font-semibold">3. Navega y explora</h3>
+                </div>
+                {/* Back */}
+                <div className="absolute inset-0 text-center p-3 md:p-6 rounded-xl md:rounded-2xl bg-primary/10 border border-primary flex items-center justify-center [transform:rotateY(180deg)]" style={{ backfaceVisibility: 'hidden' }}>
+                  <p className="text-xs md:text-base text-foreground">
+                    Ve propiedades mientras te desplazas por la ciudad
+                  </p>
+                </div>
               </div>
-              <h3 className="text-xs md:text-xl font-semibold mb-1 md:mb-2">3. Navega y explora</h3>
-              <p className="text-[10px] md:text-base text-muted-foreground hidden md:block">
-                Ve propiedades mientras te desplazas por la ciudad
-              </p>
             </div>
           </div>
         </div>
