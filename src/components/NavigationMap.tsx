@@ -36,6 +36,7 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editSearchQuery, setEditSearchQuery] = useState(searchCriteria);
   const [searchRadius, setSearchRadius] = useState<number>(300); // Default 300 meters
+  const [isPaused, setIsPaused] = useState(false);
 
   // Fetch real properties from database and position them around user location
   // More radius = more properties (200m-1km range)
@@ -112,6 +113,9 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
 
     const watchId = navigator.geolocation.watchPosition(
       (position) => {
+        // Don't update if navigation is paused
+        if (isPaused) return;
+
         const now = Date.now();
         if (now - lastUpdate < UPDATE_INTERVAL) {
           return;
@@ -277,7 +281,7 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
         directionArrow.current.remove();
       }
     };
-  }, []);
+  }, [isPaused]);
 
   // Update radius circle and map zoom when searchRadius changes
   useEffect(() => {
@@ -299,9 +303,9 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
     }
   }, [searchRadius, userLocation]);
 
-  // Setup routing - Optimizado para evitar re-calcular constantemente
+  // Setup routing - Only when not paused
   useEffect(() => {
-    if (!map.current || !userLocation) return;
+    if (!map.current || !userLocation || isPaused) return;
 
     if (routingControl.current) {
       try {
@@ -333,7 +337,7 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
         }
       }
     };
-  }, [userLocation, destination]);
+  }, [userLocation, destination, isPaused]);
 
   // Setup navigation handler for property details
   useEffect(() => {
@@ -451,6 +455,15 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
     });
   }, [userLocation, properties]);
 
+  const handleToggleNavigation = () => {
+    setIsPaused(!isPaused);
+    if (!isPaused) {
+      toast.info("Navegación pausada");
+    } else {
+      toast.success("Navegación reanudada");
+    }
+  };
+
   const handleUpdateSearch = () => {
     if (!editSearchQuery.trim()) {
       toast.error("Por favor ingresa una búsqueda");
@@ -470,17 +483,28 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
     <div className="relative w-full h-full">
       <div ref={mapContainer} className="w-full h-full" />
       
-      {/* Botón Detener - Parte inferior izquierda */}
+      {/* Botón Pausar/Reanudar - Parte inferior izquierda */}
       <div className="absolute bottom-4 left-4 z-[1000]">
         <Button
-          onClick={onStopNavigation}
-          variant="destructive"
+          onClick={handleToggleNavigation}
+          variant={isPaused ? "default" : "destructive"}
           size="lg"
-          className="shadow-lg text-xs md:text-base px-3 py-1.5 md:px-6 md:py-2 h-auto"
+          className={`shadow-lg text-xs md:text-base px-3 py-1.5 md:px-6 md:py-2 h-auto ${
+            isPaused ? 'bg-green-600 hover:bg-green-700' : ''
+          }`}
         >
-          <X className="mr-1 md:mr-2 h-3 w-3 md:h-5 md:w-5" />
-          <span className="hidden xs:inline">Detener</span>
-          <span className="xs:hidden">Stop</span>
+          {isPaused ? (
+            <>
+              <Navigation className="mr-1 md:mr-2 h-3 w-3 md:h-5 md:w-5" />
+              <span>Ir</span>
+            </>
+          ) : (
+            <>
+              <X className="mr-1 md:mr-2 h-3 w-3 md:h-5 md:w-5" />
+              <span className="hidden xs:inline">Detener</span>
+              <span className="xs:hidden">Stop</span>
+            </>
+          )}
         </Button>
       </div>
 
