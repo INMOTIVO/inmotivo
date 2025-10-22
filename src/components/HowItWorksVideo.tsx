@@ -66,33 +66,33 @@ const HowItWorksVideo = () => {
           </div>
 
           {/* Features Grid */}
-          <div className="grid grid-cols-3 gap-4 md:gap-8">
-            <div className="text-center p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-lg animate-fade-in">
-              <div className="inline-flex p-4 rounded-xl bg-primary/10 text-primary mb-4">
-                <Search className="h-8 w-8" />
+          <div className="grid grid-cols-3 gap-2 md:gap-8">
+            <div className="text-center p-3 md:p-6 rounded-xl md:rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-lg animate-fade-in">
+              <div className="inline-flex p-2 md:p-4 rounded-lg md:rounded-xl bg-primary/10 text-primary mb-2 md:mb-4">
+                <Search className="h-4 w-4 md:h-8 md:w-8" />
               </div>
-              <h3 className="text-lg md:text-xl font-semibold mb-2">1. Describe tu búsqueda</h3>
-              <p className="text-sm md:text-base text-muted-foreground">
+              <h3 className="text-xs md:text-xl font-semibold mb-1 md:mb-2">1. Describe tu búsqueda</h3>
+              <p className="text-[10px] md:text-base text-muted-foreground hidden md:block">
                 Usa lenguaje natural para describir el inmueble que buscas
               </p>
             </div>
 
-            <div className="text-center p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-lg animate-fade-in" style={{ animationDelay: '0.1s' }}>
-              <div className="inline-flex p-4 rounded-xl bg-accent/10 text-accent mb-4">
-                <MapPin className="h-8 w-8" />
+            <div className="text-center p-3 md:p-6 rounded-xl md:rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-lg animate-fade-in" style={{ animationDelay: '0.1s' }}>
+              <div className="inline-flex p-2 md:p-4 rounded-lg md:rounded-xl bg-accent/10 text-accent mb-2 md:mb-4">
+                <MapPin className="h-4 w-4 md:h-8 md:w-8" />
               </div>
-              <h3 className="text-lg md:text-xl font-semibold mb-2">2. Ubicación en tiempo real</h3>
-              <p className="text-sm md:text-base text-muted-foreground">
+              <h3 className="text-xs md:text-xl font-semibold mb-1 md:mb-2">2. Ubicación en tiempo real</h3>
+              <p className="text-[10px] md:text-base text-muted-foreground hidden md:block">
                 INMOTIVO detecta tu ubicación y busca propiedades cercanas
               </p>
             </div>
 
-            <div className="text-center p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-lg animate-fade-in" style={{ animationDelay: '0.2s' }}>
-              <div className="inline-flex p-4 rounded-xl bg-primary/10 text-primary mb-4">
-                <Navigation className="h-8 w-8" />
+            <div className="text-center p-3 md:p-6 rounded-xl md:rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-lg animate-fade-in" style={{ animationDelay: '0.2s' }}>
+              <div className="inline-flex p-2 md:p-4 rounded-lg md:rounded-xl bg-primary/10 text-primary mb-2 md:mb-4">
+                <Navigation className="h-4 w-4 md:h-8 md:w-8" />
               </div>
-              <h3 className="text-lg md:text-xl font-semibold mb-2">3. Navega y explora</h3>
-              <p className="text-sm md:text-base text-muted-foreground">
+              <h3 className="text-xs md:text-xl font-semibold mb-1 md:mb-2">3. Navega y explora</h3>
+              <p className="text-[10px] md:text-base text-muted-foreground hidden md:block">
                 Ve propiedades mientras te desplazas por la ciudad
               </p>
             </div>
