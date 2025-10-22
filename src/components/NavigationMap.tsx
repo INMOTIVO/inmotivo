@@ -94,7 +94,7 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
     };
   }, []);
 
-  // Track user location and draw 200m radius circle + heading arrow
+  // Track user location and draw radius circle + heading arrow
   useEffect(() => {
     if (!map.current) return;
 
@@ -225,11 +225,8 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
           }
         }
 
-        // Update or create radius circle with current searchRadius
-        if (radiusCircle.current) {
-          radiusCircle.current.setLatLng(newLocation);
-          radiusCircle.current.setRadius(searchRadius);
-        } else {
+        // Create radius circle if it doesn't exist
+        if (!radiusCircle.current) {
           radiusCircle.current = L.circle(newLocation, {
             radius: searchRadius,
             color: '#8b5cf6',
@@ -238,6 +235,8 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
             weight: 3,
             dashArray: '8, 12',
           }).addTo(map.current!);
+        } else {
+          radiusCircle.current.setLatLng(newLocation);
         }
 
         const currentCenter = map.current!.getCenter();
@@ -263,12 +262,20 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
       navigator.geolocation.clearWatch(watchId);
       if (radiusCircle.current && map.current) {
         radiusCircle.current.remove();
+        radiusCircle.current = null;
       }
       if (directionArrow.current && map.current) {
         directionArrow.current.remove();
       }
     };
-  }, [searchRadius]);
+  }, []);
+
+  // Update radius circle when searchRadius changes
+  useEffect(() => {
+    if (radiusCircle.current && userLocation) {
+      radiusCircle.current.setRadius(searchRadius);
+    }
+  }, [searchRadius, userLocation]);
 
   // Setup routing - Optimizado para evitar re-calcular constantemente
   useEffect(() => {
