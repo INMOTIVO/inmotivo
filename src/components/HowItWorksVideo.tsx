@@ -66,7 +66,7 @@ const HowItWorksVideo = () => {
           </div>
 
           {/* Features Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+          <div className="grid grid-cols-3 gap-4 md:gap-8">
             <div className="text-center p-6 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-lg animate-fade-in">
               <div className="inline-flex p-4 rounded-xl bg-primary/10 text-primary mb-4">
                 <Search className="h-8 w-8" />
