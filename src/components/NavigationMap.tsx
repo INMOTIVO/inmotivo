@@ -470,8 +470,8 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
     <div className="relative w-full h-full">
       <div ref={mapContainer} className="w-full h-full" />
       
-      {/* Botón Detener - Más pequeño en móvil */}
-      <div className="absolute top-4 right-4 z-[1000]">
+      {/* Botón Detener - Parte inferior izquierda */}
+      <div className="absolute bottom-4 left-4 z-[1000]">
         <Button
           onClick={onStopNavigation}
           variant="destructive"
