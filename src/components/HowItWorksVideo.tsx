@@ -105,8 +105,8 @@ const HowItWorksVideo = () => {
                   <h3 className="text-xs md:text-xl font-semibold">1. Describe tu búsqueda</h3>
                 </div>
                 {/* Back */}
-                <div className="absolute inset-0 text-center px-3 py-4 md:p-6 rounded-xl md:rounded-2xl bg-card/95 backdrop-blur-sm border-[3px] border-primary shadow-[0_0_20px_rgba(var(--primary),0.5)] flex items-center justify-center [transform:rotateY(180deg)]" style={{ backfaceVisibility: 'hidden' }}>
-                  <p className="text-xs leading-snug md:text-base text-foreground font-medium md:leading-relaxed">
+                <div className="absolute inset-0 text-center p-3 md:p-6 rounded-xl md:rounded-2xl bg-card/95 backdrop-blur-sm border-[3px] border-primary shadow-[0_0_20px_rgba(var(--primary),0.5)] flex items-center justify-center [transform:rotateY(180deg)]" style={{ backfaceVisibility: 'hidden' }}>
+                  <p className="text-xs md:text-base text-foreground font-medium">
                     Usa lenguaje natural para describir el inmueble que buscas
                   </p>
                 </div>
@@ -130,8 +130,8 @@ const HowItWorksVideo = () => {
                   <h3 className="text-xs md:text-xl font-semibold">2. Ubicación en tiempo real</h3>
                 </div>
                 {/* Back */}
-                <div className="absolute inset-0 text-center px-3 py-4 md:p-6 rounded-xl md:rounded-2xl bg-card/95 backdrop-blur-sm border-[3px] border-accent shadow-[0_0_20px_rgba(var(--accent),0.5)] flex items-center justify-center [transform:rotateY(180deg)]" style={{ backfaceVisibility: 'hidden' }}>
-                  <p className="text-xs leading-snug md:text-base text-foreground font-medium md:leading-relaxed">
+                <div className="absolute inset-0 text-center p-3 md:p-6 rounded-xl md:rounded-2xl bg-card/95 backdrop-blur-sm border-[3px] border-accent shadow-[0_0_20px_rgba(var(--accent),0.5)] flex items-center justify-center [transform:rotateY(180deg)]" style={{ backfaceVisibility: 'hidden' }}>
+                  <p className="text-xs md:text-base text-foreground font-medium">
                     INMOTIVO detecta tu ubicación y busca propiedades cercanas
                   </p>
                 </div>
@@ -155,8 +155,8 @@ const HowItWorksVideo = () => {
                   <h3 className="text-xs md:text-xl font-semibold">3. Navega y explora</h3>
                 </div>
                 {/* Back */}
-                <div className="absolute inset-0 text-center px-3 py-4 md:p-6 rounded-xl md:rounded-2xl bg-card/95 backdrop-blur-sm border-[3px] border-primary shadow-[0_0_20px_rgba(var(--primary),0.5)] flex items-center justify-center [transform:rotateY(180deg)]" style={{ backfaceVisibility: 'hidden' }}>
-                  <p className="text-xs leading-snug md:text-base text-foreground font-medium md:leading-relaxed">
+                <div className="absolute inset-0 text-center p-3 md:p-6 rounded-xl md:rounded-2xl bg-card/95 backdrop-blur-sm border-[3px] border-primary shadow-[0_0_20px_rgba(var(--primary),0.5)] flex items-center justify-center [transform:rotateY(180deg)]" style={{ backfaceVisibility: 'hidden' }}>
+                  <p className="text-xs md:text-base text-foreground font-medium">
                     Ve propiedades mientras te desplazas por la ciudad
                   </p>
                 </div>
