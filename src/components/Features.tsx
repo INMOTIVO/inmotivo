@@ -26,7 +26,7 @@ const Features = () => {
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">Tecnología de vanguardia que simplifica tu búsqueda </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {features.map((feature, index) => <div key={index} className="group p-8 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-300 hover:shadow-lg">
               <div className="mb-6 inline-flex p-4 rounded-xl bg-primary/10 text-primary group-hover:scale-110 transition-transform duration-300">
                 <feature.icon className="h-8 w-8" />
