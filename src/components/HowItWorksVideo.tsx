@@ -80,6 +80,7 @@ const HowItWorksVideo = () => {
                 <div className="absolute inset-0 bg-black">
                   <video
                     className="w-full h-full object-contain"
+                    autoPlay
                     controls
                     playsInline
                     loop
