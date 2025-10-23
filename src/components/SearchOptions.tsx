@@ -107,7 +107,7 @@ const SearchOptions = ({
         {/* Navegación GPS */}
         <Card className="p-3 md:p-6 hover:shadow-xl transition-all duration-300 hover:border-primary/50 cursor-pointer group border-primary/30">
           <div className="flex flex-col h-full space-y-2 md:space-y-4">
-            <div className="inline-flex p-2 md:p-3 rounded-2xl bg-accent/10 text-accent group-hover:scale-110 transition-transform duration-300">
+            <div className="inline-flex p-2 md:p-3 rounded-2xl bg-accent/10 text-accent group-hover:scale-110 transition-transform duration-300 animate-[slide-horizontal_2s_ease-in-out_infinite]">
               <Navigation className="h-6 w-6 md:h-8 md:w-8" />
             </div>
             
