@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
@@ -7,6 +7,7 @@ import { MapPin, Phone, MessageCircle, Calendar, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { useNavigate } from 'react-router-dom';
+import { playNotificationSound } from '@/utils/notificationSound';
 
 interface NearbyPropertiesProps {
   filters: any;
@@ -18,6 +19,7 @@ const NearbyProperties = ({ filters, searchCriteria }: NearbyPropertiesProps) =>
   const [selectedProperties, setSelectedProperties] = useState<string[]>([]);
   const [showSelected, setShowSelected] = useState(false);
   const navigate = useNavigate();
+  const previousPropertiesCount = useRef<number>(0);
 
   useEffect(() => {
     let lastUpdate = 0;
@@ -148,6 +150,18 @@ const NearbyProperties = ({ filters, searchCriteria }: NearbyPropertiesProps) =>
   });
 
   console.log('NearbyProperties: Final properties:', properties?.length || 0);
+
+  // Detectar nuevas propiedades y reproducir sonido
+  useEffect(() => {
+    if (!properties) return;
+    
+    const currentCount = properties.length;
+    if (previousPropertiesCount.current > 0 && currentCount > previousPropertiesCount.current) {
+      const newPropertiesCount = currentCount - previousPropertiesCount.current;
+      playNotificationSound();
+    }
+    previousPropertiesCount.current = currentCount;
+  }, [properties]);
 
   const togglePropertySelection = (id: string) => {
     setSelectedProperties((prev) =>

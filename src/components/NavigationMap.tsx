@@ -14,6 +14,7 @@ import { Slider } from '@/components/ui/slider';
 import { X, Navigation, Edit2, MapPin } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { playNotificationSound } from '@/utils/notificationSound';
 
 interface NavigationMapProps {
   destination: [number, number];
@@ -37,6 +38,7 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
   const [editSearchQuery, setEditSearchQuery] = useState(searchCriteria);
   const [searchRadius, setSearchRadius] = useState<number>(300); // Default 300 meters
   const [isPaused, setIsPaused] = useState(false);
+  const previousPropertiesCount = useRef<number>(0);
 
   // Fetch real properties from database and position them around user location
   // More radius = more properties (200m-1km range)
@@ -340,6 +342,17 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
   // Update property markers with real data
   useEffect(() => {
     if (!map.current || !userLocation || !properties) return;
+
+    // Detectar nuevas propiedades y reproducir sonido
+    const currentCount = properties.length;
+    if (previousPropertiesCount.current > 0 && currentCount > previousPropertiesCount.current) {
+      const newPropertiesCount = currentCount - previousPropertiesCount.current;
+      playNotificationSound();
+      toast.success(`${newPropertiesCount} nueva${newPropertiesCount > 1 ? 's' : ''} propiedad${newPropertiesCount > 1 ? 'es' : ''} cerca de ti`, {
+        duration: 3000,
+      });
+    }
+    previousPropertiesCount.current = currentCount;
 
     // Clear existing markers
     markers.current.forEach((marker) => marker.remove());
