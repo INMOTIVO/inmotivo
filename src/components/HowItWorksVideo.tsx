@@ -10,7 +10,12 @@ const HowItWorksVideo = () => {
 
   const handlePlayVideo = () => {
     setIsPlaying(true);
-    // Aquí se puede agregar la lógica para reproducir el video real
+    const videoElement = document.querySelector('video');
+    if (videoElement) {
+      videoElement.play().catch(error => {
+        console.error('Error playing video:', error);
+      });
+    }
   };
 
   useEffect(() => {
@@ -75,10 +80,13 @@ const HowItWorksVideo = () => {
                 <div className="absolute inset-0 bg-black">
                   <video
                     className="w-full h-full object-contain"
-                    autoPlay
                     controls
                     playsInline
                     loop
+                    preload="auto"
+                    onError={(e) => {
+                      console.error('Video error:', e);
+                    }}
                   >
                     <source src={demoVideo} type="video/webm" />
                     Tu navegador no soporta el elemento de video.
