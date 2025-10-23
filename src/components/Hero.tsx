@@ -336,7 +336,7 @@ const Hero = () => {
             </div>
 
             {/* Search bar */}
-            <div className="relative max-w-2xl mx-auto w-full px-2">
+            <div className="relative max-w-2xl mx-auto w-full px-4 sm:px-2">
               {/* Animated border glow */}
               <div className="absolute inset-0 rounded-xl md:rounded-2xl bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_100%] animate-[gradient-flow_3s_linear_infinite] opacity-75 blur-sm"></div>
               
@@ -346,7 +346,7 @@ const Hero = () => {
                     <Search className="h-4 w-4 text-muted-foreground mt-2 flex-shrink-0" />
                     <Textarea
                       placeholder="Cuéntame qué buscas..."
-                      className="border-0 focus-visible:ring-0 text-sm resize-none min-h-[50px] max-h-[120px] w-full"
+                      className="border-0 focus-visible:ring-0 text-sm resize-none min-h-[40px] max-h-[80px] md:max-h-[120px] w-full overflow-y-auto"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       onKeyDown={(e) => {
@@ -373,13 +373,13 @@ const Hero = () => {
                           >
                             {municipality && sector ? (
                               <div className="min-w-0">
-                                <div className="text-xs sm:text-sm font-medium truncate">{municipality}</div>
-                                <div className="text-[10px] sm:text-xs text-muted-foreground truncate">{sector}</div>
+                                <div className="text-sm font-medium truncate">{municipality}</div>
+                                <div className="text-xs text-muted-foreground truncate">{sector}</div>
                               </div>
                             ) : municipality ? (
-                              <div className="text-xs sm:text-sm font-medium truncate">{municipality}</div>
+                              <div className="text-sm font-medium truncate">{municipality}</div>
                             ) : (
-                              <span className="text-xs sm:text-sm text-muted-foreground">Ubicación actual</span>
+                              <span className="text-sm text-muted-foreground">Ubicación actual</span>
                             )}
                           </div>
                         </div>
@@ -402,7 +402,7 @@ const Hero = () => {
                             size="sm"
                             onClick={() => handleSearch()}
                             disabled={!searchQuery.trim() || isRecording}
-                            className="flex-1 sm:flex-initial"
+                            className="flex-1 sm:flex-initial min-w-[80px]"
                           >
                             {isRecording ? 'Escuchando...' : 'Buscar'}
                           </Button>
