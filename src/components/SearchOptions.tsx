@@ -23,6 +23,11 @@ const SearchOptions = ({
   const [editedQuery, setEditedQuery] = useState(searchQuery);
   const [isRecording, setIsRecording] = useState(false);
   const recognitionRef = useRef<any>(null);
+  const handleStartEdit = () => {
+    setEditedQuery('');
+    setIsEditing(true);
+  };
+
   const handleSaveEdit = () => {
     if (editedQuery.trim()) {
       onSearchChange?.(editedQuery);
@@ -39,6 +44,12 @@ const SearchOptions = ({
       return;
     }
 
+    // Si no está editando, limpiar y entrar en modo edición
+    if (!isEditing) {
+      setEditedQuery('');
+      setIsEditing(true);
+    }
+
     const recognition = new SpeechRecognition();
     recognition.lang = 'es-ES';
     recognition.continuous = false;
@@ -53,6 +64,7 @@ const SearchOptions = ({
       const transcript = event.results[0][0].transcript;
       setEditedQuery(transcript);
       onSearchChange?.(transcript);
+      setIsEditing(false);
       toast.success("Búsqueda actualizada por voz");
     };
 
@@ -198,7 +210,7 @@ const SearchOptions = ({
                 size="icon"
                 variant="ghost"
                 className="h-6 w-6"
-                onClick={() => setIsEditing(true)}
+                onClick={handleStartEdit}
               >
                 <Edit2 className="h-3 w-3" />
               </Button>
