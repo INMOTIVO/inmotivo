@@ -5,9 +5,9 @@ const Footer = () => {
   const navigate = useNavigate();
   return <footer className="bg-foreground text-background py-16">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-12 mb-8 md:mb-12">
+        <div className="flex flex-col md:grid md:grid-cols-4 gap-6 md:gap-12 mb-8 md:mb-12">
           {/* Brand */}
-          <div className="space-y-4">
+          <div className="space-y-4 flex flex-col items-center md:items-start text-center md:text-left">
             <div 
               className="flex items-center gap-2 cursor-pointer"
               onClick={() => navigate("/")}
@@ -26,7 +26,7 @@ de arriendos con IA y geolocalización</p>
           </div>
 
           {/* Quick Links */}
-          <div>
+          <div className="hidden md:block">
             <h3 className="font-semibold text-lg mb-4">Enlaces Rápidos</h3>
             <ul className="space-y-2 text-background/70">
               <li><a href="/docs/buscar-propiedades.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Buscar Propiedades</a></li>
@@ -37,7 +37,7 @@ de arriendos con IA y geolocalización</p>
           </div>
 
           {/* Legal */}
-          <div>
+          <div className="hidden md:block">
             <h3 className="font-semibold text-lg mb-4">Legal</h3>
             <ul className="space-y-2 text-background/70">
               <li><a href="/docs/terminos-condiciones.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Términos y Condiciones</a></li>
@@ -48,7 +48,7 @@ de arriendos con IA y geolocalización</p>
           </div>
 
           {/* Contact */}
-          <div>
+          <div className="hidden md:block">
             <h3 className="font-semibold text-lg mb-4">Contacto</h3>
             <ul className="space-y-3 text-background/70">
               <li className="flex items-center gap-2">
