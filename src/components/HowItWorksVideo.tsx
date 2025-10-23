@@ -2,6 +2,7 @@ import { Play, MapPin, Search, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import videoThumbnail from "@/assets/video-thumbnail.jpg";
+import demoVideo from "@/assets/inmotivo-demo.webm";
 
 const HowItWorksVideo = () => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -79,7 +80,7 @@ const HowItWorksVideo = () => {
                     playsInline
                     loop
                   >
-                    <source src="https://videos.pexels.com/video-files/5536361/5536361-hd_1920_1080_25fps.mp4" type="video/mp4" />
+                    <source src={demoVideo} type="video/webm" />
                     Tu navegador no soporta el elemento de video.
                   </video>
                 </div>
