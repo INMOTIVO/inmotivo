@@ -21,9 +21,7 @@ const Hero = () => {
   const [showOptions, setShowOptions] = useState(false);
   const [showFixedSearch, setShowFixedSearch] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [isProcessing, setIsProcessing] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
+  const recognitionRef = useRef<any>(null);
   const isMobile = useIsMobile();
 
   // Check if we should show options from URL params
@@ -112,67 +110,55 @@ const Hero = () => {
     getCurrentLocation();
   }, []);
 
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (event) => {
-        audioChunksRef.current.push(event.data);
-      };
-
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        await transcribeAudio(audioBlob);
-        stream.getTracks().forEach(track => track.stop());
-      };
-
-      mediaRecorder.start();
-      setIsRecording(true);
-      toast.success("Grabando... Habla ahora");
-    } catch (error) {
-      console.error('Error:', error);
-      toast.error("No se pudo acceder al micrófono");
+  const startRecording = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    
+    if (!SpeechRecognition) {
+      toast.error("Tu navegador no soporta reconocimiento de voz. Intenta con Chrome o Edge.");
+      return;
     }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'es-ES';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onstart = () => {
+      setIsRecording(true);
+      toast.success("Escuchando... Habla ahora");
+    };
+
+    recognition.onresult = async (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setSearchQuery(transcript);
+      await handleSearch(transcript);
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error('Error en reconocimiento de voz:', event.error);
+      setIsRecording(false);
+      toast.error("No se pudo procesar el audio. Intenta de nuevo.");
+    };
+
+    recognition.onend = () => {
+      setIsRecording(false);
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
       setIsRecording(false);
     }
   };
 
-  const transcribeAudio = async (audioBlob: Blob) => {
-    setIsProcessing(true);
-    try {
-      const reader = new FileReader();
-      reader.readAsDataURL(audioBlob);
-      reader.onloadend = async () => {
-        const base64Audio = reader.result?.toString().split(',')[1];
-        
-        const { data, error } = await supabase.functions.invoke('transcribe-audio', {
-          body: { audio: base64Audio }
-        });
-
-        if (error) throw error;
-
-        setSearchQuery(data.text);
-        toast.success("Audio transcrito correctamente");
-        await handleSearch();
-      };
-    } catch (error) {
-      console.error('Error:', error);
-      toast.error("Error al transcribir audio");
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) {
+  const handleSearch = async (queryText?: string) => {
+    const textToSearch = queryText || searchQuery;
+    
+    if (!textToSearch.trim()) {
       toast.error("Por favor describe qué buscas");
       return;
     }
@@ -180,7 +166,7 @@ const Hero = () => {
     // Validar que la búsqueda sea sobre inmuebles
     try {
       const { data, error } = await supabase.functions.invoke('interpret-search', {
-        body: { query: searchQuery.trim() }
+        body: { query: textToSearch.trim() }
       });
 
       if (error) throw error;
@@ -296,7 +282,7 @@ const Hero = () => {
                         </div>
                         <Button 
                           onClick={isRecording ? stopRecording : startRecording}
-                          disabled={isProcessing || loadingLocation}
+                          disabled={loadingLocation}
                           variant={isRecording ? "destructive" : "outline"}
                           size="icon"
                           className="flex-shrink-0"
@@ -310,17 +296,10 @@ const Hero = () => {
                         <Button 
                           variant="hero" 
                           size="default"
-                          onClick={handleSearch}
-                          disabled={!searchQuery.trim() || isProcessing || isRecording}
+                          onClick={() => handleSearch()}
+                          disabled={!searchQuery.trim() || isRecording}
                         >
-                          {isProcessing ? (
-                            <>
-                              <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                              Procesando...
-                            </>
-                          ) : (
-                            'Buscar'
-                          )}
+                          {isRecording ? 'Escuchando...' : 'Buscar'}
                         </Button>
                       </>
                     )}
@@ -353,11 +332,10 @@ const Hero = () => {
                     handleSearch();
                   }
                 }}
-                disabled={isRecording || isProcessing}
+                disabled={isRecording}
               />
               <Button 
                 onClick={isRecording ? stopRecording : startRecording}
-                disabled={isProcessing}
                 variant={isRecording ? "destructive" : "outline"}
                 size="icon"
                 className="flex-shrink-0"
@@ -371,15 +349,11 @@ const Hero = () => {
               <Button 
                 variant="hero" 
                 size="sm"
-                onClick={handleSearch}
-                disabled={!searchQuery.trim() || isProcessing || isRecording}
+                onClick={() => handleSearch()}
+                disabled={!searchQuery.trim() || isRecording}
                 className="flex-shrink-0"
               >
-                {isProcessing ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  'Buscar'
-                )}
+                {isRecording ? 'Escuchando...' : 'Buscar'}
               </Button>
             </div>
           </div>
