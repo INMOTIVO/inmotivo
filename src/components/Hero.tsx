@@ -268,7 +268,7 @@ const Hero = () => {
                       </>
                     ) : (
                       <>
-                        <MapPin className="h-4 w-4 text-muted-foreground" />
+                        <MapPin className="h-4 w-4 text-primary animate-bounce" />
                         <div className="flex-1">
                           {municipality && sector ? (
                             <div>
@@ -299,6 +299,7 @@ const Hero = () => {
                           size="default"
                           onClick={() => handleSearch()}
                           disabled={!searchQuery.trim() || isRecording}
+                          className="bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_100%] hover:bg-[length:100%_100%] transition-all shadow-lg hover:shadow-xl hover:scale-105 animate-[gradient-flow_3s_linear_infinite]"
                         >
                           {isRecording ? 'Escuchando...' : 'Buscar'}
                         </Button>
@@ -352,7 +353,7 @@ const Hero = () => {
                 size="sm"
                 onClick={() => handleSearch()}
                 disabled={!searchQuery.trim() || isRecording}
-                className="flex-shrink-0"
+                className="flex-shrink-0 bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_100%] hover:bg-[length:100%_100%] transition-all shadow-lg hover:shadow-xl animate-[gradient-flow_3s_linear_infinite]"
               >
                 {isRecording ? 'Escuchando...' : 'Buscar'}
               </Button>
