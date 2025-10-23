@@ -22,10 +22,10 @@ const CTASection = () => {
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-4xl mx-auto text-center space-y-8">
           <div className="space-y-4">
-            <h2 className="text-5xl font-bold">
+            <h2 className="text-2xl md:text-5xl font-bold">
               ¿Eres inmobiliaria o propietario?
             </h2>
-            <p className="text-2xl text-white/90">
+            <p className="text-base md:text-2xl text-white/90">
               Únete a INMOTIVO y llega a miles de clientes potenciales con tecnología de IA
             </p>
           </div>
