@@ -5,9 +5,9 @@ const Footer = () => {
   const navigate = useNavigate();
   return <footer className="bg-foreground text-background py-16">
       <div className="container mx-auto px-4">
-        <div className="grid md:grid-cols-2 gap-12 max-w-6xl mx-auto mb-12">
+        <div className="grid md:grid-cols-2 gap-12 max-w-5xl mx-auto mb-12">
           {/* Brand - Left aligned */}
-          <div className="space-y-6">
+          <div className="space-y-6 flex flex-col justify-center">
             <div 
               className="flex items-center gap-3 cursor-pointer"
               onClick={() => navigate("/")}
@@ -27,7 +27,7 @@ const Footer = () => {
           </div>
 
           {/* Contact - Left aligned, symmetric */}
-          <div className="space-y-6">
+          <div className="space-y-6 flex flex-col justify-center">
             <h3 className="font-semibold text-2xl mb-6">Contacto</h3>
             <ul className="space-y-4 text-background/70">
               <li className="flex items-center gap-3">
