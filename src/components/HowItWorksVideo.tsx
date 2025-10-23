@@ -1,7 +1,7 @@
 import { Play, MapPin, Search, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
-import videoThumbnail from "@/assets/video-thumbnail.jpg";
+import videoThumbnail from "@/assets/inmotivo-hero-video.jpg";
 import demoVideo from "@/assets/inmotivo-demo.webm";
 
 const HowItWorksVideo = () => {
