@@ -29,10 +29,10 @@ de arriendos con IA y geolocalización</p>
           <div>
             <h3 className="font-semibold text-lg mb-4">Enlaces Rápidos</h3>
             <ul className="space-y-2 text-background/70">
-              <li><a href="#" className="hover:text-primary transition-colors">Buscar Propiedades</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Cómo Funciona</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Para Inmobiliarias</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Blog</a></li>
+              <li><a href="/docs/buscar-propiedades.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Buscar Propiedades</a></li>
+              <li><a href="/docs/como-funciona.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Cómo Funciona</a></li>
+              <li><a href="/docs/para-inmobiliarias.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Para Inmobiliarias</a></li>
+              <li><a href="/docs/blog.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Blog</a></li>
             </ul>
           </div>
 
@@ -40,10 +40,10 @@ de arriendos con IA y geolocalización</p>
           <div>
             <h3 className="font-semibold text-lg mb-4">Legal</h3>
             <ul className="space-y-2 text-background/70">
-              <li><a href="#" className="hover:text-primary transition-colors">Términos y Condiciones</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Política de Privacidad</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">Política de Cookies</a></li>
-              <li><a href="#" className="hover:text-primary transition-colors">FAQ</a></li>
+              <li><a href="/docs/terminos-condiciones.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Términos y Condiciones</a></li>
+              <li><a href="/docs/politica-privacidad.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Política de Privacidad</a></li>
+              <li><a href="/docs/politica-cookies.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Política de Cookies</a></li>
+              <li><a href="/docs/faq.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">FAQ</a></li>
             </ul>
           </div>
 

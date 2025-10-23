@@ -4,6 +4,7 @@ import { Search, MapPin, Loader2, Mic, MicOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import heroImage from "@/assets/hero-medellin.jpg";
 import { toast } from "sonner";
 import SearchOptions from './SearchOptions';
@@ -21,7 +22,14 @@ const Hero = () => {
   const [showOptions, setShowOptions] = useState(false);
   const [showFixedSearch, setShowFixedSearch] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [showLocationDialog, setShowLocationDialog] = useState(false);
+  const [useCustomLocation, setUseCustomLocation] = useState(false);
+  const [customDepartment, setCustomDepartment] = useState("");
+  const [customMunicipality, setCustomMunicipality] = useState("");
+  const [customNeighborhood, setCustomNeighborhood] = useState("");
   const recognitionRef = useRef<any>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
   const isMobile = useIsMobile();
 
   // Check if we should show options from URL params
@@ -110,46 +118,108 @@ const Hero = () => {
     getCurrentLocation();
   }, []);
 
-  const startRecording = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    
-    if (!SpeechRecognition) {
-      toast.error("Tu navegador no soporta reconocimiento de voz. Intenta con Chrome o Edge.");
-      return;
+  const startRecording = async () => {
+    // Use MediaRecorder for mobile devices for better compatibility
+    if (isMobile) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const mediaRecorder = new MediaRecorder(stream);
+        mediaRecorderRef.current = mediaRecorder;
+        audioChunksRef.current = [];
+
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            audioChunksRef.current.push(event.data);
+          }
+        };
+
+        mediaRecorder.onstop = async () => {
+          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+          
+          try {
+            const base64Audio = await new Promise<string>((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                const base64 = (reader.result as string).split(',')[1];
+                resolve(base64);
+              };
+              reader.readAsDataURL(audioBlob);
+            });
+
+            const { data, error } = await supabase.functions.invoke('transcribe-audio', {
+              body: { audio: base64Audio }
+            });
+
+            if (error) throw error;
+
+            if (data?.text) {
+              setSearchQuery(data.text);
+              await handleSearch(data.text);
+              toast.success("Audio transcrito correctamente");
+            } else {
+              toast.error("No se pudo transcribir el audio");
+            }
+          } catch (error) {
+            console.error('Error transcribing audio:', error);
+            toast.error("Error al procesar el audio");
+          }
+
+          // Stop all tracks
+          stream.getTracks().forEach(track => track.stop());
+        };
+
+        mediaRecorder.start();
+        setIsRecording(true);
+        toast.success("Grabando... Habla ahora");
+      } catch (error) {
+        console.error('Error accessing microphone:', error);
+        toast.error("No se pudo acceder al micrófono");
+      }
+    } else {
+      // Use Web Speech API for desktop
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      
+      if (!SpeechRecognition) {
+        toast.error("Tu navegador no soporta reconocimiento de voz. Intenta con Chrome o Edge.");
+        return;
+      }
+
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'es-ES';
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      recognition.onstart = () => {
+        setIsRecording(true);
+        toast.success("Escuchando... Habla ahora");
+      };
+
+      recognition.onresult = async (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setSearchQuery(transcript);
+        await handleSearch(transcript);
+      };
+
+      recognition.onerror = (event: any) => {
+        console.error('Error en reconocimiento de voz:', event.error);
+        setIsRecording(false);
+        toast.error("No se pudo procesar el audio. Intenta de nuevo.");
+      };
+
+      recognition.onend = () => {
+        setIsRecording(false);
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
     }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'es-ES';
-    recognition.continuous = false;
-    recognition.interimResults = false;
-
-    recognition.onstart = () => {
-      setIsRecording(true);
-      toast.success("Escuchando... Habla ahora");
-    };
-
-    recognition.onresult = async (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      setSearchQuery(transcript);
-      await handleSearch(transcript);
-    };
-
-    recognition.onerror = (event: any) => {
-      console.error('Error en reconocimiento de voz:', event.error);
-      setIsRecording(false);
-      toast.error("No se pudo procesar el audio. Intenta de nuevo.");
-    };
-
-    recognition.onend = () => {
-      setIsRecording(false);
-    };
-
-    recognitionRef.current = recognition;
-    recognition.start();
   };
 
   const stopRecording = () => {
-    if (recognitionRef.current) {
+    if (isMobile && mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    } else if (recognitionRef.current) {
       recognitionRef.current.stop();
       setIsRecording(false);
     }
@@ -189,6 +259,32 @@ const Hero = () => {
     }
   };
 
+  const handleContinueCurrentLocation = () => {
+    setUseCustomLocation(false);
+    setShowLocationDialog(false);
+    toast.success("Usando tu ubicación actual");
+  };
+
+  const handleUseCustomLocation = () => {
+    if (!customDepartment.trim()) {
+      toast.error("El departamento es obligatorio");
+      return;
+    }
+    if (!customMunicipality.trim()) {
+      toast.error("El municipio es obligatorio");
+      return;
+    }
+    
+    setUseCustomLocation(true);
+    const fullLocation = customNeighborhood.trim() 
+      ? `${customMunicipality}, ${customNeighborhood}`
+      : customMunicipality;
+    setMunicipality(customMunicipality);
+    setSector(customNeighborhood);
+    setShowLocationDialog(false);
+    toast.success(`Buscando en: ${customDepartment}, ${fullLocation}`);
+  };
+
   if (showOptions) {
     return (
       <section className="fixed inset-0 top-16 flex items-center justify-center overflow-hidden z-50">
@@ -207,6 +303,7 @@ const Hero = () => {
             municipality={municipality || "Medellín"}
             sector={sector}
             onSearchChange={(newQuery) => setSearchQuery(newQuery)}
+            disableGPSNavigation={useCustomLocation}
           />
         </div>
       </section>
@@ -228,28 +325,28 @@ const Hero = () => {
         <div className="relative z-10 container mx-auto px-4 py-8 md:py-20">
           <div className="max-w-4xl mx-auto text-center space-y-8">
             <div className="space-y-4 animate-fade-in">
-              <h1 className="text-5xl md:text-7xl font-bold text-white leading-tight">
+              <h1 className="text-3xl sm:text-4xl md:text-7xl font-bold text-white leading-tight">
                 Encuentra tu <span className="text-primary-glow">lugar ideal</span>
-                <br />
+                <br className="hidden sm:block" />
                 de manera <span className="text-accent">inteligente</span>
               </h1>
-              <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto">
+              <p className="text-base sm:text-lg md:text-2xl text-white/90 max-w-3xl mx-auto px-4">
                 Describe lo que buscas y descubre propiedades cerca a ti mientras navegas por la ciudad.
               </p>
             </div>
 
             {/* Search bar */}
-            <div className="relative max-w-2xl mx-auto" style={{ perspective: '1000px' }}>
+            <div className="relative max-w-2xl mx-auto w-full px-4 sm:px-2">
               {/* Animated border glow */}
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_100%] animate-[gradient-flow_3s_linear_infinite] opacity-75 blur-sm"></div>
+              <div className="absolute inset-0 rounded-xl md:rounded-2xl bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_100%] animate-[gradient-flow_3s_linear_infinite] opacity-75 blur-sm"></div>
               
-              <div className="relative bg-white rounded-2xl shadow-2xl p-4">
-                <div className="space-y-3">
+              <div className="relative bg-white rounded-xl md:rounded-2xl shadow-2xl p-3 md:p-4">
+                <div className="space-y-2 md:space-y-3">
                   <div className="flex items-start gap-2">
-                    <Search className="h-4 w-4 text-muted-foreground mt-2" />
+                    <Search className="h-4 w-4 text-muted-foreground mt-2 flex-shrink-0" />
                     <Textarea
-                      placeholder="Cuéntame qué buscas... Ej: Apartamento de 2 habitaciones, cerca del metro"
-                      className="border-0 focus-visible:ring-0 text-sm resize-none min-h-[50px]"
+                      placeholder="Cuéntame qué buscas..."
+                      className="border-0 focus-visible:ring-0 text-base md:text-sm leading-normal resize-none min-h-[44px] max-h-[96px] md:max-h-[120px] w-full overflow-y-auto"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       onKeyDown={(e) => {
@@ -260,49 +357,56 @@ const Hero = () => {
                       }}
                     />
                   </div>
-                  <div className="flex items-center gap-2 pt-2 border-t">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 pt-2 border-t">
                     {loadingLocation ? (
-                      <>
+                      <div className="flex items-center gap-2">
                         <Loader2 className="h-4 w-4 text-muted-foreground animate-spin" />
                         <span className="text-xs text-muted-foreground">Detectando ubicación...</span>
-                      </>
+                      </div>
                     ) : (
                       <>
-                        <MapPin className="h-4 w-4 text-primary animate-bounce" />
-                        <div className="flex-1">
-                          {municipality && sector ? (
-                            <div>
-                              <div className="text-xs font-medium">{municipality}</div>
-                              <div className="text-[10px] text-muted-foreground">{sector}</div>
-                            </div>
-                          ) : municipality ? (
-                            <div className="text-xs font-medium">{municipality}</div>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">Ubicación actual</span>
-                          )}
+                        <div className="flex items-center gap-2 flex-1 min-w-0 w-full sm:w-auto">
+                          <MapPin className="h-4 w-4 text-primary animate-bounce flex-shrink-0" />
+                          <div 
+                            className="flex-1 cursor-pointer hover:opacity-80 transition-opacity truncate"
+                            onClick={() => setShowLocationDialog(true)}
+                          >
+                            {municipality && sector ? (
+                              <div className="min-w-0">
+                                <div className="text-sm font-medium truncate">{municipality}</div>
+                                <div className="text-xs text-muted-foreground truncate">{sector}</div>
+                              </div>
+                            ) : municipality ? (
+                              <div className="text-sm font-medium truncate">{municipality}</div>
+                            ) : (
+                              <span className="text-sm text-muted-foreground">Ubicación actual</span>
+                            )}
+                          </div>
                         </div>
-                        <Button 
-                          onClick={isRecording ? stopRecording : startRecording}
-                          disabled={loadingLocation}
-                          variant={isRecording ? "destructive" : "outline"}
-                          size="icon"
-                          className="flex-shrink-0"
-                        >
-                          {isRecording ? (
-                            <MicOff className="h-4 w-4" />
-                          ) : (
-                            <Mic className="h-4 w-4" />
-                          )}
-                        </Button>
-                        <Button 
-                          variant="hero" 
-                          size="default"
-                          onClick={() => handleSearch()}
-                          disabled={!searchQuery.trim() || isRecording}
-                          className="shadow-lg hover:shadow-xl hover:scale-105 transition-all"
-                        >
-                          {isRecording ? 'Escuchando...' : 'Buscar'}
-                        </Button>
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
+                          <Button 
+                            onClick={isRecording ? stopRecording : startRecording}
+                            disabled={loadingLocation}
+                            variant={isRecording ? "destructive" : "outline"}
+                            size="icon"
+                            className="flex-shrink-0 h-9 w-9"
+                          >
+                            {isRecording ? (
+                              <MicOff className="h-4 w-4" />
+                            ) : (
+                              <Mic className="h-4 w-4" />
+                            )}
+                          </Button>
+                          <Button 
+                            variant="hero" 
+                            size="sm"
+                            onClick={() => handleSearch()}
+                            disabled={!searchQuery.trim() || isRecording}
+                            className="flex-1 sm:flex-initial min-w-[80px]"
+                          >
+                            {isRecording ? 'Escuchando...' : 'Buscar'}
+                          </Button>
+                        </div>
                       </>
                     )}
                   </div>
@@ -313,8 +417,8 @@ const Hero = () => {
         </div>
 
         {/* Decorative gradient orbs */}
-        <div className="absolute top-20 left-10 w-72 h-72 bg-primary-glow/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl" />
+        <div className="absolute top-20 left-10 w-48 h-48 md:w-72 md:h-72 bg-primary-glow/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-10 w-64 h-64 md:w-96 md:h-96 bg-blue-400/20 rounded-full blur-3xl" />
       </section>
 
       {/* Fixed search bar for mobile when scrolling */}
@@ -325,7 +429,7 @@ const Hero = () => {
               <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
               <Input
                 placeholder="¿Qué buscas?"
-                className="flex-1 border-input"
+                className="flex-1 border-input text-base leading-normal min-h-[44px]"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => {
@@ -353,7 +457,7 @@ const Hero = () => {
                 size="sm"
                 onClick={() => handleSearch()}
                 disabled={!searchQuery.trim() || isRecording}
-                className="flex-shrink-0 shadow-lg hover:shadow-xl transition-all"
+                className="flex-shrink-0"
               >
                 {isRecording ? 'Escuchando...' : 'Buscar'}
               </Button>
@@ -361,6 +465,96 @@ const Hero = () => {
           </div>
         </div>
       )}
+
+      {/* Location Selection Dialog */}
+      <Dialog open={showLocationDialog} onOpenChange={setShowLocationDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Selecciona tu ubicación</DialogTitle>
+            <DialogDescription>
+              Actualmente estamos usando tu ubicación en tiempo real para buscar inmuebles cerca de ti.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Tu ubicación actual: <span className="font-medium text-foreground">{municipality}{sector && `, ${sector}`}</span>
+              </p>
+            </div>
+            
+            <div className="flex flex-col gap-3">
+              <Button 
+                onClick={handleContinueCurrentLocation}
+                variant="default"
+                className="w-full"
+              >
+                <MapPin className="mr-2 h-4 w-4" />
+                Continuar con ubicación actual
+              </Button>
+              
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">O</span>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Departamento <span className="text-destructive">*</span>
+                  </label>
+                  <Input
+                    placeholder="Ej: Antioquia"
+                    value={customDepartment}
+                    onChange={(e) => setCustomDepartment(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Municipio <span className="text-destructive">*</span>
+                  </label>
+                  <Input
+                    placeholder="Ej: Medellín"
+                    value={customMunicipality}
+                    onChange={(e) => setCustomMunicipality(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Localidad o Barrio <span className="text-muted-foreground text-xs">(opcional)</span>
+                  </label>
+                  <Input
+                    placeholder="Ej: El Poblado"
+                    value={customNeighborhood}
+                    onChange={(e) => setCustomNeighborhood(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleUseCustomLocation();
+                      }
+                    }}
+                  />
+                </div>
+
+                <Button 
+                  onClick={handleUseCustomLocation}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Buscar en otra ubicación
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  * Si eliges buscar en otra ubicación, la navegación GPS estará deshabilitada y solo podrás ver propiedades en la dirección ingresada.
+                </p>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
