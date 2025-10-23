@@ -30,27 +30,27 @@ const CTASection = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 py-12">
-            <div className="space-y-3">
-              <div className="inline-flex p-4 rounded-xl bg-white/10 backdrop-blur-sm">
-                <Building2 className="h-8 w-8" />
+          <div className="grid grid-cols-3 gap-3 md:gap-8 py-8 md:py-12">
+            <div className="space-y-2 md:space-y-3">
+              <div className="inline-flex p-2 md:p-4 rounded-lg md:rounded-xl bg-white/10 backdrop-blur-sm">
+                <Building2 className="h-5 w-5 md:h-8 md:w-8" />
               </div>
-              <h3 className="text-xl font-semibold">Panel B2B</h3>
-              <p className="text-white/80">Gestiona todas tus propiedades en un solo lugar</p>
+              <h3 className="text-sm md:text-xl font-semibold">Panel B2B</h3>
+              <p className="text-xs md:text-base text-white/80 leading-tight">Gestiona todas tus propiedades en un solo lugar</p>
             </div>
-            <div className="space-y-3">
-              <div className="inline-flex p-4 rounded-xl bg-white/10 backdrop-blur-sm">
-                <TrendingUp className="h-8 w-8" />
+            <div className="space-y-2 md:space-y-3">
+              <div className="inline-flex p-2 md:p-4 rounded-lg md:rounded-xl bg-white/10 backdrop-blur-sm">
+                <TrendingUp className="h-5 w-5 md:h-8 md:w-8" />
               </div>
-              <h3 className="text-xl font-semibold">Más Leads</h3>
-              <p className="text-white/80">Aumenta tu visibilidad y genera más contactos</p>
+              <h3 className="text-sm md:text-xl font-semibold">Más Leads</h3>
+              <p className="text-xs md:text-base text-white/80 leading-tight">Aumenta tu visibilidad y genera más contactos</p>
             </div>
-            <div className="space-y-3">
-              <div className="inline-flex p-4 rounded-xl bg-white/10 backdrop-blur-sm">
-                <Users className="h-8 w-8" />
+            <div className="space-y-2 md:space-y-3">
+              <div className="inline-flex p-2 md:p-4 rounded-lg md:rounded-xl bg-white/10 backdrop-blur-sm">
+                <Users className="h-5 w-5 md:h-8 md:w-8" />
               </div>
-              <h3 className="text-xl font-semibold">Analítica</h3>
-              <p className="text-white/80">Mide el rendimiento de tus publicaciones</p>
+              <h3 className="text-sm md:text-xl font-semibold">Analítica</h3>
+              <p className="text-xs md:text-base text-white/80 leading-tight">Mide el rendimiento de tus publicaciones</p>
             </div>
           </div>
 
