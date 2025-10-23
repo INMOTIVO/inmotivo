@@ -64,21 +64,14 @@ const HowItWorksVideo = () => {
               
               {/* Play Button Overlay */}
               {!isPlaying && (
-                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-black/30 via-black/40 to-black/60 backdrop-blur-[2px] group-hover:from-black/40 group-hover:via-black/50 group-hover:to-black/70 transition-all duration-500">
-                  <div className="relative">
-                    {/* Glow effect rings */}
-                    <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary via-accent to-primary animate-[spin_3s_linear_infinite] blur-xl opacity-60"></div>
-                    <div className="absolute inset-0 rounded-full bg-primary/30 animate-pulse blur-2xl"></div>
-                    
-                    <Button
-                      size="lg"
-                      onClick={handlePlayVideo}
-                      className="relative h-20 w-20 md:h-28 md:w-28 rounded-full bg-gradient-to-br from-white via-primary/20 to-white border-2 border-primary/30 hover:border-primary/60 backdrop-blur-sm hover:scale-110 transition-all duration-300 shadow-[0_0_40px_rgba(var(--primary),0.4)] hover:shadow-[0_0_60px_rgba(var(--primary),0.6)] group/button"
-                    >
-                      <div className="absolute inset-0 rounded-full bg-gradient-to-br from-transparent via-primary/10 to-transparent opacity-0 group-hover/button:opacity-100 transition-opacity duration-300"></div>
-                      <Play className="h-10 w-10 md:h-14 md:w-14 ml-1 text-primary drop-shadow-[0_0_8px_rgba(var(--primary),0.8)]" fill="currentColor" />
-                    </Button>
-                  </div>
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/50 transition-all duration-300">
+                  <Button
+                    size="lg"
+                    onClick={handlePlayVideo}
+                    className="h-20 w-20 md:h-24 md:w-24 rounded-full bg-white hover:bg-white/90 text-primary hover:scale-110 transition-all duration-300 shadow-2xl"
+                  >
+                    <Play className="h-10 w-10 md:h-12 md:w-12 ml-1" fill="currentColor" />
+                  </Button>
                 </div>
               )}
               
