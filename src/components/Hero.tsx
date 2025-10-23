@@ -325,28 +325,28 @@ const Hero = () => {
         <div className="relative z-10 container mx-auto px-4 py-8 md:py-20">
           <div className="max-w-4xl mx-auto text-center space-y-8">
             <div className="space-y-4 animate-fade-in">
-              <h1 className="text-3xl sm:text-4xl md:text-7xl font-bold text-white leading-tight">
+              <h1 className="text-5xl md:text-7xl font-bold text-white leading-tight">
                 Encuentra tu <span className="text-primary-glow">lugar ideal</span>
-                <br className="hidden sm:block" />
+                <br />
                 de manera <span className="text-accent">inteligente</span>
               </h1>
-              <p className="text-base sm:text-lg md:text-2xl text-white/90 max-w-3xl mx-auto px-4">
+              <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto">
                 Describe lo que buscas y descubre propiedades cerca a ti mientras navegas por la ciudad.
               </p>
             </div>
 
             {/* Search bar */}
-            <div className="relative max-w-2xl mx-auto w-full px-2">
+            <div className="relative max-w-2xl mx-auto" style={{ perspective: '1000px' }}>
               {/* Animated border glow */}
-              <div className="absolute inset-0 rounded-xl md:rounded-2xl bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_100%] animate-[gradient-flow_3s_linear_infinite] opacity-75 blur-sm"></div>
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_100%] animate-[gradient-flow_3s_linear_infinite] opacity-75 blur-sm"></div>
               
-              <div className="relative bg-white rounded-xl md:rounded-2xl shadow-2xl p-3 md:p-4">
-                <div className="space-y-2 md:space-y-3">
+              <div className="relative bg-white rounded-2xl shadow-2xl p-4">
+                <div className="space-y-3">
                   <div className="flex items-start gap-2">
-                    <Search className="h-4 w-4 text-muted-foreground mt-2 flex-shrink-0" />
+                    <Search className="h-4 w-4 text-muted-foreground mt-2" />
                     <Textarea
-                      placeholder="Cuéntame qué buscas..."
-                      className="border-0 focus-visible:ring-0 text-sm resize-none min-h-[50px] max-h-[120px] w-full"
+                      placeholder="Cuéntame qué buscas... Ej: Apartamento de 2 habitaciones, cerca del metro"
+                      className="border-0 focus-visible:ring-0 text-sm resize-none min-h-[50px]"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       onKeyDown={(e) => {
@@ -357,56 +357,51 @@ const Hero = () => {
                       }}
                     />
                   </div>
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 pt-2 border-t">
+                  <div className="flex items-center gap-2 pt-2 border-t">
                     {loadingLocation ? (
-                      <div className="flex items-center gap-2">
+                      <>
                         <Loader2 className="h-4 w-4 text-muted-foreground animate-spin" />
                         <span className="text-xs text-muted-foreground">Detectando ubicación...</span>
-                      </div>
+                      </>
                     ) : (
                       <>
-                        <div className="flex items-center gap-2 flex-1 min-w-0 w-full sm:w-auto">
-                          <MapPin className="h-4 w-4 text-primary animate-bounce flex-shrink-0" />
-                          <div 
-                            className="flex-1 cursor-pointer hover:opacity-80 transition-opacity truncate"
-                            onClick={() => setShowLocationDialog(true)}
-                          >
-                            {municipality && sector ? (
-                              <div className="min-w-0">
-                                <div className="text-xs sm:text-sm font-medium truncate">{municipality}</div>
-                                <div className="text-[10px] sm:text-xs text-muted-foreground truncate">{sector}</div>
-                              </div>
-                            ) : municipality ? (
-                              <div className="text-xs sm:text-sm font-medium truncate">{municipality}</div>
-                            ) : (
-                              <span className="text-xs sm:text-sm text-muted-foreground">Ubicación actual</span>
-                            )}
-                          </div>
+                        <MapPin className="h-4 w-4 text-primary animate-bounce" />
+                        <div 
+                          className="flex-1 cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => setShowLocationDialog(true)}
+                        >
+                          {municipality && sector ? (
+                            <div>
+                              <div className="text-xs font-medium">{municipality}</div>
+                              <div className="text-[10px] text-muted-foreground">{sector}</div>
+                            </div>
+                          ) : municipality ? (
+                            <div className="text-xs font-medium">{municipality}</div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">Ubicación actual</span>
+                          )}
                         </div>
-                        <div className="flex items-center gap-2 w-full sm:w-auto">
-                          <Button 
-                            onClick={isRecording ? stopRecording : startRecording}
-                            disabled={loadingLocation}
-                            variant={isRecording ? "destructive" : "outline"}
-                            size="icon"
-                            className="flex-shrink-0 h-9 w-9"
-                          >
-                            {isRecording ? (
-                              <MicOff className="h-4 w-4" />
-                            ) : (
-                              <Mic className="h-4 w-4" />
-                            )}
-                          </Button>
-                          <Button 
-                            variant="hero" 
-                            size="sm"
-                            onClick={() => handleSearch()}
-                            disabled={!searchQuery.trim() || isRecording}
-                            className="flex-1 sm:flex-initial"
-                          >
-                            {isRecording ? 'Escuchando...' : 'Buscar'}
-                          </Button>
-                        </div>
+                        <Button 
+                          onClick={isRecording ? stopRecording : startRecording}
+                          disabled={loadingLocation}
+                          variant={isRecording ? "destructive" : "outline"}
+                          size="icon"
+                          className="flex-shrink-0"
+                        >
+                          {isRecording ? (
+                            <MicOff className="h-4 w-4" />
+                          ) : (
+                            <Mic className="h-4 w-4" />
+                          )}
+                        </Button>
+                        <Button 
+                          variant="hero" 
+                          size="default"
+                          onClick={() => handleSearch()}
+                          disabled={!searchQuery.trim() || isRecording}
+                        >
+                          {isRecording ? 'Escuchando...' : 'Buscar'}
+                        </Button>
                       </>
                     )}
                   </div>
@@ -417,8 +412,8 @@ const Hero = () => {
         </div>
 
         {/* Decorative gradient orbs */}
-        <div className="absolute top-20 left-10 w-48 h-48 md:w-72 md:h-72 bg-primary-glow/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-10 w-64 h-64 md:w-96 md:h-96 bg-blue-400/20 rounded-full blur-3xl" />
+        <div className="absolute top-20 left-10 w-72 h-72 bg-primary-glow/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl" />
       </section>
 
       {/* Fixed search bar for mobile when scrolling */}
