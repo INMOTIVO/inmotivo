@@ -5,11 +5,11 @@ const Footer = () => {
   const navigate = useNavigate();
   return <footer className="bg-foreground text-background py-16">
       <div className="container mx-auto px-4">
-        <div className="grid md:grid-cols-2 gap-12 max-w-4xl mx-auto mb-12">
-          {/* Brand - Centered and larger */}
-          <div className="space-y-6 text-center md:text-left">
+        <div className="grid md:grid-cols-2 gap-12 max-w-6xl mx-auto mb-12">
+          {/* Brand - Left aligned */}
+          <div className="space-y-6">
             <div 
-              className="flex items-center gap-3 cursor-pointer justify-center md:justify-start"
+              className="flex items-center gap-3 cursor-pointer"
               onClick={() => navigate("/")}
             >
               <svg width="56" height="56" viewBox="0 0 180 180" className="flex-shrink-0 transition-transform hover:scale-105">
@@ -26,23 +26,23 @@ const Footer = () => {
             </p>
           </div>
 
-          {/* Contact - Expanded */}
-          <div className="space-y-6 text-center md:text-left">
+          {/* Contact - Left aligned, symmetric */}
+          <div className="space-y-6">
             <h3 className="font-semibold text-2xl mb-6">Contacto</h3>
             <ul className="space-y-4 text-background/70">
-              <li className="flex items-center gap-3 justify-center md:justify-start">
+              <li className="flex items-center gap-3">
                 <Mail className="h-5 w-5 flex-shrink-0" />
                 <a href="mailto:info@inmotivo.com" className="hover:text-primary transition-colors text-lg">
                   info@inmotivo.com
                 </a>
               </li>
-              <li className="flex items-center gap-3 justify-center md:justify-start">
+              <li className="flex items-center gap-3">
                 <Phone className="h-5 w-5 flex-shrink-0" />
                 <a href="tel:+573001234567" className="hover:text-primary transition-colors text-lg">
                   +57 300 123 4567
                 </a>
               </li>
-              <li className="flex items-center gap-4 justify-center md:justify-start pt-2">
+              <li className="flex items-center gap-4 pt-2">
                 <a href="https://instagram.com/inmotivo" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors hover:scale-110 transform duration-200">
                   <Instagram className="h-6 w-6" />
                 </a>
