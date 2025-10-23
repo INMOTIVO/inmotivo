@@ -28,6 +28,8 @@ const Hero = () => {
   const [customMunicipality, setCustomMunicipality] = useState("");
   const [customNeighborhood, setCustomNeighborhood] = useState("");
   const recognitionRef = useRef<any>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
   const isMobile = useIsMobile();
 
   // Check if we should show options from URL params
@@ -116,46 +118,108 @@ const Hero = () => {
     getCurrentLocation();
   }, []);
 
-  const startRecording = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    
-    if (!SpeechRecognition) {
-      toast.error("Tu navegador no soporta reconocimiento de voz. Intenta con Chrome o Edge.");
-      return;
+  const startRecording = async () => {
+    // Use MediaRecorder for mobile devices for better compatibility
+    if (isMobile) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const mediaRecorder = new MediaRecorder(stream);
+        mediaRecorderRef.current = mediaRecorder;
+        audioChunksRef.current = [];
+
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            audioChunksRef.current.push(event.data);
+          }
+        };
+
+        mediaRecorder.onstop = async () => {
+          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+          
+          try {
+            const base64Audio = await new Promise<string>((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => {
+                const base64 = (reader.result as string).split(',')[1];
+                resolve(base64);
+              };
+              reader.readAsDataURL(audioBlob);
+            });
+
+            const { data, error } = await supabase.functions.invoke('transcribe-audio', {
+              body: { audio: base64Audio }
+            });
+
+            if (error) throw error;
+
+            if (data?.text) {
+              setSearchQuery(data.text);
+              await handleSearch(data.text);
+              toast.success("Audio transcrito correctamente");
+            } else {
+              toast.error("No se pudo transcribir el audio");
+            }
+          } catch (error) {
+            console.error('Error transcribing audio:', error);
+            toast.error("Error al procesar el audio");
+          }
+
+          // Stop all tracks
+          stream.getTracks().forEach(track => track.stop());
+        };
+
+        mediaRecorder.start();
+        setIsRecording(true);
+        toast.success("Grabando... Habla ahora");
+      } catch (error) {
+        console.error('Error accessing microphone:', error);
+        toast.error("No se pudo acceder al micrófono");
+      }
+    } else {
+      // Use Web Speech API for desktop
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      
+      if (!SpeechRecognition) {
+        toast.error("Tu navegador no soporta reconocimiento de voz. Intenta con Chrome o Edge.");
+        return;
+      }
+
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'es-ES';
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      recognition.onstart = () => {
+        setIsRecording(true);
+        toast.success("Escuchando... Habla ahora");
+      };
+
+      recognition.onresult = async (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setSearchQuery(transcript);
+        await handleSearch(transcript);
+      };
+
+      recognition.onerror = (event: any) => {
+        console.error('Error en reconocimiento de voz:', event.error);
+        setIsRecording(false);
+        toast.error("No se pudo procesar el audio. Intenta de nuevo.");
+      };
+
+      recognition.onend = () => {
+        setIsRecording(false);
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
     }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'es-ES';
-    recognition.continuous = false;
-    recognition.interimResults = false;
-
-    recognition.onstart = () => {
-      setIsRecording(true);
-      toast.success("Escuchando... Habla ahora");
-    };
-
-    recognition.onresult = async (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      setSearchQuery(transcript);
-      await handleSearch(transcript);
-    };
-
-    recognition.onerror = (event: any) => {
-      console.error('Error en reconocimiento de voz:', event.error);
-      setIsRecording(false);
-      toast.error("No se pudo procesar el audio. Intenta de nuevo.");
-    };
-
-    recognition.onend = () => {
-      setIsRecording(false);
-    };
-
-    recognitionRef.current = recognition;
-    recognition.start();
   };
 
   const stopRecording = () => {
-    if (recognitionRef.current) {
+    if (isMobile && mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    } else if (recognitionRef.current) {
       recognitionRef.current.stop();
       setIsRecording(false);
     }
