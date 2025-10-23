@@ -299,7 +299,7 @@ const Hero = () => {
                           size="default"
                           onClick={() => handleSearch()}
                           disabled={!searchQuery.trim() || isRecording}
-                          className="bg-gradient-to-r from-primary via-accent to-primary shadow-lg hover:shadow-xl hover:scale-105 transition-all"
+                          className="shadow-lg hover:shadow-xl hover:scale-105 transition-all"
                         >
                           {isRecording ? 'Escuchando...' : 'Buscar'}
                         </Button>
@@ -353,7 +353,7 @@ const Hero = () => {
                 size="sm"
                 onClick={() => handleSearch()}
                 disabled={!searchQuery.trim() || isRecording}
-                className="flex-shrink-0 bg-gradient-to-r from-primary via-accent to-primary shadow-lg hover:shadow-xl transition-all"
+                className="flex-shrink-0 shadow-lg hover:shadow-xl transition-all"
               >
                 {isRecording ? 'Escuchando...' : 'Buscar'}
               </Button>
