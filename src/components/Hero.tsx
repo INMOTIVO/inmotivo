@@ -24,7 +24,9 @@ const Hero = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [showLocationDialog, setShowLocationDialog] = useState(false);
   const [useCustomLocation, setUseCustomLocation] = useState(false);
-  const [customLocation, setCustomLocation] = useState("");
+  const [customDepartment, setCustomDepartment] = useState("");
+  const [customMunicipality, setCustomMunicipality] = useState("");
+  const [customNeighborhood, setCustomNeighborhood] = useState("");
   const recognitionRef = useRef<any>(null);
   const isMobile = useIsMobile();
 
@@ -200,15 +202,23 @@ const Hero = () => {
   };
 
   const handleUseCustomLocation = () => {
-    if (!customLocation.trim()) {
-      toast.error("Por favor ingresa una ubicación");
+    if (!customDepartment.trim()) {
+      toast.error("El departamento es obligatorio");
       return;
     }
+    if (!customMunicipality.trim()) {
+      toast.error("El municipio es obligatorio");
+      return;
+    }
+    
     setUseCustomLocation(true);
-    setMunicipality(customLocation);
-    setSector("");
+    const fullLocation = customNeighborhood.trim() 
+      ? `${customMunicipality}, ${customNeighborhood}`
+      : customMunicipality;
+    setMunicipality(customMunicipality);
+    setSector(customNeighborhood);
     setShowLocationDialog(false);
-    toast.success(`Buscando en: ${customLocation}`);
+    toast.success(`Buscando en: ${customDepartment}, ${fullLocation}`);
   };
 
   if (showOptions) {
@@ -422,17 +432,45 @@ const Hero = () => {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Input
-                  placeholder="Departamento, ciudad, localidad o barrio"
-                  value={customLocation}
-                  onChange={(e) => setCustomLocation(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      handleUseCustomLocation();
-                    }
-                  }}
-                />
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Departamento <span className="text-destructive">*</span>
+                  </label>
+                  <Input
+                    placeholder="Ej: Antioquia"
+                    value={customDepartment}
+                    onChange={(e) => setCustomDepartment(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Municipio <span className="text-destructive">*</span>
+                  </label>
+                  <Input
+                    placeholder="Ej: Medellín"
+                    value={customMunicipality}
+                    onChange={(e) => setCustomMunicipality(e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">
+                    Localidad o Barrio <span className="text-muted-foreground text-xs">(opcional)</span>
+                  </label>
+                  <Input
+                    placeholder="Ej: El Poblado"
+                    value={customNeighborhood}
+                    onChange={(e) => setCustomNeighborhood(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleUseCustomLocation();
+                      }
+                    }}
+                  />
+                </div>
+
                 <Button 
                   onClick={handleUseCustomLocation}
                   variant="outline"
