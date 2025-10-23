@@ -1,5 +1,6 @@
 import { Mail, Phone, Instagram, Facebook } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+
 const Footer = () => {
   const navigate = useNavigate();
   return <footer className="bg-foreground text-background py-16">
@@ -7,7 +8,10 @@ const Footer = () => {
         <div className="grid md:grid-cols-4 gap-12 mb-12">
           {/* Brand */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
+            <div 
+              className="flex items-center gap-2 cursor-pointer"
+              onClick={() => navigate("/")}
+            >
               <svg width="46" height="46" viewBox="0 0 180 180" className="flex-shrink-0 transition-transform hover:scale-105">
                 <g transform="translate(20,25)" strokeWidth="8" fill="none">
                   <rect x="0" y="0" width="48" height="90" rx="6" className="stroke-primary" />
@@ -17,13 +21,13 @@ const Footer = () => {
               </svg>
               <span className="text-2xl font-bold">INMOTIVO</span>
             </div>
-            <p className="text-background/70 text-xl text-left font-light">La plataforma inteligente 
+            <p className="text-background/70">La plataforma inteligente 
 de arriendos con IA y geolocalización</p>
           </div>
 
           {/* Quick Links */}
           <div>
-            <h3 className="font-semibold text-lg mb-4 my-0 mx-[120px]">Enlaces Rápidos</h3>
+            <h3 className="font-semibold text-lg mb-4">Enlaces Rápidos</h3>
             <ul className="space-y-2 text-background/70">
               <li><a href="/docs/buscar-propiedades.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Buscar Propiedades</a></li>
               <li><a href="/docs/como-funciona.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Cómo Funciona</a></li>
@@ -34,7 +38,7 @@ de arriendos con IA y geolocalización</p>
 
           {/* Legal */}
           <div>
-            <h3 className="font-semibold text-lg mb-4 my-0 mx-0 px-0 py-0">Legal</h3>
+            <h3 className="font-semibold text-lg mb-4">Legal</h3>
             <ul className="space-y-2 text-background/70">
               <li><a href="/docs/terminos-condiciones.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Términos y Condiciones</a></li>
               <li><a href="/docs/politica-privacidad.pdf" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Política de Privacidad</a></li>
