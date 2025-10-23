@@ -30,7 +30,7 @@ const CTASection = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 py-8 md:py-12">
+          <div className="grid md:grid-cols-3 gap-8 py-12">
             <div className="space-y-3">
               <div className="inline-flex p-4 rounded-xl bg-white/10 backdrop-blur-sm">
                 <Building2 className="h-8 w-8" />
