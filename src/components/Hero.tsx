@@ -346,7 +346,7 @@ const Hero = () => {
                     <Search className="h-4 w-4 text-muted-foreground mt-2 flex-shrink-0" />
                     <Textarea
                       placeholder="Cuéntame qué buscas..."
-                      className="border-0 focus-visible:ring-0 text-sm resize-none min-h-[40px] max-h-[80px] md:max-h-[120px] w-full overflow-y-auto"
+                      className="border-0 focus-visible:ring-0 text-base md:text-sm leading-normal resize-none min-h-[44px] max-h-[96px] md:max-h-[120px] w-full overflow-y-auto"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       onKeyDown={(e) => {
@@ -429,7 +429,7 @@ const Hero = () => {
               <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
               <Input
                 placeholder="¿Qué buscas?"
-                className="flex-1 border-input"
+                className="flex-1 border-input text-base leading-normal min-h-[44px]"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => {
