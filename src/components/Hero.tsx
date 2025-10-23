@@ -372,13 +372,13 @@ const Hero = () => {
                         >
                           {municipality && sector ? (
                             <div>
-                              <div className="text-xs font-medium">{municipality}</div>
-                              <div className="text-[10px] text-muted-foreground">{sector}</div>
+                              <div className="text-sm font-medium">{municipality}</div>
+                              <div className="text-xs text-muted-foreground">{sector}</div>
                             </div>
                           ) : municipality ? (
-                            <div className="text-xs font-medium">{municipality}</div>
+                            <div className="text-sm font-medium">{municipality}</div>
                           ) : (
-                            <span className="text-xs text-muted-foreground">Ubicación actual</span>
+                            <span className="text-sm text-muted-foreground">Ubicación actual</span>
                           )}
                         </div>
                         <Button 
