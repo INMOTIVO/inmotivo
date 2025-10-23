@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Search, MapPin, Loader2 } from "lucide-react";
+import { Search, MapPin, Loader2, Mic, MicOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,6 +20,10 @@ const Hero = () => {
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [showFixedSearch, setShowFixedSearch] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
   const isMobile = useIsMobile();
 
   // Check if we should show options from URL params
@@ -107,6 +111,65 @@ const Hero = () => {
 
     getCurrentLocation();
   }, []);
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        audioChunksRef.current.push(event.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        await transcribeAudio(audioBlob);
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      toast.success("Grabando... Habla ahora");
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error("No se pudo acceder al micrófono");
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const transcribeAudio = async (audioBlob: Blob) => {
+    setIsProcessing(true);
+    try {
+      const reader = new FileReader();
+      reader.readAsDataURL(audioBlob);
+      reader.onloadend = async () => {
+        const base64Audio = reader.result?.toString().split(',')[1];
+        
+        const { data, error } = await supabase.functions.invoke('transcribe-audio', {
+          body: { audio: base64Audio }
+        });
+
+        if (error) throw error;
+
+        setSearchQuery(data.text);
+        toast.success("Audio transcrito correctamente");
+        await handleSearch();
+      };
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error("Error al transcribir audio");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
@@ -232,12 +295,32 @@ const Hero = () => {
                           )}
                         </div>
                         <Button 
+                          onClick={isRecording ? stopRecording : startRecording}
+                          disabled={isProcessing || loadingLocation}
+                          variant={isRecording ? "destructive" : "outline"}
+                          size="icon"
+                          className="flex-shrink-0"
+                        >
+                          {isRecording ? (
+                            <MicOff className="h-4 w-4" />
+                          ) : (
+                            <Mic className="h-4 w-4" />
+                          )}
+                        </Button>
+                        <Button 
                           variant="hero" 
                           size="default"
                           onClick={handleSearch}
-                          disabled={!searchQuery.trim()}
+                          disabled={!searchQuery.trim() || isProcessing || isRecording}
                         >
-                          Buscar
+                          {isProcessing ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                              Procesando...
+                            </>
+                          ) : (
+                            'Buscar'
+                          )}
                         </Button>
                       </>
                     )}
@@ -270,15 +353,33 @@ const Hero = () => {
                     handleSearch();
                   }
                 }}
+                disabled={isRecording || isProcessing}
               />
+              <Button 
+                onClick={isRecording ? stopRecording : startRecording}
+                disabled={isProcessing}
+                variant={isRecording ? "destructive" : "outline"}
+                size="icon"
+                className="flex-shrink-0"
+              >
+                {isRecording ? (
+                  <MicOff className="h-4 w-4" />
+                ) : (
+                  <Mic className="h-4 w-4" />
+                )}
+              </Button>
               <Button 
                 variant="hero" 
                 size="sm"
                 onClick={handleSearch}
-                disabled={!searchQuery.trim()}
+                disabled={!searchQuery.trim() || isProcessing || isRecording}
                 className="flex-shrink-0"
               >
-                Buscar
+                {isProcessing ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  'Buscar'
+                )}
               </Button>
             </div>
           </div>
