@@ -71,14 +71,15 @@ const HowItWorksVideo = () => {
               
               {/* Video Player */}
               {isPlaying && (
-                <div className="absolute inset-0">
+                <div className="absolute inset-0 bg-black">
                   <video
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-contain"
                     autoPlay
                     controls
                     playsInline
+                    loop
                   >
-                    <source src="https://download.samplelib.com/mp4/sample-5s.mp4" type="video/mp4" />
+                    <source src="https://videos.pexels.com/video-files/5536361/5536361-hd_1920_1080_25fps.mp4" type="video/mp4" />
                     Tu navegador no soporta el elemento de video.
                   </video>
                 </div>
