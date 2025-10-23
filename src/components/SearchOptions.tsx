@@ -1,23 +1,87 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Map, Navigation } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Map, Navigation, Edit2, Mic, MicOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useState, useRef } from 'react';
+import { toast } from 'sonner';
+
 interface SearchOptionsProps {
   searchQuery: string;
   municipality: string;
   sector: string;
+  onSearchChange?: (newQuery: string) => void;
 }
 const SearchOptions = ({
   searchQuery,
   municipality,
-  sector
+  sector,
+  onSearchChange
 }: SearchOptionsProps) => {
   const navigate = useNavigate();
-  const handleFixedView = () => {
-    navigate(`/catalogo?query=${encodeURIComponent(searchQuery)}`);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedQuery, setEditedQuery] = useState(searchQuery);
+  const [isRecording, setIsRecording] = useState(false);
+  const recognitionRef = useRef<any>(null);
+  const handleSaveEdit = () => {
+    if (editedQuery.trim()) {
+      onSearchChange?.(editedQuery);
+      setIsEditing(false);
+      toast.success("Búsqueda actualizada");
+    }
   };
+
+  const startRecording = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    
+    if (!SpeechRecognition) {
+      toast.error("Tu navegador no soporta reconocimiento de voz");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'es-ES';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onstart = () => {
+      setIsRecording(true);
+      toast.success("Escuchando...");
+    };
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setEditedQuery(transcript);
+      onSearchChange?.(transcript);
+      toast.success("Búsqueda actualizada por voz");
+    };
+
+    recognition.onerror = () => {
+      setIsRecording(false);
+      toast.error("Error al procesar el audio");
+    };
+
+    recognition.onend = () => {
+      setIsRecording(false);
+    };
+
+    recognitionRef.current = recognition;
+    recognition.start();
+  };
+
+  const stopRecording = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsRecording(false);
+    }
+  };
+
+  const handleFixedView = () => {
+    navigate(`/catalogo?query=${encodeURIComponent(editedQuery)}`);
+  };
+  
   const handleGPSNavigation = () => {
-    navigate(`/navegacion?query=${encodeURIComponent(searchQuery)}&autostart=true`);
+    navigate(`/navegacion?query=${encodeURIComponent(editedQuery)}&autostart=true`);
   };
   return <div className="w-full max-w-4xl mx-auto space-y-3 md:space-y-4 animate-fade-in px-4">
       <div className="text-center space-y-1">
@@ -102,11 +166,57 @@ const SearchOptions = ({
       </div>
 
       <div className="text-center pt-2 animate-fade-in">
-        <div className="inline-flex items-center gap-2 bg-white/95 px-4 md:px-6 py-1.5 md:py-2 rounded-full border border-primary/20 shadow-lg max-w-full">
+        <div className="inline-flex items-center gap-2 bg-white/95 px-4 md:px-6 py-2 md:py-3 rounded-full border border-primary/20 shadow-lg max-w-full">
           <span className="text-[10px] md:text-xs text-muted-foreground whitespace-nowrap">Tu búsqueda:</span>
-          <span className="text-xs md:text-sm font-semibold text-foreground truncate">
-            "{searchQuery}"
-          </span>
+          {isEditing ? (
+            <>
+              <Input
+                value={editedQuery}
+                onChange={(e) => setEditedQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSaveEdit();
+                  if (e.key === 'Escape') setIsEditing(false);
+                }}
+                className="h-7 text-xs md:text-sm font-semibold border-0 focus-visible:ring-1 px-2"
+                autoFocus
+              />
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-6 w-6"
+                onClick={handleSaveEdit}
+              >
+                ✓
+              </Button>
+            </>
+          ) : (
+            <>
+              <span className="text-xs md:text-sm font-semibold text-foreground truncate">
+                "{editedQuery}"
+              </span>
+              <Button
+                size="icon"
+                variant="ghost"
+                className="h-6 w-6"
+                onClick={() => setIsEditing(true)}
+              >
+                <Edit2 className="h-3 w-3" />
+              </Button>
+            </>
+          )}
+          <Button
+            size="icon"
+            variant="ghost"
+            className="h-6 w-6"
+            onClick={isRecording ? stopRecording : startRecording}
+            disabled={isRecording}
+          >
+            {isRecording ? (
+              <MicOff className="h-3 w-3 text-red-500" />
+            ) : (
+              <Mic className="h-3 w-3" />
+            )}
+          </Button>
         </div>
       </div>
     </div>;

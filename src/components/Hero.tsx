@@ -206,6 +206,7 @@ const Hero = () => {
             searchQuery={searchQuery}
             municipality={municipality || "Medellín"}
             sector={sector}
+            onSearchChange={(newQuery) => setSearchQuery(newQuery)}
           />
         </div>
       </section>
