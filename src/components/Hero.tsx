@@ -4,6 +4,7 @@ import { Search, MapPin, Loader2, Mic, MicOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import heroImage from "@/assets/hero-medellin.jpg";
 import { toast } from "sonner";
 import SearchOptions from './SearchOptions';
@@ -21,6 +22,9 @@ const Hero = () => {
   const [showOptions, setShowOptions] = useState(false);
   const [showFixedSearch, setShowFixedSearch] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [showLocationDialog, setShowLocationDialog] = useState(false);
+  const [useCustomLocation, setUseCustomLocation] = useState(false);
+  const [customLocation, setCustomLocation] = useState("");
   const recognitionRef = useRef<any>(null);
   const isMobile = useIsMobile();
 
@@ -189,6 +193,24 @@ const Hero = () => {
     }
   };
 
+  const handleContinueCurrentLocation = () => {
+    setUseCustomLocation(false);
+    setShowLocationDialog(false);
+    toast.success("Usando tu ubicación actual");
+  };
+
+  const handleUseCustomLocation = () => {
+    if (!customLocation.trim()) {
+      toast.error("Por favor ingresa una ubicación");
+      return;
+    }
+    setUseCustomLocation(true);
+    setMunicipality(customLocation);
+    setSector("");
+    setShowLocationDialog(false);
+    toast.success(`Buscando en: ${customLocation}`);
+  };
+
   if (showOptions) {
     return (
       <section className="fixed inset-0 top-16 flex items-center justify-center overflow-hidden z-50">
@@ -207,6 +229,7 @@ const Hero = () => {
             municipality={municipality || "Medellín"}
             sector={sector}
             onSearchChange={(newQuery) => setSearchQuery(newQuery)}
+            disableGPSNavigation={useCustomLocation}
           />
         </div>
       </section>
@@ -269,7 +292,10 @@ const Hero = () => {
                     ) : (
                       <>
                         <MapPin className="h-4 w-4 text-primary animate-bounce" />
-                        <div className="flex-1">
+                        <div 
+                          className="flex-1 cursor-pointer hover:opacity-80 transition-opacity"
+                          onClick={() => setShowLocationDialog(true)}
+                        >
                           {municipality && sector ? (
                             <div>
                               <div className="text-xs font-medium">{municipality}</div>
@@ -360,6 +386,68 @@ const Hero = () => {
           </div>
         </div>
       )}
+
+      {/* Location Selection Dialog */}
+      <Dialog open={showLocationDialog} onOpenChange={setShowLocationDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Selecciona tu ubicación</DialogTitle>
+            <DialogDescription>
+              Actualmente estamos usando tu ubicación en tiempo real para buscar inmuebles cerca de ti.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Tu ubicación actual: <span className="font-medium text-foreground">{municipality}{sector && `, ${sector}`}</span>
+              </p>
+            </div>
+            
+            <div className="flex flex-col gap-3">
+              <Button 
+                onClick={handleContinueCurrentLocation}
+                variant="default"
+                className="w-full"
+              >
+                <MapPin className="mr-2 h-4 w-4" />
+                Continuar con ubicación actual
+              </Button>
+              
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">O</span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Input
+                  placeholder="Departamento, ciudad, localidad o barrio"
+                  value={customLocation}
+                  onChange={(e) => setCustomLocation(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleUseCustomLocation();
+                    }
+                  }}
+                />
+                <Button 
+                  onClick={handleUseCustomLocation}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Buscar en otra ubicación
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  * Si eliges buscar en otra ubicación, la navegación GPS estará deshabilitada y solo podrás ver propiedades en la dirección ingresada.
+                </p>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

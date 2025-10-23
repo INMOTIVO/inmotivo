@@ -11,12 +11,14 @@ interface SearchOptionsProps {
   municipality: string;
   sector: string;
   onSearchChange?: (newQuery: string) => void;
+  disableGPSNavigation?: boolean;
 }
 const SearchOptions = ({
   searchQuery,
   municipality,
   sector,
-  onSearchChange
+  onSearchChange,
+  disableGPSNavigation = false
 }: SearchOptionsProps) => {
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
@@ -103,42 +105,44 @@ const SearchOptions = ({
         </p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-3 md:gap-5">
+      <div className={`grid ${disableGPSNavigation ? 'md:grid-cols-1 max-w-md mx-auto' : 'md:grid-cols-2'} gap-3 md:gap-5`}>
         {/* Navegación GPS */}
-        <Card className="p-3 md:p-6 hover:shadow-xl transition-all duration-300 hover:border-primary/50 cursor-pointer group border-primary/30">
-          <div className="flex flex-col h-full space-y-2 md:space-y-4">
-            <div className="inline-flex p-2 md:p-3 rounded-2xl bg-accent/10 text-accent group-hover:scale-110 transition-transform duration-300">
-              <Navigation className="h-6 w-6 md:h-8 md:w-8" />
-            </div>
-            
-            <div className="space-y-1 md:space-y-2">
-              <h3 className="text-base md:text-xl font-bold">Navegar con GPS</h3>
-              <p className="text-[11px] md:text-sm text-muted-foreground line-clamp-2">
-                Descubre propiedades mientras te desplazas en tiempo real.
-              </p>
-            </div>
+        {!disableGPSNavigation && (
+          <Card className="p-3 md:p-6 hover:shadow-xl transition-all duration-300 hover:border-primary/50 cursor-pointer group border-primary/30">
+            <div className="flex flex-col h-full space-y-2 md:space-y-4">
+              <div className="inline-flex p-2 md:p-3 rounded-2xl bg-accent/10 text-accent group-hover:scale-110 transition-transform duration-300">
+                <Navigation className="h-6 w-6 md:h-8 md:w-8" />
+              </div>
+              
+              <div className="space-y-1 md:space-y-2">
+                <h3 className="text-base md:text-xl font-bold">Navegar con GPS</h3>
+                <p className="text-[11px] md:text-sm text-muted-foreground line-clamp-2">
+                  Descubre propiedades mientras te desplazas en tiempo real.
+                </p>
+              </div>
 
-            <ul className="space-y-1 md:space-y-1.5 text-xs md:text-xs text-muted-foreground hidden md:block flex-grow">
-              <li className="flex items-center gap-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-accent" />
-                Navegación en tiempo real
-              </li>
-              <li className="flex items-center gap-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-accent" />
-                Propiedades en 2km alrededor
-              </li>
-              <li className="flex items-center gap-2">
-                <div className="h-1.5 w-1.5 rounded-full bg-accent" />
-                Actualización automática
-              </li>
-            </ul>
+              <ul className="space-y-1 md:space-y-1.5 text-xs md:text-xs text-muted-foreground hidden md:block flex-grow">
+                <li className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-accent" />
+                  Navegación en tiempo real
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-accent" />
+                  Propiedades en 2km alrededor
+                </li>
+                <li className="flex items-center gap-2">
+                  <div className="h-1.5 w-1.5 rounded-full bg-accent" />
+                  Actualización automática
+                </li>
+              </ul>
 
-            <Button onClick={handleGPSNavigation} variant="default" className="w-full bg-gradient-to-r from-accent to-accent/80 mt-auto" size="default">
-              <Navigation className="mr-2 h-4 w-4 md:h-5 md:w-5" />
-              Iniciar Navegación
-            </Button>
-          </div>
-        </Card>
+              <Button onClick={handleGPSNavigation} variant="default" className="w-full bg-gradient-to-r from-accent to-accent/80 mt-auto" size="default">
+                <Navigation className="mr-2 h-4 w-4 md:h-5 md:w-5" />
+                Iniciar Navegación
+              </Button>
+            </div>
+          </Card>
+        )}
 
         {/* Vista Fija */}
         <Card className="p-3 md:p-6 hover:shadow-xl transition-all duration-300 hover:border-primary/50 cursor-pointer group">
