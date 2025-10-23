@@ -98,7 +98,7 @@ const HowItWorksVideo = () => {
           </div>
 
           {/* Features Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+          <div className="grid grid-cols-3 gap-3 md:gap-8">
             {/* Card 1 */}
             <div className="relative h-56 md:h-64 group" style={{ perspective: '1000px' }}>
               {/* Animated border glow */}
