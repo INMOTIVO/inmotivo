@@ -41,7 +41,7 @@ const ContactDialog = ({
     name: '',
     email: '',
     phone: '',
-    message: 'Hola, estoy interesado en esta propiedad...'
+    message: '¡Hola! Estoy interesado en esta propiedad...'
   });
   const [errors, setErrors] = useState<Partial<Record<keyof ContactFormData, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
