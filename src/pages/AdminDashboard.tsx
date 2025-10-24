@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Navbar from '@/components/Navbar';
+import PropertiesManagementTable from '@/components/PropertiesManagementTable';
 import { 
   Home, 
   MessageCircle, 
@@ -53,6 +54,7 @@ const AdminDashboard = () => {
   });
   const [recentProperties, setRecentProperties] = useState<RecentProperty[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showPropertiesView, setShowPropertiesView] = useState<'all' | 'available' | 'draft' | 'suspended' | null>(null);
 
   useEffect(() => {
     if (!authLoading && !roleLoading) {
@@ -148,6 +150,21 @@ const AdminDashboard = () => {
     );
   }
 
+  if (showPropertiesView) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="container mx-auto px-4 pt-24 pb-12">
+          <PropertiesManagementTable 
+            filterStatus={showPropertiesView}
+            isAdmin={true}
+            onBack={() => setShowPropertiesView(null)}
+          />
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -177,7 +194,7 @@ const AdminDashboard = () => {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
-          <Card>
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setShowPropertiesView('all')}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">
                 Total Propiedades
@@ -192,7 +209,7 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setShowPropertiesView('available')}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">
                 Propiedades Activas

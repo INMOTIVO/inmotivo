@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Navbar from '@/components/Navbar';
+import PropertiesManagementTable from '@/components/PropertiesManagementTable';
 import { Plus, Home, MessageCircle, Edit, Trash2, Eye, User, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
@@ -107,6 +108,7 @@ const ProviderDashboard = () => {
   const [loadingData, setLoadingData] = useState(true);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [savingProfile, setSavingProfile] = useState(false);
+  const [showPropertiesView, setShowPropertiesView] = useState<'all' | 'available' | 'draft' | 'suspended' | null>(null);
 
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
@@ -245,6 +247,22 @@ const ProviderDashboard = () => {
     );
   }
 
+  if (showPropertiesView) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="container mx-auto px-4 pt-24 pb-12">
+          <PropertiesManagementTable 
+            filterStatus={showPropertiesView}
+            userId={user?.id}
+            isAdmin={false}
+            onBack={() => setShowPropertiesView(null)}
+          />
+        </main>
+      </div>
+    );
+  }
+
   const propertyTypeLabels: Record<string, string> = {
     apartment: 'Apartamento',
     house: 'Casa',
@@ -285,7 +303,7 @@ const ProviderDashboard = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card>
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setShowPropertiesView('available')}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">
                 Propiedades Activas
@@ -299,7 +317,7 @@ const ProviderDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setShowPropertiesView('all')}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">
                 Total Propiedades
