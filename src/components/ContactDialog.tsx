@@ -119,7 +119,7 @@ const ContactDialog = ({
 
           {/* Separador con texto */}
           <div className="text-center">
-            <p className="text-sm font-medium text-muted-foreground">
+            <p className="text-base font-medium text-muted-foreground">
               Puedes contactarlo por la app
             </p>
           </div>
