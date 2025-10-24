@@ -105,7 +105,7 @@ const ContactDialog = ({
 
         <div className="space-y-6">
           {/* Información del publicador */}
-          <div className="p-4 rounded-lg space-y-3 bg-slate-200">
+          <div className="p-4 rounded-lg bg-slate-200">
             <div className="flex items-center gap-2 text-sm font-medium">
               {isAgency ? <>
                   <Building2 className="h-4 w-4 text-primary" />
@@ -115,25 +115,6 @@ const ContactDialog = ({
                   <span>Este inmueble fue publicado por un propietario directo</span>
                 </>}
             </div>
-
-            <div className="space-y-2">
-              <p className="font-semibold">{contactName}</p>
-              
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Phone className="h-4 w-4" />
-                <span>{contactPhone || '+57 300 123 4567'}</span>
-              </div>
-              
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Mail className="h-4 w-4" />
-                <span>{contactEmail || 'contacto@ejemplo.com'}</span>
-              </div>
-            </div>
-
-            {contactPhone && <Button onClick={handleWhatsApp} className="w-full bg-[#25D366] hover:bg-[#20BA5A]" size="sm">
-                <Phone className="mr-2 h-4 w-4" />
-                Contactar por WhatsApp
-              </Button>}
           </div>
 
           {/* Separador con texto */}
