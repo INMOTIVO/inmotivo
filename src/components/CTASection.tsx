@@ -71,7 +71,7 @@ const CTASection = () => {
                 </DialogHeader>
                 <div className="flex flex-col gap-4 py-4">
                   <div className="space-y-2">
-                    <h4 className="font-semibold text-sm">Beneficios de tener una cuenta:</h4>
+                    <h4 className="font-semibold text-sm">Beneficios de registrar tu usuario:</h4>
                     <ul className="space-y-2 text-sm text-muted-foreground">
                       <li className="flex items-start gap-2">
                         <span className="text-primary mt-0.5">•</span>
