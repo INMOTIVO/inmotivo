@@ -1,12 +1,14 @@
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Building2, TrendingUp, Users, HelpCircle, MessageCircle } from "lucide-react";
+import { Building2, TrendingUp, Users, HelpCircle, MessageCircle, UserPlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useState } from "react";
 const CTASection = () => {
   const navigate = useNavigate();
+  const [showPublishDialog, setShowPublishDialog] = useState(false);
   const handleWhatsApp = () => {
     window.open('https://wa.me/573001234567?text=Hola%20INMOTIVO,%20tengo%20una%20consulta', '_blank');
   };
@@ -51,7 +53,61 @@ const CTASection = () => {
           </div>
 
           <div className="flex flex-col items-center gap-3">
-            <Button size="xl" variant="secondary" className="bg-white text-primary hover:bg-white/95 shadow-[0_0_30px_rgba(255,255,255,0.5)] hover:shadow-[0_0_40px_rgba(255,255,255,0.7)] transition-all duration-300 font-semibold" onClick={handleWhatsApp}>Publicar inmueble</Button>
+            <Dialog open={showPublishDialog} onOpenChange={setShowPublishDialog}>
+              <DialogTrigger asChild>
+                <Button size="xl" variant="secondary" className="bg-white text-primary hover:bg-white/95 shadow-[0_0_30px_rgba(255,255,255,0.5)] hover:shadow-[0_0_40px_rgba(255,255,255,0.7)] transition-all duration-300 font-semibold">
+                  Publicar inmueble
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="text-2xl flex items-center gap-2">
+                    <UserPlus className="h-6 w-6 text-primary" />
+                    Crea tu cuenta
+                  </DialogTitle>
+                  <DialogDescription className="text-base pt-2">
+                    Para publicar tu inmueble en INMOTIVO necesitas crear una cuenta de usuario.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="flex flex-col gap-4 py-4">
+                  <div className="space-y-2">
+                    <h4 className="font-semibold text-sm">Beneficios de tener una cuenta:</h4>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      <li className="flex items-start gap-2">
+                        <span className="text-primary mt-0.5">•</span>
+                        <span>Gestiona todas tus propiedades desde un panel</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-primary mt-0.5">•</span>
+                        <span>Recibe notificaciones de clientes interesados</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-primary mt-0.5">•</span>
+                        <span>Analíticas de rendimiento de tus publicaciones</span>
+                      </li>
+                    </ul>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <Button 
+                      onClick={() => {
+                        setShowPublishDialog(false);
+                        navigate('/auth');
+                      }}
+                      className="w-full"
+                    >
+                      Crear cuenta ahora
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => setShowPublishDialog(false)}
+                      className="w-full"
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
             
             <Popover>
               <PopoverTrigger asChild>
