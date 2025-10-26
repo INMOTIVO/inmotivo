@@ -39,21 +39,21 @@ const HowItWorksVideo = () => {
   }, []);
 
   return (
-    <section className="py-16 md:py-24 bg-gradient-to-b from-background to-accent/20">
+    <section className="py-8 md:py-12 bg-gradient-to-b from-background to-accent/20">
       <div className="container mx-auto px-4">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-5xl mx-auto">
           {/* Header */}
-          <div className="text-center mb-12 space-y-4 animate-fade-in">
-            <h2 className="text-3xl md:text-5xl font-bold">
+          <div className="text-center mb-6 space-y-2 animate-fade-in">
+            <h2 className="text-2xl md:text-4xl font-bold">
               Descubre cómo funciona <span className="text-primary">INMOTIVO</span>
             </h2>
-            <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
+            <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
               Tecnología inteligente que encuentra propiedades a tu alrededor según tus preferencias
             </p>
           </div>
 
           {/* Video Container */}
-          <div className="relative rounded-3xl overflow-hidden shadow-2xl mb-12 group animate-scale-in">
+          <div className="relative rounded-2xl overflow-hidden shadow-2xl mb-6 group animate-scale-in">
             <div className="aspect-video bg-gradient-to-br from-primary/20 to-accent/20 relative">
               {/* Video Thumbnail */}
               <img 
@@ -98,9 +98,9 @@ const HowItWorksVideo = () => {
           </div>
 
           {/* Features Grid */}
-          <div className="grid grid-cols-3 gap-3 md:gap-8">
+          <div className="grid grid-cols-3 gap-3 md:gap-6">
             {/* Card 1 */}
-            <div className="relative h-56 md:h-64 group" style={{ perspective: '1000px' }}>
+            <div className="relative h-40 md:h-48 group" style={{ perspective: '1000px' }}>
               {/* Animated border glow */}
               <div className="absolute inset-0 rounded-xl md:rounded-2xl bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_100%] animate-[gradient-flow_3s_linear_infinite] opacity-75 blur-sm"></div>
               
@@ -125,7 +125,7 @@ const HowItWorksVideo = () => {
             </div>
 
             {/* Card 2 */}
-            <div className="relative h-56 md:h-64 group" style={{ perspective: '1000px' }}>
+            <div className="relative h-40 md:h-48 group" style={{ perspective: '1000px' }}>
               {/* Animated border glow with delay */}
               <div className="absolute inset-0 rounded-xl md:rounded-2xl bg-gradient-to-r from-accent via-primary to-accent bg-[length:200%_100%] animate-[gradient-flow_3s_linear_infinite_1s] opacity-75 blur-sm"></div>
               
@@ -150,7 +150,7 @@ const HowItWorksVideo = () => {
             </div>
 
             {/* Card 3 */}
-            <div className="relative h-56 md:h-64 group" style={{ perspective: '1000px' }}>
+            <div className="relative h-40 md:h-48 group" style={{ perspective: '1000px' }}>
               {/* Animated border glow with delay */}
               <div className="absolute inset-0 rounded-xl md:rounded-2xl bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_100%] animate-[gradient-flow_3s_linear_infinite_2s] opacity-75 blur-sm"></div>
               
