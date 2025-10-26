@@ -2,16 +2,12 @@ import { Button } from "@/components/ui/button";
 import { Building2, TrendingUp, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-
 const CTASection = () => {
   const navigate = useNavigate();
-
   const handleContact = () => {
     window.location.href = 'mailto:contacto@inmotivo.com';
   };
-
-  return (
-    <section className="py-12 md:py-16 bg-gradient-to-br from-primary via-primary to-blue-600 text-white relative overflow-hidden">
+  return <section className="py-12 md:py-16 bg-gradient-to-br from-primary via-primary to-blue-600 text-white relative overflow-hidden">
       {/* Decorative elements */}
       <div className="absolute top-0 left-0 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-white/5 rounded-full blur-3xl" />
@@ -52,19 +48,10 @@ const CTASection = () => {
           </div>
 
           <div className="flex justify-center">
-            <Button 
-              size="xl" 
-              variant="secondary"
-              className="bg-white text-primary hover:bg-white/95 shadow-[0_0_30px_rgba(255,255,255,0.5)] hover:shadow-[0_0_40px_rgba(255,255,255,0.7)] transition-all duration-300 font-semibold"
-              onClick={handleContact}
-            >
-              Contactar a INMOTIVO
-            </Button>
+            <Button size="xl" variant="secondary" className="bg-white text-primary hover:bg-white/95 shadow-[0_0_30px_rgba(255,255,255,0.5)] hover:shadow-[0_0_40px_rgba(255,255,255,0.7)] transition-all duration-300 font-semibold" onClick={handleContact}>Publicar inmueble</Button>
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default CTASection;
