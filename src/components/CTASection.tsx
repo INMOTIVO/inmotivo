@@ -59,7 +59,7 @@ const CTASection = () => {
               </PopoverTrigger>
               <PopoverContent className="w-72 p-0 bg-card" align="center">
                 <div className="flex flex-col gap-3 p-4">
-                  <h3 className="font-semibold text-base text-foreground">¿Necesitas ayuda?</h3>
+                  <h3 className="font-semibold text-sm text-foreground text-center">¿Necesitas ayuda?</h3>
                   <div className="flex flex-col gap-2">
                     <a 
                       href="/docs/faq.pdf" 
