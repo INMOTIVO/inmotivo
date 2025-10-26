@@ -1,8 +1,9 @@
 import { Mail, Phone, Instagram, Facebook } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-const Footer = () => {
+import { cn } from "@/lib/utils";
+const Footer = ({ className }: { className?: string }) => {
   const navigate = useNavigate();
-  return <footer className="bg-foreground text-background py-6">
+  return <footer className={cn("bg-foreground text-background py-6", className)}>
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:grid md:grid-cols-4 gap-4 md:gap-8 mb-4 md:mb-6">
           {/* Brand */}

@@ -1,12 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Building2, TrendingUp, Users, HelpCircle, Mail } from "lucide-react";
+import { Building2, TrendingUp, Users, HelpCircle, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 const CTASection = () => {
   const navigate = useNavigate();
-  const handleContact = () => {
-    window.location.href = 'mailto:contacto@inmotivo.com';
+  const handleWhatsApp = () => {
+    window.open('https://wa.me/573001234567?text=Hola%20INMOTIVO,%20tengo%20una%20consulta', '_blank');
   };
   return <section className="py-12 md:py-16 bg-gradient-to-br from-primary via-primary to-blue-600 text-white relative overflow-hidden">
       {/* Decorative elements */}
@@ -49,7 +49,7 @@ const CTASection = () => {
           </div>
 
           <div className="flex flex-col items-center gap-3">
-            <Button size="xl" variant="secondary" className="bg-white text-primary hover:bg-white/95 shadow-[0_0_30px_rgba(255,255,255,0.5)] hover:shadow-[0_0_40px_rgba(255,255,255,0.7)] transition-all duration-300 font-semibold" onClick={handleContact}>Publicar inmueble</Button>
+            <Button size="xl" variant="secondary" className="bg-white text-primary hover:bg-white/95 shadow-[0_0_30px_rgba(255,255,255,0.5)] hover:shadow-[0_0_40px_rgba(255,255,255,0.7)] transition-all duration-300 font-semibold" onClick={handleWhatsApp}>Publicar inmueble</Button>
             
             <Popover>
               <PopoverTrigger asChild>
@@ -57,23 +57,26 @@ const CTASection = () => {
                   ¿Tienes dudas?
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-56 p-2" align="center">
-                <div className="flex flex-col gap-1">
-                  <a 
-                    href="/docs/faq.pdf" 
-                    target="_blank"
-                    className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
-                  >
-                    <HelpCircle className="h-4 w-4" />
-                    Preguntas frecuentes
-                  </a>
-                  <button
-                    onClick={handleContact}
-                    className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors text-left"
-                  >
-                    <Mail className="h-4 w-4" />
-                    Contactar a INMOTIVO
-                  </button>
+              <PopoverContent className="w-72 p-0 bg-card" align="center">
+                <div className="flex flex-col gap-3 p-4">
+                  <h3 className="font-semibold text-base text-foreground">¿Necesitas ayuda?</h3>
+                  <div className="flex flex-col gap-2">
+                    <a 
+                      href="/docs/faq.pdf" 
+                      target="_blank"
+                      className="flex items-center gap-3 px-4 py-3 text-sm rounded-lg border bg-background hover:bg-accent transition-colors"
+                    >
+                      <HelpCircle className="h-5 w-5 text-primary" />
+                      <span className="font-medium">Preguntas frecuentes</span>
+                    </a>
+                    <Button
+                      onClick={handleWhatsApp}
+                      className="flex items-center gap-2 w-full bg-[#25D366] hover:bg-[#20BD5A] text-white"
+                    >
+                      <MessageCircle className="h-5 w-5" />
+                      Contactar por WhatsApp
+                    </Button>
+                  </div>
                 </div>
               </PopoverContent>
             </Popover>
