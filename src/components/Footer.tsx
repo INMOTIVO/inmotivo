@@ -1,6 +1,5 @@
 import { Mail, Phone, Instagram, Facebook } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-
 const Footer = () => {
   const navigate = useNavigate();
   return <footer className="bg-foreground text-background py-6">
@@ -8,10 +7,7 @@ const Footer = () => {
         <div className="flex flex-col md:grid md:grid-cols-4 gap-4 md:gap-8 mb-4 md:mb-6">
           {/* Brand */}
           <div className="space-y-4 flex flex-col items-center md:items-start text-center md:text-left">
-            <div 
-              className="flex items-center gap-2 cursor-pointer"
-              onClick={() => navigate("/")}
-            >
+            <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
               <svg width="46" height="46" viewBox="0 0 180 180" className="flex-shrink-0 transition-transform hover:scale-105">
                 <g transform="translate(20,25)" strokeWidth="8" fill="none">
                   <rect x="0" y="0" width="48" height="90" rx="6" className="stroke-primary" />
@@ -21,8 +17,8 @@ const Footer = () => {
               </svg>
               <span className="text-2xl font-bold">INMOTIVO</span>
             </div>
-            <p className="text-background/70">La plataforma inteligente 
-de arriendos con IA y geolocalización</p>
+            <p className="text-background/70">
+          </p>
           </div>
 
           {/* Quick Links */}
