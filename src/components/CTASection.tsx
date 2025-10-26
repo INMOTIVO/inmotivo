@@ -91,7 +91,7 @@ const CTASection = () => {
                     <Button 
                       onClick={() => {
                         setShowPublishDialog(false);
-                        navigate('/auth');
+                        navigate('/auth?tab=signup');
                       }}
                       className="w-full"
                     >
