@@ -17,8 +17,7 @@ const Footer = () => {
               </svg>
               <span className="text-xl font-bold">INMOTIVO</span>
             </div>
-            <p className="text-background/70 text-xs">La plataforma inteligente 
-de arriendos con IA y geolocalización</p>
+            
           </div>
 
           {/* Quick Links */}
