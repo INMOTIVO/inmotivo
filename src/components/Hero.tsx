@@ -429,7 +429,7 @@ const Hero = () => {
               <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
               <Input
                 placeholder="¿Qué buscas?"
-                className="flex-1 border-input text-base leading-normal min-h-[44px]"
+                className="flex-1 border-input text-base leading-normal min-h-[44px] shadow-lg border-2"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={(e) => {
