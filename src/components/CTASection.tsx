@@ -63,7 +63,7 @@ const CTASection = () => {
                 <DialogHeader>
                   <DialogTitle className="text-2xl flex items-center gap-2">
                     <UserPlus className="h-6 w-6 text-primary" />
-                    Crea tu cuenta
+                    Registrarse
                   </DialogTitle>
                   <DialogDescription className="text-base pt-2">
                     Para publicar tu inmueble en INMOTIVO necesitas crear una cuenta de usuario.
@@ -95,7 +95,7 @@ const CTASection = () => {
                       }}
                       className="w-full"
                     >
-                      Crear cuenta ahora
+                      Registrar usuario
                     </Button>
                     <Button 
                       variant="outline"
