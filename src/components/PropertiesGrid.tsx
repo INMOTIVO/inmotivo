@@ -12,7 +12,7 @@ const PropertiesGrid = () => {
         .eq("status", "available")
         .lte("price", 25000000) // Max price 25M
         .order("created_at", { ascending: false })
-        .limit(6);
+        .limit(2);
       
       if (error) throw error;
       return data;
