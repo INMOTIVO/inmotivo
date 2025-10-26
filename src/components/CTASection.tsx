@@ -66,7 +66,7 @@ const CTASection = () => {
                     Registrarse
                   </DialogTitle>
                   <DialogDescription className="text-base pt-2">
-                    Para publicar tu inmueble en INMOTIVO necesitas crear una cuenta de usuario.
+                    Para publicar tu inmueble en INMOTIVO necesitas registrar tu usuario.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="flex flex-col gap-4 py-4">
