@@ -1,5 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Building2, TrendingUp, Users, HelpCircle, MessageCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -61,14 +63,61 @@ const CTASection = () => {
                 <div className="flex flex-col gap-3 p-4">
                   <h3 className="font-semibold text-sm text-foreground text-center">¿Necesitas ayuda?</h3>
                   <div className="flex flex-col gap-2">
-                    <a 
-                      href="/docs/faq.pdf" 
-                      target="_blank"
-                      className="flex items-center gap-3 px-4 py-3 text-sm rounded-lg border bg-background hover:bg-accent transition-colors"
-                    >
-                      <HelpCircle className="h-5 w-5 text-primary" />
-                      <span className="font-medium">Preguntas frecuentes</span>
-                    </a>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <button
+                          className="flex items-center gap-3 px-4 py-3 text-sm rounded-lg border bg-background hover:bg-accent transition-colors"
+                        >
+                          <HelpCircle className="h-5 w-5 text-primary" />
+                          <span className="font-medium">Preguntas frecuentes</span>
+                        </button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                          <DialogTitle className="text-2xl">Preguntas Frecuentes</DialogTitle>
+                        </DialogHeader>
+                        <Accordion type="single" collapsible className="w-full">
+                          <AccordionItem value="item-1">
+                            <AccordionTrigger>¿Cómo funciona INMOTIVO?</AccordionTrigger>
+                            <AccordionContent>
+                              INMOTIVO utiliza inteligencia artificial para ayudarte a buscar propiedades de forma natural. 
+                              Puedes usar búsquedas por voz o texto, y nuestro sistema te mostrará las mejores opciones 
+                              según tus necesidades en el mapa interactivo.
+                            </AccordionContent>
+                          </AccordionItem>
+                          <AccordionItem value="item-2">
+                            <AccordionTrigger>¿Es gratuito usar INMOTIVO?</AccordionTrigger>
+                            <AccordionContent>
+                              Sí, buscar propiedades en INMOTIVO es completamente gratuito. Solo las inmobiliarias 
+                              y propietarios que desean publicar propiedades tienen planes de pago.
+                            </AccordionContent>
+                          </AccordionItem>
+                          <AccordionItem value="item-3">
+                            <AccordionTrigger>¿Cómo puedo publicar mi propiedad?</AccordionTrigger>
+                            <AccordionContent>
+                              Puedes contactarnos a través del botón "Publicar inmueble" o por WhatsApp. 
+                              Nuestro equipo te ayudará a crear tu perfil y publicar tus propiedades en nuestra plataforma.
+                            </AccordionContent>
+                          </AccordionItem>
+                          <AccordionItem value="item-4">
+                            <AccordionTrigger>¿Qué ventajas ofrece el panel B2B?</AccordionTrigger>
+                            <AccordionContent>
+                              El panel B2B te permite gestionar todas tus propiedades desde un solo lugar, 
+                              obtener analíticas detalladas sobre el rendimiento de tus publicaciones, 
+                              y generar más leads cualificados gracias a nuestra tecnología de IA.
+                            </AccordionContent>
+                          </AccordionItem>
+                          <AccordionItem value="item-5">
+                            <AccordionTrigger>¿Cómo contacto al propietario de una propiedad?</AccordionTrigger>
+                            <AccordionContent>
+                              En cada ficha de propiedad encontrarás opciones para contactar directamente 
+                              con el propietario o la inmobiliaria a través de WhatsApp, llamada telefónica 
+                              o formulario de contacto.
+                            </AccordionContent>
+                          </AccordionItem>
+                        </Accordion>
+                      </DialogContent>
+                    </Dialog>
                     <Button
                       onClick={handleWhatsApp}
                       className="flex items-center gap-2 w-full bg-[#25D366] hover:bg-[#20BD5A] text-white"
