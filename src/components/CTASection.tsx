@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Building2, TrendingUp, Users } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Building2, TrendingUp, Users, HelpCircle, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 const CTASection = () => {
@@ -47,8 +48,35 @@ const CTASection = () => {
             </div>
           </div>
 
-          <div className="flex justify-center">
+          <div className="flex flex-col items-center gap-3">
             <Button size="xl" variant="secondary" className="bg-white text-primary hover:bg-white/95 shadow-[0_0_30px_rgba(255,255,255,0.5)] hover:shadow-[0_0_40px_rgba(255,255,255,0.7)] transition-all duration-300 font-semibold" onClick={handleContact}>Publicar inmueble</Button>
+            
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="text-sm text-white/90 hover:text-white underline underline-offset-4 transition-colors">
+                  ¿Tienes dudas?
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56 p-2" align="center">
+                <div className="flex flex-col gap-1">
+                  <a 
+                    href="/docs/faq.pdf" 
+                    target="_blank"
+                    className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors"
+                  >
+                    <HelpCircle className="h-4 w-4" />
+                    Preguntas frecuentes
+                  </a>
+                  <button
+                    onClick={handleContact}
+                    className="flex items-center gap-2 px-3 py-2 text-sm rounded-md hover:bg-accent transition-colors text-left"
+                  >
+                    <Mail className="h-4 w-4" />
+                    Contactar a INMOTIVO
+                  </button>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
       </div>
