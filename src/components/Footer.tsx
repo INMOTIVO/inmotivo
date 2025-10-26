@@ -3,9 +3,9 @@ import { useNavigate } from "react-router-dom";
 
 const Footer = () => {
   const navigate = useNavigate();
-  return <footer className="bg-foreground text-background py-16">
+  return <footer className="bg-foreground text-background py-6">
       <div className="container mx-auto px-4">
-        <div className="flex flex-col md:grid md:grid-cols-4 gap-6 md:gap-12 mb-8 md:mb-12">
+        <div className="flex flex-col md:grid md:grid-cols-4 gap-4 md:gap-8 mb-4 md:mb-6">
           {/* Brand */}
           <div className="space-y-4 flex flex-col items-center md:items-start text-center md:text-left">
             <div 
@@ -75,7 +75,7 @@ de arriendos con IA y geolocalización</p>
           </div>
         </div>
 
-        <div className="pt-8 border-t border-background/20 text-center text-background/60">
+        <div className="pt-4 border-t border-background/20 text-center text-background/60">
           <p>&copy; 2025 INMOTIVO. Todos los derechos reservados.</p>
         </div>
       </div>
