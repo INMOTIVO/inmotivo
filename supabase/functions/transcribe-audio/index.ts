@@ -23,92 +23,37 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY no configurada");
     }
 
-    // Usar Lovable AI Gateway para transcribir el audio vía chat multimodal
-    const gatewayUrl = "https://ai.gateway.lovable.dev/v1/chat/completions";
+    // Convertir base64 a binary
+    const binaryString = atob(audio);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
 
-    const payload = {
-      model: "google/gemini-2.5-flash",
-      messages: [
-        {
-          role: "system",
-          content:
-            "Eres un transcriptor de voz a texto en español. Devuelve únicamente la transcripción limpia, sin prefijos ni explicaciones.",
-        },
-        {
-          role: "user",
-          content: [
-            { type: "text", text: "Transcribe este audio a texto en español." },
-            { type: "input_audio", input_audio: { data: audio, format: "webm" } },
-          ],
-        },
-      ],
-    } as const;
+    // Crear FormData con el audio
+    const formData = new FormData();
+    const blob = new Blob([bytes], { type: "audio/webm" });
+    formData.append("file", blob, "audio.webm");
+    formData.append("model", "whisper-1");
 
-    const response = await fetch(gatewayUrl, {
+    const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
       },
-      body: JSON.stringify(payload),
+      body: formData,
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({
-            error: "rate_limit",
-            message:
-              "Has alcanzado el límite de solicitudes. Por favor espera un momento e intenta nuevamente.",
-          }),
-          {
-            status: 429,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
-      }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({
-            error: "payment_required",
-            message: "Se requiere agregar créditos a tu cuenta de Lovable AI.",
-          }),
-          {
-            status: 402,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
-      }
-      console.error("AI Gateway transcription error:", response.status, errorText);
-      throw new Error(`Error en transcripción: ${errorText}`);
+      throw new Error(`Error en transcripción: ${await response.text()}`);
     }
 
-    const ai = await response.json();
+    const result = await response.json();
 
-    // Extraer texto de la respuesta (puede venir como string o como partes)
-    let text = "";
-    const msg = ai.choices?.[0]?.message;
-    if (typeof msg?.content === "string") {
-      text = msg.content;
-    } else if (Array.isArray(msg?.content)) {
-      text = msg.content
-        .map((part: any) => {
-          if (typeof part === "string") return part;
-          if (part?.type === "text") return part.text ?? "";
-          return "";
-        })
-        .join("")
-        .trim();
-    }
-
-    if (!text) {
-      throw new Error("No se obtuvo transcripción");
-    }
-
-    return new Response(JSON.stringify({ text }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ text: result.text }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   } catch (error) {
     console.error("Error:", error);
     return new Response(
