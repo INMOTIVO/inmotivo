@@ -45,7 +45,33 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
-      throw new Error(`Error en transcripción: ${await response.text()}`);
+      const errorText = await response.text();
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ 
+            error: "rate_limit",
+            message: "Has alcanzado el límite de solicitudes. Por favor espera un momento e intenta nuevamente." 
+          }),
+          { 
+            status: 429,
+            headers: { ...corsHeaders, "Content-Type": "application/json" } 
+          }
+        );
+      }
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ 
+            error: "payment_required",
+            message: "Se requiere agregar créditos a tu cuenta de Lovable AI." 
+          }),
+          { 
+            status: 402,
+            headers: { ...corsHeaders, "Content-Type": "application/json" } 
+          }
+        );
+      }
+      console.error("Transcription error:", response.status, errorText);
+      throw new Error(`Error en transcripción: ${errorText}`);
     }
 
     const result = await response.json();

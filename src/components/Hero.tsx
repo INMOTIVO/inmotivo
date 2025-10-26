@@ -150,14 +150,28 @@ const Hero = () => {
               body: { audio: base64Audio }
             });
 
-            if (error) throw error;
+            if (error) {
+              if (error.message?.includes('rate_limit') || error.message?.includes('429')) {
+                toast.error("Has alcanzado el límite de solicitudes. Por favor espera un momento.");
+              } else if (error.message?.includes('payment_required') || error.message?.includes('402')) {
+                toast.error("Se requiere agregar créditos a tu cuenta.");
+              } else {
+                toast.error("Error al transcribir el audio. Intenta de nuevo.");
+              }
+              return;
+            }
+
+            if (data?.error) {
+              toast.error(data.message || "Error al transcribir el audio");
+              return;
+            }
 
             if (data?.text) {
               setSearchQuery(data.text);
               await handleSearch(data.text);
-              toast.success("Audio transcrito correctamente");
+              toast.success("🎤 Audio transcrito correctamente");
             } else {
-              toast.error("No se pudo transcribir el audio");
+              toast.error("No se pudo transcribir el audio. Habla más claro e intenta de nuevo.");
             }
           } catch (error) {
             console.error('Error transcribing audio:', error);
@@ -203,7 +217,16 @@ const Hero = () => {
       recognition.onerror = (event: any) => {
         console.error('Error en reconocimiento de voz:', event.error);
         setIsRecording(false);
-        toast.error("No se pudo procesar el audio. Intenta de nuevo.");
+        
+        if (event.error === 'no-speech') {
+          toast.error("No detecté ninguna voz. Por favor habla más claro.");
+        } else if (event.error === 'audio-capture') {
+          toast.error("No se pudo acceder al micrófono. Verifica los permisos.");
+        } else if (event.error === 'not-allowed') {
+          toast.error("Permiso de micrófono denegado. Activa el micrófono en la configuración.");
+        } else {
+          toast.error("Error al procesar el audio. Intenta de nuevo.");
+        }
       };
 
       recognition.onend = () => {
