@@ -313,19 +313,17 @@ const Hero = () => {
                     ) : (
                       <>
                         <div 
-                          className="flex items-center gap-1 flex-1 min-w-0 w-full sm:w-auto cursor-pointer hover:opacity-80 transition-opacity justify-center sm:justify-start"
+                          className="flex items-center gap-1.5 flex-1 min-w-0 w-full sm:w-auto cursor-pointer hover:opacity-80 transition-opacity justify-center sm:justify-start"
                           onClick={() => setShowLocationDialog(true)}
                         >
                           <MapPin className="h-4 w-4 text-primary animate-bounce flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            {municipality && sector ? (
-                              <span className="text-sm font-medium truncate">{municipality} - {sector}</span>
-                            ) : municipality ? (
-                              <span className="text-sm font-medium truncate">{municipality}</span>
-                            ) : (
+                          {municipality && sector ? (
+                            <span className="text-sm font-medium truncate">{municipality} - {sector}</span>
+                          ) : municipality ? (
+                            <span className="text-sm font-medium truncate">{municipality}</span>
+                          ) : (
                               <span className="text-sm text-muted-foreground">Ubicación actual</span>
                             )}
-                          </div>
                         </div>
                         <div className="flex items-center gap-2 w-full sm:w-auto">
                           <Button 
