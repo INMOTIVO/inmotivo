@@ -23,53 +23,54 @@ const PropertyCard = ({ id, title, price, location, beds, baths, area, imageUrl,
       className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group"
       onClick={() => navigate(`/property/${id}`)}
     >
-      <div className="relative h-56 overflow-hidden">
+      <div className="relative h-40 overflow-hidden">
         <img 
           src={imageUrl} 
           alt={title}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
         />
-        <Badge className="absolute top-4 left-4 bg-primary text-primary-foreground">
+        <Badge className="absolute top-3 left-3 bg-primary text-primary-foreground text-xs">
           {type}
         </Badge>
       </div>
       
-      <div className="p-5 space-y-4 flex flex-col">
-        <div className="min-h-[72px] md:min-h-0">
-          <h3 className="font-semibold text-lg mb-2 line-clamp-2">{title}</h3>
-          <div className="flex items-center text-muted-foreground text-sm">
-            <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
+      <div className="p-4 space-y-3 flex flex-col">
+        <div className="min-h-[60px] md:min-h-0">
+          <h3 className="font-semibold text-base mb-1.5 line-clamp-2">{title}</h3>
+          <div className="flex items-center text-muted-foreground text-xs">
+            <MapPin className="h-3.5 w-3.5 mr-1 flex-shrink-0" />
             <span className="line-clamp-1">{location}</span>
           </div>
         </div>
 
-        <div className="flex items-center justify-between text-sm text-muted-foreground py-2">
+        <div className="flex items-center justify-between text-xs text-muted-foreground py-1.5">
           <div className="flex items-center gap-1">
-            <Bed className="h-4 w-4" />
+            <Bed className="h-3.5 w-3.5" />
             <span>{beds}</span>
           </div>
           <div className="flex items-center gap-1">
-            <Bath className="h-4 w-4" />
+            <Bath className="h-3.5 w-3.5" />
             <span>{baths}</span>
           </div>
           <div className="flex items-center gap-1">
-            <Maximize className="h-4 w-4" />
+            <Maximize className="h-3.5 w-3.5" />
             <span>{area}</span>
           </div>
         </div>
 
-        <div className="pt-4 border-t mt-auto">
+        <div className="pt-3 border-t mt-auto">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-2xl font-bold text-primary">{price}</p>
-              <p className="text-xs text-muted-foreground">por mes</p>
+              <p className="text-xl font-bold text-primary">{price}</p>
+              <p className="text-[10px] text-muted-foreground">por mes</p>
             </div>
             <Button 
               onClick={(e) => {
                 e.stopPropagation();
                 navigate(`/property/${id}`);
               }}
-              className="min-w-[100px]"
+              size="sm"
+              className="min-w-[80px]"
             >
               Ver
             </Button>
