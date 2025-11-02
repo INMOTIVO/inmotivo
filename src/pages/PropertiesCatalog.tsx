@@ -141,10 +141,16 @@ const PropertiesCatalog = () => {
               con tu búsqueda
             </h1>
             {queryParam && (
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full">
-                <span className="text-sm text-muted-foreground">Buscaste:</span>
-                <span className="text-sm font-semibold text-primary">"{queryParam}"</span>
-              </div>
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full">
+              <span className="text-sm text-muted-foreground">Buscaste:</span>
+              <span className="text-sm font-semibold text-primary">"{queryParam}"</span>
+              {filters.location && (
+                <>
+                  <span className="text-sm text-muted-foreground">en:</span>
+                  <span className="text-sm font-semibold text-primary">{filters.location}</span>
+                </>
+              )}
+            </div>
             )}
           </div>
 
