@@ -143,14 +143,14 @@ const SearchOptions = ({
                   if (e.key === 'Enter') handleSaveEdit();
                   if (e.key === 'Escape') setIsEditing(false);
                 }}
-                className="h-7 text-xs md:text-sm font-semibold border-0 focus-visible:ring-1 px-2"
+                className="h-7 text-xs md:text-sm font-semibold border-0 focus-visible:ring-1 px-2 min-w-[120px] max-w-[200px] md:max-w-[300px]"
                 autoFocus
                 onClick={(e) => e.stopPropagation()}
               />
               <Button
                 size="icon"
                 variant="ghost"
-                className="h-6 w-6"
+                className="h-6 w-6 flex-shrink-0"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleSaveEdit();
@@ -161,10 +161,10 @@ const SearchOptions = ({
             </>
           ) : (
             <>
-              <span className="text-xs md:text-sm font-semibold text-foreground truncate">
+              <span className="text-xs md:text-sm font-semibold text-foreground truncate max-w-[150px] md:max-w-[300px]">
                 "{editedQuery}"
               </span>
-              <Edit2 className="h-3 w-3 text-muted-foreground" />
+              <Edit2 className="h-3 w-3 text-muted-foreground flex-shrink-0" />
             </>
           )}
         </div>
