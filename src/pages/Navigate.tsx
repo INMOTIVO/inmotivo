@@ -119,6 +119,15 @@ const Navigate = () => {
           </div>
         ) : (
           <div className="relative h-[calc(100vh-5rem)]">
+            <Button
+              variant="secondary"
+              onClick={() => navigate('/')}
+              className="absolute top-4 left-4 z-[1000] shadow-lg"
+              size="sm"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Volver
+            </Button>
             <NavigationMap
               destination={destination!}
               filters={filters}
