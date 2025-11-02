@@ -1,9 +1,9 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Map, Navigation, Edit2, Mic, MicOff } from 'lucide-react';
+import { Map, Navigation, Edit2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
 interface SearchOptionsProps {
@@ -23,10 +23,9 @@ const SearchOptions = ({
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [editedQuery, setEditedQuery] = useState(searchQuery);
-  const [isRecording, setIsRecording] = useState(false);
-  const recognitionRef = useRef<any>(null);
+  
   const handleStartEdit = () => {
-    setEditedQuery('');
+    setEditedQuery(searchQuery);
     setIsEditing(true);
   };
 
@@ -35,58 +34,6 @@ const SearchOptions = ({
       onSearchChange?.(editedQuery);
       setIsEditing(false);
       toast.success("Búsqueda actualizada");
-    }
-  };
-
-  const startRecording = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    
-    if (!SpeechRecognition) {
-      toast.error("Tu navegador no soporta reconocimiento de voz");
-      return;
-    }
-
-    // Si no está editando, limpiar y entrar en modo edición
-    if (!isEditing) {
-      setEditedQuery('');
-      setIsEditing(true);
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'es-ES';
-    recognition.continuous = false;
-    recognition.interimResults = false;
-
-    recognition.onstart = () => {
-      setIsRecording(true);
-      toast.success("Escuchando...");
-    };
-
-    recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      setEditedQuery(transcript);
-      onSearchChange?.(transcript);
-      setIsEditing(false);
-      toast.success("Búsqueda actualizada por voz");
-    };
-
-    recognition.onerror = () => {
-      setIsRecording(false);
-      toast.error("Error al procesar el audio");
-    };
-
-    recognition.onend = () => {
-      setIsRecording(false);
-    };
-
-    recognitionRef.current = recognition;
-    recognition.start();
-  };
-
-  const stopRecording = () => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-      setIsRecording(false);
     }
   };
 
@@ -182,7 +129,10 @@ const SearchOptions = ({
       </div>
 
       <div className="text-center pt-2 animate-fade-in">
-        <div className="inline-flex items-center gap-2 bg-white/95 px-4 md:px-6 py-2 md:py-3 rounded-full border border-primary/20 shadow-lg max-w-full">
+        <div 
+          className="inline-flex items-center gap-2 bg-white/95 px-4 md:px-6 py-2 md:py-3 rounded-full border border-primary/20 shadow-lg max-w-full cursor-pointer hover:bg-white transition-colors"
+          onClick={() => !isEditing && handleStartEdit()}
+        >
           <span className="text-[10px] md:text-xs text-muted-foreground whitespace-nowrap">Tu búsqueda:</span>
           {isEditing ? (
             <>
@@ -195,12 +145,16 @@ const SearchOptions = ({
                 }}
                 className="h-7 text-xs md:text-sm font-semibold border-0 focus-visible:ring-1 px-2"
                 autoFocus
+                onClick={(e) => e.stopPropagation()}
               />
               <Button
                 size="icon"
                 variant="ghost"
                 className="h-6 w-6"
-                onClick={handleSaveEdit}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSaveEdit();
+                }}
               >
                 ✓
               </Button>
@@ -210,29 +164,9 @@ const SearchOptions = ({
               <span className="text-xs md:text-sm font-semibold text-foreground truncate">
                 "{editedQuery}"
               </span>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-6 w-6"
-                onClick={handleStartEdit}
-              >
-                <Edit2 className="h-3 w-3" />
-              </Button>
+              <Edit2 className="h-3 w-3 text-muted-foreground" />
             </>
           )}
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-6 w-6"
-            onClick={isRecording ? stopRecording : startRecording}
-            disabled={isRecording}
-          >
-            {isRecording ? (
-              <MicOff className="h-3 w-3 text-red-500" />
-            ) : (
-              <Mic className="h-3 w-3" />
-            )}
-          </Button>
         </div>
       </div>
     </div>;
