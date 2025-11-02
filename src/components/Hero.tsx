@@ -224,7 +224,7 @@ const Hero = () => {
 
   if (showOptions) {
     return (
-      <section className="fixed inset-0 top-16 flex flex-col overflow-hidden z-50">
+      <section className="fixed inset-0 top-14 md:top-16 flex flex-col overflow-hidden z-50">
         <div className="absolute inset-0">
           <div 
             className="absolute inset-0 bg-cover bg-center"
