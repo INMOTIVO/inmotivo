@@ -234,7 +234,7 @@ const Hero = () => {
           </div>
         </div>
 
-        <div className="relative z-10 container mx-auto px-4 pt-6">
+        <div className="relative z-10 container mx-auto px-4 pt-2">
           <Button
             variant="ghost"
             size="sm"
