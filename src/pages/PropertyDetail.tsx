@@ -90,35 +90,35 @@ const PropertyDetail = () => {
   return (
     <div className="min-h-screen">
       <Navbar />
-      <main className="pt-16">
-        <div className="container mx-auto px-4 py-8">
+      <main className="pt-14 md:pt-16">
+        <div className="container mx-auto px-4 py-4 md:py-8">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => navigate(-1)}
-            className="mb-6"
+            className="mb-4 md:mb-6"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Volver
           </Button>
 
-          <div className="grid lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 space-y-6">
+          <div className="grid lg:grid-cols-3 gap-4 md:gap-8">
+            <div className="lg:col-span-2 space-y-4 md:space-y-6">
               {images.length > 0 && (
-                <div className="space-y-4">
+                <div className="space-y-3 md:space-y-4">
                   <img
                     src={images[0]}
                     alt={property.title}
-                    className="w-full h-96 object-cover rounded-2xl cursor-pointer hover:opacity-90 transition-opacity"
+                    className="w-full h-64 md:h-96 object-cover rounded-lg md:rounded-2xl cursor-pointer hover:opacity-90 transition-opacity"
                     onClick={() => setSelectedImageIndex(0)}
                   />
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-3 gap-2 md:gap-3">
                     {images.slice(1, 7).map((image, index) => (
                       <img
                         key={index}
                         src={image}
                         alt={`${property.title} - ${index + 2}`}
-                        className="w-full h-32 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                        className="w-full h-20 md:h-32 object-cover rounded-md md:rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
                         onClick={() => setSelectedImageIndex(index + 1)}
                       />
                     ))}
@@ -127,17 +127,17 @@ const PropertyDetail = () => {
               )}
 
               <div>
-                <div className="flex items-center gap-3 mb-3">
-                  <Badge className="bg-primary text-primary-foreground">
+                <div className="flex items-center gap-2 md:gap-3 mb-3 flex-wrap">
+                  <Badge className="bg-primary text-primary-foreground text-xs md:text-sm">
                     {propertyTypes[property.property_type]}
                   </Badge>
                   {property.verified && (
-                    <Badge variant="secondary">Verificado</Badge>
+                    <Badge variant="secondary" className="text-xs md:text-sm">Verificado</Badge>
                   )}
                 </div>
-                <h1 className="text-4xl font-bold mb-4">{property.title}</h1>
-                <div className="flex items-center text-muted-foreground mb-4">
-                  <MapPin className="h-5 w-5 mr-2" />
+                <h1 className="text-2xl md:text-4xl font-bold mb-3 md:mb-4">{property.title}</h1>
+                <div className="flex items-center text-muted-foreground mb-4 text-sm md:text-base">
+                  <MapPin className="h-4 w-4 md:h-5 md:w-5 mr-2" />
                   <span>{property.address}, {property.neighborhood}</span>
                 </div>
 

@@ -134,16 +134,16 @@ const PropertiesCatalog = () => {
             Volver
           </Button>
 
-          <div className="mb-6 text-center">
-            <h1 className="text-3xl md:text-4xl font-bold mb-3">
+          <div className="mb-6 text-center px-4">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-3">
               Propiedades que <span className="text-primary">coinciden</span>
-              <br />
-              con tu búsqueda
+              <br className="hidden sm:block" />
+              <span className="sm:inline"> </span>con tu búsqueda
             </h1>
             {queryParam && (
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full">
-              <span className="text-sm text-muted-foreground">Buscaste:</span>
-              <span className="text-sm font-semibold text-primary">"{queryParam}"</span>
+            <div className="inline-flex items-center gap-2 px-3 md:px-4 py-2 bg-primary/10 rounded-full max-w-[90%]">
+              <span className="text-xs md:text-sm text-muted-foreground whitespace-nowrap">Buscaste:</span>
+              <span className="text-xs md:text-sm font-semibold text-primary truncate">"{queryParam}"</span>
               {filters.location && (
                 <>
                   <span className="text-sm text-muted-foreground">en:</span>
@@ -159,7 +159,7 @@ const PropertiesCatalog = () => {
               <Loader2 className="h-12 w-12 animate-spin text-primary" />
             </div>
           ) : properties && properties.length > 0 ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
               {properties.map((property, index) => {
                 const images = property.images as string[] || [];
                 const defaultImage = getPropertyImage(property.property_type, index);
