@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Search, MapPin, Loader2, Mic, MicOff } from "lucide-react";
+import { Search, MapPin, Loader2, Mic, MicOff, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -235,6 +235,16 @@ const Hero = () => {
         </div>
 
         <div className="relative z-10 container mx-auto px-4 py-20 overflow-y-auto max-h-full">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowOptions(false)}
+            className="mb-6 text-white hover:bg-white/20"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Volver
+          </Button>
+          
           <SearchOptions 
             searchQuery={searchQuery}
             municipality={municipality || "Medellín"}
