@@ -510,7 +510,7 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
       {userLocation && (
         <>
           {/* Navigation Status - Mobile: top left, Desktop: top left */}
-          <div className="absolute top-4 left-4 md:top-20 md:left-4 z-[1000] bg-background/95 backdrop-blur p-3 md:p-4 rounded-lg shadow-lg">
+          <div className="absolute top-4 right-4 md:top-20 md:right-4 z-[1000] bg-background/95 backdrop-blur p-3 md:p-4 rounded-lg shadow-lg">
             <div className="flex items-center gap-2 mb-1">
               <Navigation className="h-4 w-4 md:h-5 md:w-5 text-primary flex-shrink-0" />
               <span className="font-semibold text-sm md:text-base leading-tight">Navegando</span>
