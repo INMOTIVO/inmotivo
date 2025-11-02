@@ -326,9 +326,7 @@ const Hero = () => {
           <div className="max-w-4xl mx-auto text-center space-y-8">
             <div className="space-y-4 animate-fade-in">
               <h1 className="text-3xl sm:text-4xl md:text-7xl font-bold text-white leading-tight">
-                Encuentra tu <span className="text-primary-glow">lugar ideal</span>
-                <br className="hidden sm:block" />
-                de manera <span className="text-accent">inteligente</span>
+                Encuentra tu <span className="text-primary-glow">lugar ideal</span> de manera <span className="text-accent">inteligente</span>
               </h1>
               <p className="text-base sm:text-lg md:text-2xl text-white/90 max-w-3xl mx-auto px-4">
                 Describe lo que buscas y descubre propiedades cerca a ti mientras navegas por la ciudad.
