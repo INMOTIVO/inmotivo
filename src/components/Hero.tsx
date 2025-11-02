@@ -328,10 +328,10 @@ const Hero = () => {
                         <div className="flex items-center gap-2 w-full sm:w-auto">
                           <Button 
                             variant="hero" 
-                            size="sm"
+                            size="lg"
                             onClick={() => handleSearch()}
                             disabled={!searchQuery.trim() || isRecording}
-                            className="flex-1 sm:flex-initial min-w-[80px]"
+                            className="flex-1 sm:flex-initial min-w-[120px] text-base font-semibold"
                           >
                             {isRecording ? 'Escuchando...' : 'Buscar'}
                           </Button>
