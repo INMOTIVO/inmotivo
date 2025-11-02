@@ -307,17 +307,12 @@ const Hero = () => {
                           <MapPin className="h-4 w-4 text-primary animate-bounce flex-shrink-0" />
                           <div className="flex-1 min-w-0">
                             {municipality && sector ? (
-                              <div className="min-w-0 space-y-0.5">
-                                <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Ciudad</div>
-                                <div className="text-sm font-semibold truncate">{municipality}</div>
-                                <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Zona</div>
-                                <div className="text-xs text-foreground truncate">{sector}</div>
+                              <div className="min-w-0">
+                                <div className="text-sm font-medium truncate">{municipality}</div>
+                                <div className="text-xs text-muted-foreground truncate">{sector}</div>
                               </div>
                             ) : municipality ? (
-                              <div className="min-w-0 space-y-0.5">
-                                <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Ciudad</div>
-                                <div className="text-sm font-semibold truncate">{municipality}</div>
-                              </div>
+                              <div className="text-sm font-medium truncate">{municipality}</div>
                             ) : (
                               <span className="text-sm text-muted-foreground">Ubicación actual</span>
                             )}
