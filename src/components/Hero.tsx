@@ -343,7 +343,7 @@ const Hero = () => {
                   <div className="flex items-start gap-2">
                     <Search className="h-4 w-4 text-muted-foreground mt-2 flex-shrink-0" />
                     <Textarea
-                      placeholder="Cuéntame qué buscas..."
+                      placeholder="Dime las características de la propiedad que buscas. Ejemplo: apartamento con dos habitaciones y 1 baño"
                       className="border-0 focus-visible:ring-0 text-base md:text-sm leading-normal resize-none min-h-[44px] max-h-[96px] md:max-h-[120px] w-full overflow-y-auto"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
