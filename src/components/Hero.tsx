@@ -387,10 +387,10 @@ const Hero = () => {
                             disabled={loadingLocation}
                             variant={isRecording ? "destructive" : "default"}
                             size="lg"
-                            className="flex-shrink-0 animate-pulse hover:scale-110 transition-all duration-300 shadow-lg hover:shadow-xl"
+                            className="flex-shrink-0"
                           >
                             {isRecording ? (
-                              <MicOff className="h-5 w-5 animate-pulse" />
+                              <MicOff className="h-5 w-5" />
                             ) : (
                               <Mic className="h-5 w-5" />
                             )}
