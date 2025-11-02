@@ -69,7 +69,7 @@ const PropertyCard = ({ id, title, price, location, beds, baths, area, imageUrl,
                 e.stopPropagation();
                 navigate(`/property/${id}`);
               }}
-              size="sm"
+              className="min-w-[100px]"
             >
               Ver
             </Button>
