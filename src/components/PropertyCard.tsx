@@ -1,6 +1,7 @@
 import { MapPin, Bed, Bath, Maximize } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 
 interface PropertyCardProps {
@@ -63,6 +64,15 @@ const PropertyCard = ({ id, title, price, location, beds, baths, area, imageUrl,
               <p className="text-2xl font-bold text-primary">{price}</p>
               <p className="text-xs text-muted-foreground">por mes</p>
             </div>
+            <Button 
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/property/${id}`);
+              }}
+              size="sm"
+            >
+              Ver
+            </Button>
           </div>
         </div>
       </div>
