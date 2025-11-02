@@ -385,14 +385,14 @@ const Hero = () => {
                           <Button 
                             onClick={isRecording ? stopRecording : startRecording}
                             disabled={loadingLocation}
-                            variant={isRecording ? "destructive" : "outline"}
-                            size="icon"
-                            className="flex-shrink-0 h-9 w-9"
+                            variant={isRecording ? "destructive" : "default"}
+                            size="lg"
+                            className="flex-shrink-0"
                           >
                             {isRecording ? (
-                              <MicOff className="h-4 w-4" />
+                              <MicOff className="h-5 w-5" />
                             ) : (
-                              <Mic className="h-4 w-4" />
+                              <Mic className="h-5 w-5" />
                             )}
                           </Button>
                           <Button 
