@@ -327,6 +327,15 @@ const Hero = () => {
                         </div>
                         <div className="flex items-center gap-2 w-full sm:w-auto">
                           <Button 
+                            variant="hero" 
+                            size="sm"
+                            onClick={() => handleSearch()}
+                            disabled={!searchQuery.trim() || isRecording}
+                            className="flex-1 sm:flex-initial min-w-[80px]"
+                          >
+                            {isRecording ? 'Escuchando...' : 'Buscar'}
+                          </Button>
+                          <Button 
                             onClick={isRecording ? stopRecording : startRecording}
                             disabled={loadingLocation}
                             variant={isRecording ? "destructive" : "default"}
@@ -338,15 +347,6 @@ const Hero = () => {
                             ) : (
                               <Mic className="h-5 w-5" />
                             )}
-                          </Button>
-                          <Button 
-                            variant="hero" 
-                            size="sm"
-                            onClick={() => handleSearch()}
-                            disabled={!searchQuery.trim() || isRecording}
-                            className="flex-1 sm:flex-initial min-w-[80px]"
-                          >
-                            {isRecording ? 'Escuchando...' : 'Buscar'}
                           </Button>
                         </div>
                       </>
