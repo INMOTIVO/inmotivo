@@ -121,7 +121,10 @@ const Navigate = () => {
           <div className="relative h-[calc(100vh-5rem)]">
             <Button
               variant="default"
-              onClick={() => navigate('/')}
+              onClick={() => {
+                const query = searchParams.get('query');
+                navigate(`/?query=${encodeURIComponent(query || '')}&showOptions=true`);
+              }}
               className="absolute top-6 left-6 z-[9999] shadow-xl bg-primary hover:bg-primary/90"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
