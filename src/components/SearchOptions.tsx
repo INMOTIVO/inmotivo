@@ -130,12 +130,12 @@ const SearchOptions = ({
 
       <div className="text-center pt-2 animate-fade-in">
         <div 
-          className="inline-flex items-center gap-2 bg-white/95 px-4 md:px-6 py-2 md:py-3 rounded-full border border-primary/20 shadow-lg max-w-full cursor-pointer hover:bg-white transition-colors"
+          className={`inline-flex items-center gap-2 bg-white/95 px-3 md:px-6 py-2 md:py-3 rounded-full border border-primary/20 shadow-lg w-auto cursor-pointer hover:bg-white transition-colors ${isEditing ? 'max-w-[95%]' : 'max-w-[90%]'}`}
           onClick={() => !isEditing && handleStartEdit()}
         >
-          <span className="text-[10px] md:text-xs text-muted-foreground whitespace-nowrap">Tu búsqueda:</span>
+          <span className="text-[10px] md:text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">Tu búsqueda:</span>
           {isEditing ? (
-            <>
+            <div className="flex items-center gap-1.5 flex-1 min-w-0">
               <Input
                 value={editedQuery}
                 onChange={(e) => setEditedQuery(e.target.value)}
@@ -143,14 +143,14 @@ const SearchOptions = ({
                   if (e.key === 'Enter') handleSaveEdit();
                   if (e.key === 'Escape') setIsEditing(false);
                 }}
-                className="h-7 text-xs md:text-sm font-semibold border-0 focus-visible:ring-1 px-2 min-w-[120px] max-w-[200px] md:max-w-[300px]"
+                className="h-7 text-xs md:text-sm font-semibold border-0 focus-visible:ring-1 px-2 flex-1 min-w-[100px]"
                 autoFocus
                 onClick={(e) => e.stopPropagation()}
               />
               <Button
                 size="icon"
                 variant="ghost"
-                className="h-6 w-6 flex-shrink-0"
+                className="h-7 w-7 flex-shrink-0"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleSaveEdit();
@@ -158,10 +158,10 @@ const SearchOptions = ({
               >
                 ✓
               </Button>
-            </>
+            </div>
           ) : (
             <>
-              <span className="text-xs md:text-sm font-semibold text-foreground truncate max-w-[150px] md:max-w-[300px]">
+              <span className="text-xs md:text-sm font-semibold text-foreground truncate max-w-[120px] md:max-w-[300px]">
                 "{editedQuery}"
               </span>
               <Edit2 className="h-3 w-3 text-muted-foreground flex-shrink-0" />
