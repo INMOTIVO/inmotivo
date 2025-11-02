@@ -87,10 +87,7 @@ const Hero = () => {
             
             // Extract municipality and sector
             const municipalityName = address.city || address.town || address.municipality || address.county || "Medellín";
-            // Try to get the most specific location available
-            const sectorName = address.suburb || address.neighbourhood || address.quarter || 
-                             address.village || address.hamlet || address.residential || 
-                             address.state_district || "";
+            const sectorName = address.suburb || address.neighbourhood || address.quarter || address.village || "";
             
             setMunicipality(municipalityName);
             setSector(sectorName);
