@@ -365,7 +365,7 @@ const Hero = () => {
 
       {/* Fixed search bar for mobile when scrolling */}
       {isMobile && showFixedSearch && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white shadow-2xl border-t border-border/50 animate-in slide-in-from-bottom-5 duration-300">
+        <div className="fixed bottom-16 left-0 right-0 z-50 bg-white shadow-2xl border-t border-border/50 animate-in slide-in-from-bottom-5 duration-300">
           <div className="p-3">
             <div className="flex items-center gap-2">
               <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
