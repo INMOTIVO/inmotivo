@@ -246,7 +246,7 @@ const Hero = () => {
           </Button>
         </div>
 
-        <div className="relative z-10 container mx-auto px-4 py-8 overflow-y-auto flex-1 flex items-center justify-center">
+        <div className="relative z-10 container mx-auto px-4 pt-12 pb-8 overflow-y-auto flex-1 flex items-start justify-center">
           <SearchOptions 
             searchQuery={searchQuery}
             municipality={municipality || "Medellín"}
