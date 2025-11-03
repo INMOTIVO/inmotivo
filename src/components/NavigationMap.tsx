@@ -143,7 +143,7 @@ const NavigationMap = ({
   useEffect(() => {
     let watchId: number;
     let lastUpdate = 0;
-    const UPDATE_INTERVAL = 3000; // Reducido para mejor detección de velocidad
+    const UPDATE_INTERVAL = 800; // Actualización cada 0.8 segundos (menor a 1 segundo)
     
     watchId = navigator.geolocation.watchPosition(position => {
       if (isPaused) return;
@@ -208,6 +208,7 @@ const NavigationMap = ({
         setHeading(position.coords.heading);
       }
       if (mapRef.current && !isVehicleMode) {
+        // Pan suave como Google Maps
         mapRef.current.panTo(newLocation);
       }
     }, error => {
@@ -219,8 +220,8 @@ const NavigationMap = ({
       }
     }, {
       enableHighAccuracy: true,
-      maximumAge: 1000,
-      timeout: 10000
+      maximumAge: 0, // Sin caché, siempre obtener ubicación actual
+      timeout: 5000
     });
     
     return () => {
