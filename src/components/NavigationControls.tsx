@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Navigation, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { FunctionsHttpError } from '@supabase/supabase-js';
 import { useVoiceRecording } from '@/hooks/useVoiceRecording';
 import VoiceButton from './VoiceButton';
 
@@ -48,16 +49,19 @@ const NavigationControls = ({ onStartNavigation, initialCriteria = '' }: Navigat
         body: { query: searchQuery }
       });
 
-      if (error) throw error;
-
-      // Verificar si la consulta no es válida
-      if (data?.error === 'invalid_query') {
-        toast.error(data.message, {
-          duration: 5000,
-          description: "💡 Ejemplo: 'Casa con jardín y parqueadero'"
-        });
-        return;
+      if (error instanceof FunctionsHttpError) {
+        const errorData = await error.context.json();
+        if (errorData?.error === 'invalid_query') {
+          toast.error(errorData.message || 'Esta búsqueda no es sobre propiedades', {
+            duration: 5000,
+            description: "💡 Ejemplo: 'Casa con jardín y parqueadero'"
+          });
+          setIsProcessing(false);
+          return;
+        }
       }
+
+      if (error) throw error;
 
       const filters = data?.filters || {};
       
