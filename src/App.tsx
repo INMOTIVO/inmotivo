@@ -14,6 +14,7 @@ import AdCreativesPreview from "./pages/AdCreativesPreview";
 import ProviderDashboard from "./pages/ProviderDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import CreateProperty from "./pages/CreateProperty";
+import Favorites from "./pages/Favorites";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
           <Route path="/publicar" element={<PublishProperty />} />
           <Route path="/dashboard" element={<ProviderDashboard />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/favorites" element={<Favorites />} />
           <Route path="/create-property" element={<CreateProperty />} />
           <Route path="/edit-property/:id" element={<CreateProperty />} />
           <Route path="/marketing-preview" element={<AdCreativesPreview />} />

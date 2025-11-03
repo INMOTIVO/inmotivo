@@ -6,14 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { MapPin, Bed, Bath, Maximize, ArrowLeft, X } from "lucide-react";
+import { MapPin, Bed, Bath, Maximize, ArrowLeft, X, Heart } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ContactDialog from "@/components/ContactDialog";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 const PropertyDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [showContactDialog, setShowContactDialog] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
 
@@ -54,6 +57,63 @@ const PropertyDetail = () => {
     },
   });
 
+  // Verificar si la propiedad está en favoritos
+  const { data: isFavorite, refetch: refetchFavorite } = useQuery({
+    queryKey: ["favorite", id, user?.id],
+    queryFn: async () => {
+      if (!user) return false;
+      
+      const { data, error } = await supabase
+        .from("property_favorites")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("property_id", id)
+        .maybeSingle();
+
+      if (error) throw error;
+      return !!data;
+    },
+    enabled: !!user && !!id,
+  });
+
+  const handleToggleFavorite = async () => {
+    if (!user) {
+      toast.error("Debes iniciar sesión para guardar favoritos");
+      navigate("/auth");
+      return;
+    }
+
+    try {
+      if (isFavorite) {
+        // Eliminar de favoritos
+        const { error } = await supabase
+          .from("property_favorites")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("property_id", id);
+
+        if (error) throw error;
+        toast.success("Eliminado de favoritos");
+      } else {
+        // Agregar a favoritos
+        const { error } = await supabase
+          .from("property_favorites")
+          .insert({
+            user_id: user.id,
+            property_id: id,
+          });
+
+        if (error) throw error;
+        toast.success("Agregado a favoritos");
+      }
+      
+      refetchFavorite();
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+      toast.error("Error al actualizar favoritos");
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen">
@@ -92,14 +152,35 @@ const PropertyDetail = () => {
       <Navbar />
       <main className="pt-14 md:pt-16">
         <div className="container mx-auto px-4 py-4 md:py-8">
-          <Button
-            variant="default"
-            size="icon"
-            onClick={() => navigate(-1)}
-            className="mb-4 md:mb-6 rounded-full w-12 h-12 shadow-xl bg-primary hover:bg-primary/90"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+          <div className="flex items-center justify-between mb-4 md:mb-6">
+            <Button
+              variant="default"
+              size="icon"
+              onClick={() => navigate(-1)}
+              className="rounded-full w-12 h-12 shadow-xl bg-primary hover:bg-primary/90"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleToggleFavorite}
+              className={`rounded-full w-12 h-12 shadow-xl ${
+                isFavorite 
+                  ? 'bg-red-50 hover:bg-red-100 border-red-200' 
+                  : 'bg-white hover:bg-gray-50'
+              }`}
+            >
+              <Heart 
+                className={`h-5 w-5 ${
+                  isFavorite 
+                    ? 'fill-red-500 text-red-500' 
+                    : 'text-gray-600'
+                }`} 
+              />
+            </Button>
+          </div>
 
           <div className="grid lg:grid-cols-3 gap-4 md:gap-8">
             <div className="lg:col-span-2 space-y-4 md:space-y-6">

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, LogOut, Home, Shield } from "lucide-react";
+import { Menu, LogOut, Home, Shield, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useRole } from "@/hooks/useRole";
@@ -56,10 +56,21 @@ const Navbar = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-4">
             <a href="/" className="text-foreground hover:text-primary transition-colors font-medium">
               Home
             </a>
+            {user && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate("/favorites")}
+                className="gap-2"
+              >
+                <Heart className="h-4 w-4" />
+                Favoritos
+              </Button>
+            )}
             {user ? (
               <>
                 <Button 
@@ -118,6 +129,14 @@ const Navbar = () => {
                 </Button>
                 {user ? (
                   <>
+                    <Button
+                      variant="ghost"
+                      className="justify-start text-base h-12"
+                      onClick={() => handleNavigation("/favorites")}
+                    >
+                      <Heart className="h-5 w-5 mr-3" />
+                      Favoritos
+                    </Button>
                     <Button
                       variant="ghost"
                       className="justify-start text-base h-12"
