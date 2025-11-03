@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +17,7 @@ const PropertyDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [showContactDialog, setShowContactDialog] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
 
@@ -107,7 +108,10 @@ const PropertyDetail = () => {
         toast.success("Agregado a favoritos");
       }
       
-      refetchFavorite();
+      // Invalidar las queries de favoritos para actualizar el contador
+      await refetchFavorite();
+      await queryClient.invalidateQueries({ queryKey: ["favorites-count", user.id] });
+      await queryClient.invalidateQueries({ queryKey: ["favorites", user.id] });
     } catch (error) {
       console.error("Error toggling favorite:", error);
       toast.error("Error al actualizar favoritos");

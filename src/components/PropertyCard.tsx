@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -23,6 +23,7 @@ interface PropertyCardProps {
 const PropertyCard = ({ id, title, price, location, beds, baths, area, imageUrl, type }: PropertyCardProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   // Verificar si la propiedad está en favoritos
   const { data: isFavorite, refetch: refetchFavorite } = useQuery({
@@ -74,7 +75,10 @@ const PropertyCard = ({ id, title, price, location, beds, baths, area, imageUrl,
         toast.success("Agregado a favoritos");
       }
       
-      refetchFavorite();
+      // Invalidar las queries de favoritos para actualizar el contador
+      await refetchFavorite();
+      await queryClient.invalidateQueries({ queryKey: ["favorites-count", user.id] });
+      await queryClient.invalidateQueries({ queryKey: ["favorites", user.id] });
     } catch (error) {
       console.error("Error toggling favorite:", error);
       toast.error("Error al actualizar favoritos");
