@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useRole } from "@/hooks/useRole";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Sheet,
   SheetContent,
@@ -18,6 +20,20 @@ const Navbar = () => {
   const { user, signOut } = useAuth();
   const { isAdmin } = useRole();
   const [isOpen, setIsOpen] = useState(false);
+
+  // Query to count favorites
+  const { data: favoritesCount = 0 } = useQuery({
+    queryKey: ["favorites-count", user?.id],
+    queryFn: async () => {
+      if (!user) return 0;
+      const { count } = await supabase
+        .from("property_favorites")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id);
+      return count || 0;
+    },
+    enabled: !!user,
+  });
 
   const handleSignOut = async () => {
     const { error } = await signOut();
@@ -108,6 +124,11 @@ const Navbar = () => {
                 aria-label="Ver favoritos"
               >
                 <Heart className="h-5 w-5" />
+                {favoritesCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {favoritesCount}
+                  </span>
+                )}
               </Button>
             )}
 
