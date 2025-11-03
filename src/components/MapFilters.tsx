@@ -42,15 +42,31 @@ const MapFilters = ({ onFiltersChange, initialQuery = '' }: MapFiltersProps) => 
         body: { query: query.trim() }
       });
 
-      if (error) throw error;
+      // Manejar errores de validación (error puede contener el mensaje)
+      if (error && typeof error === 'object' && 'error' in error) {
+        const errorData = error as any;
+        if (errorData.error === 'invalid_query') {
+          toast.error(errorData.message || "Esta búsqueda no es sobre propiedades", {
+            duration: 5000,
+            description: "💡 Ejemplo: 'Apartamento de 2 habitaciones cerca del metro'"
+          });
+          setIsProcessing(false);
+          return;
+        }
+      }
 
-      // Verificar si la consulta no es válida
+      // También verificar en data por si acaso
       if (data?.error === 'invalid_query') {
         toast.error(data.message, {
           duration: 5000,
           description: "💡 Ejemplo: 'Apartamento de 2 habitaciones cerca del metro'"
         });
+        setIsProcessing(false);
         return;
+      }
+
+      if (error) {
+        throw error;
       }
 
       const filters = data.filters;
