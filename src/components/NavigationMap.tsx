@@ -481,87 +481,83 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
         })}
       </GoogleMap>
       
-      {/* Botón Pausar/Reanudar y Buscador integrados - inferior centrado */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] flex items-end gap-3 w-[90%] max-w-2xl">
-        <Button
-          onClick={handleToggleNavigation}
-          variant={isPaused ? "default" : "destructive"}
-          size="lg"
-          className={`shadow-lg px-4 py-3 h-auto shrink-0 ${
-            isPaused ? 'bg-green-600 hover:bg-green-700' : ''
-          }`}
-        >
-          {isPaused ? (
-            <>
-              <Navigation className="mr-2 h-5 w-5" />
-              <span className="font-semibold">Ir</span>
-            </>
-          ) : (
-            <>
-              <X className="mr-2 h-5 w-5" />
-              <span className="font-semibold">Detener</span>
-            </>
-          )}
-        </Button>
-
-        {userLocation && (
-          <Card className="flex-1 bg-background/95 backdrop-blur-md p-3 shadow-xl">
-            <div className="space-y-2">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <MapPin className="h-3.5 w-3.5 text-primary flex-shrink-0" />
-                    <span className="text-[10px] font-semibold text-muted-foreground uppercase">
-                      Buscando
-                    </span>
-                  </div>
-                  <p className="text-xs font-medium leading-tight line-clamp-1">
-                    {searchCriteria || 'Propiedades cerca'}
-                  </p>
-                </div>
+      {/* Barra de control inferior - ocupa todo el ancho */}
+      {userLocation && (
+        <div className="absolute bottom-0 left-0 right-0 z-[1000]">
+          <Card className="rounded-none border-x-0 border-b-0 bg-background/95 backdrop-blur-md shadow-2xl">
+            <div className="container mx-auto px-4 py-3">
+              <div className="flex items-center gap-3">
+                {/* Botón Ir/Detener */}
                 <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-7 w-7 p-0 shrink-0"
-                  onClick={() => {
-                    setEditSearchQuery(searchCriteria);
-                    setIsEditDialogOpen(true);
-                  }}
+                  onClick={handleToggleNavigation}
+                  variant={isPaused ? "default" : "destructive"}
+                  size="lg"
+                  className={`shrink-0 px-6 py-6 h-auto ${
+                    isPaused ? 'bg-green-600 hover:bg-green-700' : ''
+                  }`}
                 >
-                  <Edit2 className="h-3.5 w-3.5" />
+                  {isPaused ? (
+                    <>
+                      <Navigation className="h-6 w-6" />
+                    </>
+                  ) : (
+                    <>
+                      <X className="h-6 w-6" />
+                    </>
+                  )}
                 </Button>
-              </div>
 
-              <div className="pt-2 border-t space-y-2">
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between text-[10px]">
-                    <span className="text-muted-foreground">Radio</span>
-                    <span className="font-semibold text-primary">
-                      {searchRadius >= 1000 ? `${(searchRadius / 1000).toFixed(1)} km` : `${searchRadius} m`}
-                    </span>
+                {/* Información de búsqueda */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <div className="flex-1 min-w-0 flex items-center gap-2">
+                      <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
+                      <p className="text-sm font-medium leading-tight line-clamp-1">
+                        {searchCriteria || 'Propiedades cerca'}
+                      </p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 w-8 p-0 shrink-0"
+                      onClick={() => {
+                        setEditSearchQuery(searchCriteria);
+                        setIsEditDialogOpen(true);
+                      }}
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
                   </div>
-                  <Slider
-                    value={[searchRadius]}
-                    onValueChange={(value) => handleManualRadiusChange(value[0])}
-                    min={100}
-                    max={1000}
-                    step={50}
-                    className="w-full"
-                  />
-                  <div className="flex justify-between text-[9px] text-muted-foreground">
-                    <span>100m</span>
-                    <span>1km</span>
+
+                  {/* Radio y propiedades */}
+                  <div className="flex items-center gap-4">
+                    <div className="flex-1 space-y-1">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">Radio</span>
+                        <span className="font-semibold text-primary">
+                          {searchRadius >= 1000 ? `${(searchRadius / 1000).toFixed(1)} km` : `${searchRadius} m`}
+                        </span>
+                      </div>
+                      <Slider
+                        value={[searchRadius]}
+                        onValueChange={(value) => handleManualRadiusChange(value[0])}
+                        min={100}
+                        max={1000}
+                        step={50}
+                        className="w-full"
+                      />
+                    </div>
+                    <div className="shrink-0 text-center px-3 py-1.5 bg-primary/10 rounded-lg">
+                      <div className="text-xs text-muted-foreground">Propiedades</div>
+                      <div className="text-lg font-bold text-primary">{properties?.length || 0}</div>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center justify-between text-[10px] pt-1 border-t">
-                  <span className="text-muted-foreground">Propiedades</span>
-                  <span className="font-semibold text-primary">{properties?.length || 0}</span>
                 </div>
               </div>
             </div>
           </Card>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Dialog para editar búsqueda */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
