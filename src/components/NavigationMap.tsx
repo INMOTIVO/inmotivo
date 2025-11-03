@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { X, Navigation, Edit2, MapPin } from 'lucide-react';
+import { X, Navigation, Edit2, MapPin, Car } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { playNotificationSound } from '@/utils/notificationSound';
@@ -39,6 +39,15 @@ const NavigationMap = ({
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
   const [mapZoom, setMapZoom] = useState<number>(18);
   const isManualRadiusChange = useRef(false);
+  
+  // Estados para detección de velocidad y modo vehículo
+  const [currentSpeed, setCurrentSpeed] = useState<number>(0);
+  const [isVehicleMode, setIsVehicleMode] = useState(false);
+  const [collectedProperties, setCollectedProperties] = useState<any[]>([]);
+  const [showCollectedProperties, setShowCollectedProperties] = useState(false);
+  const previousLocation = useRef<{ lat: number; lng: number; time: number } | null>(null);
+  const collectedPropertyIds = useRef<Set<string>>(new Set());
+  const travelDistance = useRef<number>(0);
   const {
     isLoaded
   } = useJsApiLoader({
@@ -130,25 +139,75 @@ const NavigationMap = ({
     enabled: !!userLocation && !isPaused
   });
 
-  // Track user location
+  // Track user location and speed
   useEffect(() => {
     let watchId: number;
     let lastUpdate = 0;
-    const UPDATE_INTERVAL = 5000;
+    const UPDATE_INTERVAL = 3000; // Reducido para mejor detección de velocidad
+    
     watchId = navigator.geolocation.watchPosition(position => {
       if (isPaused) return;
       const now = Date.now();
       if (now - lastUpdate < UPDATE_INTERVAL) return;
       lastUpdate = now;
+      
       const newLocation = {
         lat: position.coords.latitude,
         lng: position.coords.longitude
       };
+      
+      // Calcular velocidad
+      let speed = 0;
+      if (previousLocation.current) {
+        const timeDiff = (now - previousLocation.current.time) / 1000 / 3600; // en horas
+        const distance = calculateDistance(
+          previousLocation.current.lat,
+          previousLocation.current.lng,
+          newLocation.lat,
+          newLocation.lng
+        ); // en km
+        
+        speed = distance / timeDiff; // km/h
+        setCurrentSpeed(speed);
+        
+        // Acumular distancia recorrida
+        if (isVehicleMode) {
+          travelDistance.current += distance;
+          
+          // Limitar a 2km de registro
+          if (travelDistance.current > 2) {
+            // Resetear el registro más antiguo
+            collectedPropertyIds.current.clear();
+            setCollectedProperties([]);
+            travelDistance.current = 0;
+          }
+        }
+      }
+      
+      // Detectar modo vehículo (>10 km/h)
+      if (speed > 10 && !isVehicleMode) {
+        setIsVehicleMode(true);
+        travelDistance.current = 0;
+        collectedPropertyIds.current.clear();
+        setCollectedProperties([]);
+        toast.info("Modo conducción activado", {
+          description: "Las propiedades se guardarán automáticamente"
+        });
+      } else if (speed <= 10 && isVehicleMode) {
+        setIsVehicleMode(false);
+        if (collectedProperties.length > 0) {
+          setShowCollectedProperties(true);
+          toast.success(`${collectedProperties.length} propiedades encontradas en tu recorrido`);
+        }
+      }
+      
+      previousLocation.current = { lat: newLocation.lat, lng: newLocation.lng, time: now };
       setUserLocation(newLocation);
+      
       if (position.coords.heading !== null) {
         setHeading(position.coords.heading);
       }
-      if (mapRef.current) {
+      if (mapRef.current && !isVehicleMode) {
         mapRef.current.panTo(newLocation);
       }
     }, error => {
@@ -160,13 +219,27 @@ const NavigationMap = ({
       }
     }, {
       enableHighAccuracy: true,
-      maximumAge: 5000,
+      maximumAge: 1000,
       timeout: 10000
     });
+    
     return () => {
       if (watchId) navigator.geolocation.clearWatch(watchId);
     };
-  }, [isPaused]);
+  }, [isPaused, isVehicleMode, collectedProperties.length]);
+  
+  // Función para calcular distancia entre dos puntos (Haversine)
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // Radio de la Tierra en km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
 
   // Calculate directions when user location or destination changes
   useEffect(() => {
@@ -190,15 +263,31 @@ const NavigationMap = ({
   useEffect(() => {
     if (!properties) return;
     const currentCount = properties.length;
-    if (previousPropertiesCount.current > 0 && currentCount > previousPropertiesCount.current) {
-      const newPropertiesCount = currentCount - previousPropertiesCount.current;
-      playNotificationSound();
-      toast.success(`${newPropertiesCount} nueva${newPropertiesCount > 1 ? 's' : ''} propiedad${newPropertiesCount > 1 ? 'es' : ''} cerca de ti`, {
-        duration: 3000
-      });
+    
+    // En modo vehículo, guardar propiedades
+    if (isVehicleMode && properties.length > 0) {
+      const newProperties = properties.filter(p => !collectedPropertyIds.current.has(p.id));
+      if (newProperties.length > 0) {
+        newProperties.forEach(p => collectedPropertyIds.current.add(p.id));
+        setCollectedProperties(prev => [...prev, ...newProperties]);
+        playNotificationSound();
+        toast.info(`${newProperties.length} propiedad${newProperties.length > 1 ? 'es' : ''} detectada${newProperties.length > 1 ? 's' : ''}`, {
+          duration: 2000
+        });
+      }
+    } else if (!isVehicleMode) {
+      // Modo normal
+      if (previousPropertiesCount.current > 0 && currentCount > previousPropertiesCount.current) {
+        const newPropertiesCount = currentCount - previousPropertiesCount.current;
+        playNotificationSound();
+        toast.success(`${newPropertiesCount} nueva${newPropertiesCount > 1 ? 's' : ''} propiedad${newPropertiesCount > 1 ? 'es' : ''} cerca de ti`, {
+          duration: 3000
+        });
+      }
     }
+    
     previousPropertiesCount.current = currentCount;
-  }, [properties]);
+  }, [properties, isVehicleMode]);
   const handleToggleNavigation = () => {
     const newPausedState = !isPaused;
     setIsPaused(newPausedState);
@@ -501,6 +590,108 @@ const NavigationMap = ({
             </Button>
             <Button onClick={handleUpdateSearch}>
               Actualizar búsqueda
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Overlay de modo vehículo */}
+      {isVehicleMode && (
+        <div className="absolute inset-0 z-[9999] bg-gradient-to-br from-primary/95 to-accent/95 backdrop-blur-sm flex flex-col items-center justify-center">
+          <div className="text-center space-y-8 px-4">
+            {/* Ícono de carro animado */}
+            <div className="relative">
+              <div className="absolute inset-0 animate-ping">
+                <Car className="w-32 h-32 text-white/30 mx-auto" />
+              </div>
+              <Car className="w-32 h-32 text-white mx-auto relative z-10 animate-pulse" />
+            </div>
+
+            {/* Información */}
+            <div className="space-y-4">
+              <h2 className="text-3xl font-bold text-white">Modo Conducción</h2>
+              <p className="text-xl text-white/90">
+                Velocidad: <span className="font-bold">{Math.round(currentSpeed)} km/h</span>
+              </p>
+              <p className="text-lg text-white/80">
+                Guardando propiedades en tu recorrido...
+              </p>
+              <p className="text-sm text-white/70">
+                Propiedades detectadas: <span className="font-semibold">{collectedProperties.length}</span>
+              </p>
+              <p className="text-sm text-white/70">
+                Distancia recorrida: <span className="font-semibold">{(travelDistance.current * 1000).toFixed(0)}m</span>
+              </p>
+            </div>
+
+            {/* Mensaje de seguridad */}
+            <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 max-w-md mx-auto border border-white/20">
+              <p className="text-white text-sm leading-relaxed">
+                🚗 Por tu seguridad, la pantalla está bloqueada mientras conduces.
+                Las propiedades se guardarán automáticamente y las verás cuando te detengas.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Dialog de propiedades recolectadas */}
+      <Dialog open={showCollectedProperties} onOpenChange={setShowCollectedProperties}>
+        <DialogContent className="sm:max-w-2xl z-[10000] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Propiedades en tu Recorrido</DialogTitle>
+            <DialogDescription>
+              Encontramos {collectedProperties.length} propiedad{collectedProperties.length !== 1 ? 'es' : ''} durante tu viaje
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {collectedProperties.map((property) => {
+              const priceFormatted = new Intl.NumberFormat('es-CO', {
+                minimumFractionDigits: 0
+              }).format(property.price);
+              
+              return (
+                <Card 
+                  key={property.id} 
+                  className="p-4 cursor-pointer hover:shadow-lg transition-shadow"
+                  onClick={() => {
+                    setShowCollectedProperties(false);
+                    navigate(`/property/${property.id}`);
+                  }}
+                >
+                  <div className="flex gap-4">
+                    {property.images && property.images[0] && (
+                      <img 
+                        src={property.images[0]} 
+                        alt={property.title}
+                        className="w-24 h-24 object-cover rounded-lg"
+                      />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-lg line-clamp-1">{property.title}</h3>
+                      <p className="text-2xl font-bold text-primary">${priceFormatted}</p>
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {property.neighborhood}, {property.city}
+                      </p>
+                      <div className="flex gap-2 mt-2 text-xs text-muted-foreground">
+                        {property.bedrooms > 0 && <span>{property.bedrooms} hab</span>}
+                        {property.bathrooms > 0 && <span>• {property.bathrooms} baños</span>}
+                        {property.area_m2 && <span>• {property.area_m2} m²</span>}
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+          <div className="flex gap-2 justify-end">
+            <Button onClick={() => {
+              setShowCollectedProperties(false);
+              setCollectedProperties([]);
+              collectedPropertyIds.current.clear();
+              travelDistance.current = 0;
+            }}>
+              Cerrar
             </Button>
           </div>
         </DialogContent>
