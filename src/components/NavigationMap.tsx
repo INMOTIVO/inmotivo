@@ -509,7 +509,7 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
 
                 {/* Información de búsqueda */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2 mb-2">
+                  <div className="flex items-center justify-between gap-2 mb-2 border-2 border-green-500 rounded-lg p-2">
                     <div className="flex-1 min-w-0 flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
                       <p className="text-sm font-medium leading-tight line-clamp-1">
