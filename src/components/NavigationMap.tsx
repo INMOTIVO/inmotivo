@@ -225,7 +225,7 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
                     height: '60px',
                     top: '-10px',
                     borderRadius: '50%',
-                    background: 'rgba(139, 92, 246, 0.3)',
+                    background: 'rgba(34, 197, 94, 0.3)',
                     animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
                   }} />
                   <div style={{
@@ -234,13 +234,13 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
                     height: '50px',
                     top: '-5px',
                     borderRadius: '50%',
-                    background: 'rgba(139, 92, 246, 0.4)',
+                    background: 'rgba(34, 197, 94, 0.4)',
                     animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite 0.5s',
                   }} />
                   
                   {/* Modern location pin */}
                   <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style={{ 
-                    filter: 'drop-shadow(0 8px 16px rgba(139, 92, 246, 0.6))',
+                    filter: 'drop-shadow(0 8px 16px rgba(34, 197, 94, 0.6))',
                     position: 'relative',
                     zIndex: 10,
                   }}>
@@ -265,19 +265,19 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
                     <g transform={`rotate(${heading} 12 9)`}>
                       <path 
                         d="M12 7 L12 11" 
-                        stroke="#8b5cf6" 
+                        stroke="#22c55e" 
                         strokeWidth="1.5" 
                         strokeLinecap="round"
                       />
                       <path 
                         d="M12 7 L10.5 8.5" 
-                        stroke="#8b5cf6" 
+                        stroke="#22c55e" 
                         strokeWidth="1.5" 
                         strokeLinecap="round"
                       />
                       <path 
                         d="M12 7 L13.5 8.5" 
-                        stroke="#8b5cf6" 
+                        stroke="#22c55e" 
                         strokeWidth="1.5" 
                         strokeLinecap="round"
                       />
@@ -286,12 +286,12 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
                     {/* Gradients */}
                     <defs>
                       <linearGradient id="gradient" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse">
-                        <stop offset="0%" stopColor="#a78bfa"/>
-                        <stop offset="100%" stopColor="#8b5cf6"/>
+                        <stop offset="0%" stopColor="#4ade80"/>
+                        <stop offset="100%" stopColor="#22c55e"/>
                       </linearGradient>
                       <radialGradient id="glow" cx="12" cy="10" r="7" gradientUnits="userSpaceOnUse">
-                        <stop offset="0%" stopColor="#a78bfa" stopOpacity="0.8"/>
-                        <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0"/>
+                        <stop offset="0%" stopColor="#4ade80" stopOpacity="0.8"/>
+                        <stop offset="100%" stopColor="#22c55e" stopOpacity="0"/>
                       </radialGradient>
                     </defs>
                   </svg>
