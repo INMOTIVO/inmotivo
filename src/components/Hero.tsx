@@ -61,24 +61,44 @@ const Hero = () => {
     const getCurrentLocation = () => {
       if (!navigator.geolocation) {
         toast.error("Geolocalización no disponible en tu navegador");
+        setMunicipality("Medellín");
+        setLocation("Medellín");
         return;
       }
 
       setLoadingLocation(true);
+      
+      // Timeout para la detección de ubicación
+      const timeoutId = setTimeout(() => {
+        setLoadingLocation(false);
+        setMunicipality("Medellín");
+        setLocation("Medellín");
+        toast.error("Tiempo agotado. Usando ubicación por defecto", {
+          description: "Puedes cambiarla haciendo clic en tu ubicación"
+        });
+      }, 8000); // 8 segundos timeout
+
       navigator.geolocation.getCurrentPosition(
         async (position) => {
+          clearTimeout(timeoutId);
           const { latitude, longitude } = position.coords;
           
           try {
-            // Use Nominatim API for reverse geocoding
+            // Use Nominatim API with timeout
+            const controller = new AbortController();
+            const fetchTimeout = setTimeout(() => controller.abort(), 5000);
+            
             const response = await fetch(
               `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`,
               {
                 headers: {
                   'Accept-Language': 'es'
-                }
+                },
+                signal: controller.signal
               }
             );
+            
+            clearTimeout(fetchTimeout);
             
             if (!response.ok) throw new Error("Error al obtener la ubicación");
             
@@ -93,22 +113,46 @@ const Hero = () => {
             setSector(sectorName);
             setLocation(sectorName ? `${municipalityName}, ${sectorName}` : municipalityName);
             
-            toast.success("Ubicación detectada");
+            toast.success("Ubicación detectada correctamente");
           } catch (error) {
             console.error("Error getting location:", error);
-            toast.error("No se pudo obtener la ubicación exacta");
+            // Usar ubicación por defecto en caso de error
+            setMunicipality("Medellín");
+            setLocation("Medellín");
+            toast.info("Usando ubicación por defecto: Medellín", {
+              description: "Puedes cambiarla haciendo clic en tu ubicación"
+            });
           } finally {
             setLoadingLocation(false);
           }
         },
         (error) => {
+          clearTimeout(timeoutId);
           console.error("Geolocation error:", error);
           setLoadingLocation(false);
+          
+          // Siempre establecer una ubicación por defecto
+          setMunicipality("Medellín");
+          setLocation("Medellín");
+          
           if (error.code === error.PERMISSION_DENIED) {
-            toast.error("Permiso de ubicación denegado");
+            toast.error("Permiso de ubicación denegado", {
+              description: "Usando Medellín como ubicación por defecto"
+            });
+          } else if (error.code === error.TIMEOUT) {
+            toast.error("Tiempo agotado al obtener ubicación", {
+              description: "Usando Medellín como ubicación por defecto"
+            });
           } else {
-            toast.error("No se pudo obtener tu ubicación");
+            toast.error("Error al obtener ubicación", {
+              description: "Usando Medellín como ubicación por defecto"
+            });
           }
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 7000, // 7 segundos para GPS
+          maximumAge: 0
         }
       );
     };
@@ -322,15 +366,15 @@ const Hero = () => {
                           ) : municipality ? (
                             <span className="text-sm font-medium truncate">{municipality}</span>
                           ) : (
-                              <span className="text-sm text-muted-foreground">Detectando...</span>
-                            )}
+                            <span className="text-sm font-medium truncate">Medellín</span>
+                          )}
                         </div>
                         <div className="flex items-center gap-2 w-full sm:w-auto">
                           <Button 
                             variant="hero" 
                             size="lg"
                             onClick={() => handleSearch()}
-                            disabled={!searchQuery.trim() || isRecording}
+                            disabled={!searchQuery.trim() || isRecording || loadingLocation}
                             className="flex-1 sm:flex-initial min-w-[120px] text-base font-semibold"
                           >
                             {isRecording ? 'Escuchando...' : 'Buscar'}
