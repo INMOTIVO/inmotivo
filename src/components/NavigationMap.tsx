@@ -420,7 +420,7 @@ const NavigationMap = ({
       </GoogleMap>
       
       {/* Barra de control inferior - ocupa todo el ancho */}
-      {userLocation && <div className="absolute bottom-0 left-0 right-0 z-[1000]">
+      {userLocation && <div className="absolute bottom-16 left-0 right-0 z-[1000]">
           <Card className={`rounded-none border-x-0 border-b-0 border-t-4 border-t-yellow-500 backdrop-blur-md shadow-2xl ${!isPaused ? 'bg-background/30' : 'bg-background/95'}`}>
             <div className="container mx-auto px-4 py-3">
               <div className="flex items-center gap-3">
@@ -433,9 +433,23 @@ const NavigationMap = ({
                     </>}
                 </Button>
 
-                {/* Información de búsqueda */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2 mb-2 border-2 border-green-500 rounded-lg p-2">
+                  {/* Radio y propiedades */}
+                  <div className="flex items-center gap-4 mb-2">
+                    <div className="flex-1 space-y-1">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground">Radio</span>
+                        <span className="font-semibold text-primary">
+                          {searchRadius >= 1000 ? `${(searchRadius / 1000).toFixed(1)} km` : `${searchRadius} m`}
+                        </span>
+                      </div>
+                      <Slider value={[searchRadius]} onValueChange={value => handleManualRadiusChange(value[0])} min={100} max={1000} step={50} className="w-full" />
+                    </div>
+                    
+                  </div>
+
+                  {/* Información de búsqueda */}
+                  <div className="flex items-center justify-between gap-2 border-2 border-green-500 rounded-lg p-2">
                     <div className="flex-1 min-w-0 flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
                       <p className="text-sm font-medium leading-tight line-clamp-1">
@@ -448,20 +462,6 @@ const NavigationMap = ({
                 }}>
                       <Edit2 className="h-4 w-4" />
                     </Button>
-                  </div>
-
-                  {/* Radio y propiedades */}
-                  <div className="flex items-center gap-4">
-                    <div className="flex-1 space-y-1">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">Radio</span>
-                        <span className="font-semibold text-primary">
-                          {searchRadius >= 1000 ? `${(searchRadius / 1000).toFixed(1)} km` : `${searchRadius} m`}
-                        </span>
-                      </div>
-                      <Slider value={[searchRadius]} onValueChange={value => handleManualRadiusChange(value[0])} min={100} max={1000} step={50} className="w-full" />
-                    </div>
-                    
                   </div>
                 </div>
               </div>
