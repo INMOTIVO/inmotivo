@@ -63,12 +63,11 @@ const Navbar = () => {
             {user && (
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon"
                 onClick={() => navigate("/favorites")}
-                className="gap-2"
+                className="relative"
               >
-                <Heart className="h-4 w-4" />
-                Favoritos
+                <Heart className="h-5 w-5" />
               </Button>
             )}
             {user ? (
@@ -106,6 +105,18 @@ const Navbar = () => {
               </Button>
             )}
           </div>
+
+          {/* Mobile - Favorites Icon */}
+          {user && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/favorites")}
+              className="md:hidden"
+            >
+              <Heart className="h-5 w-5" />
+            </Button>
+          )}
 
           {/* Mobile menu */}
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
