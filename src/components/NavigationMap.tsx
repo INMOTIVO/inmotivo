@@ -216,23 +216,84 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  animation: 'bounce 1s ease-in-out infinite',
+                  position: 'relative',
                 }}>
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" style={{ filter: 'drop-shadow(0 4px 12px rgba(139, 92, 246, 0.5))' }}>
-                    <circle cx="12" cy="5" r="2.5" fill="#8b5cf6" stroke="white" strokeWidth="1.5"/>
-                    <path d="M12 7.5 L12 14" stroke="#8b5cf6" strokeWidth="2.5" strokeLinecap="round"/>
-                    <path d="M12 9 L9 11" stroke="#8b5cf6" strokeWidth="2" strokeLinecap="round">
-                      <animate attributeName="d" values="M12 9 L9 11;M12 9 L9 13;M12 9 L9 11" dur="1s" repeatCount="indefinite"/>
-                    </path>
-                    <path d="M12 9 L15 13" stroke="#8b5cf6" strokeWidth="2" strokeLinecap="round">
-                      <animate attributeName="d" values="M12 9 L15 13;M12 9 L15 11;M12 9 L15 13" dur="1s" repeatCount="indefinite"/>
-                    </path>
-                    <path d="M12 14 L10 19" stroke="#8b5cf6" strokeWidth="2.5" strokeLinecap="round">
-                      <animate attributeName="d" values="M12 14 L10 19;M12 14 L11 20;M12 14 L10 19" dur="1s" repeatCount="indefinite"/>
-                    </path>
-                    <path d="M12 14 L14 20" stroke="#8b5cf6" strokeWidth="2.5" strokeLinecap="round">
-                      <animate attributeName="d" values="M12 14 L14 20;M12 14 L13 19;M12 14 L14 20" dur="1s" repeatCount="indefinite"/>
-                    </path>
+                  {/* Pulse rings */}
+                  <div style={{
+                    position: 'absolute',
+                    width: '60px',
+                    height: '60px',
+                    top: '-10px',
+                    borderRadius: '50%',
+                    background: 'rgba(139, 92, 246, 0.3)',
+                    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                  }} />
+                  <div style={{
+                    position: 'absolute',
+                    width: '50px',
+                    height: '50px',
+                    top: '-5px',
+                    borderRadius: '50%',
+                    background: 'rgba(139, 92, 246, 0.4)',
+                    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite 0.5s',
+                  }} />
+                  
+                  {/* Modern location pin */}
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style={{ 
+                    filter: 'drop-shadow(0 8px 16px rgba(139, 92, 246, 0.6))',
+                    position: 'relative',
+                    zIndex: 10,
+                  }}>
+                    {/* Outer glow */}
+                    <circle cx="12" cy="10" r="7" fill="url(#glow)" opacity="0.4"/>
+                    
+                    {/* Main pin shape */}
+                    <path 
+                      d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" 
+                      fill="url(#gradient)"
+                      stroke="white"
+                      strokeWidth="1.5"
+                    />
+                    
+                    {/* Inner dot with pulse */}
+                    <circle cx="12" cy="9" r="3" fill="white">
+                      <animate attributeName="r" values="3;3.5;3" dur="1.5s" repeatCount="indefinite"/>
+                      <animate attributeName="opacity" values="1;0.8;1" dur="1.5s" repeatCount="indefinite"/>
+                    </circle>
+                    
+                    {/* Navigation arrow */}
+                    <g transform={`rotate(${heading} 12 9)`}>
+                      <path 
+                        d="M12 7 L12 11" 
+                        stroke="#8b5cf6" 
+                        strokeWidth="1.5" 
+                        strokeLinecap="round"
+                      />
+                      <path 
+                        d="M12 7 L10.5 8.5" 
+                        stroke="#8b5cf6" 
+                        strokeWidth="1.5" 
+                        strokeLinecap="round"
+                      />
+                      <path 
+                        d="M12 7 L13.5 8.5" 
+                        stroke="#8b5cf6" 
+                        strokeWidth="1.5" 
+                        strokeLinecap="round"
+                      />
+                    </g>
+                    
+                    {/* Gradients */}
+                    <defs>
+                      <linearGradient id="gradient" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stopColor="#a78bfa"/>
+                        <stop offset="100%" stopColor="#8b5cf6"/>
+                      </linearGradient>
+                      <radialGradient id="glow" cx="12" cy="10" r="7" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stopColor="#a78bfa" stopOpacity="0.8"/>
+                        <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0"/>
+                      </radialGradient>
+                    </defs>
                   </svg>
                   <div style={{
                     width: '16px',
