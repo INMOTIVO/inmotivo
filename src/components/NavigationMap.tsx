@@ -455,19 +455,20 @@ const NavigationMap = ({
                   </div>
 
                   {/* Información de búsqueda */}
-                  <div className="flex items-center justify-between gap-2 border-2 border-green-500 rounded-lg p-2">
+                  <div 
+                    className="flex items-center justify-between gap-2 border-2 border-green-500 rounded-lg p-2 cursor-pointer hover:bg-accent/10 transition-colors"
+                    onClick={() => {
+                      setEditSearchQuery(searchCriteria);
+                      setIsEditDialogOpen(true);
+                    }}
+                  >
                     <div className="flex-1 min-w-0 flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
                       <p className="text-sm font-medium leading-tight line-clamp-1">
                         {searchCriteria || 'Propiedades cerca'}
                       </p>
                     </div>
-                    <Button size="sm" variant="ghost" className="h-8 w-8 p-0 shrink-0" onClick={() => {
-                  setEditSearchQuery(searchCriteria);
-                  setIsEditDialogOpen(true);
-                }}>
-                      <Edit2 className="h-4 w-4" />
-                    </Button>
+                    <Edit2 className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
                   </div>
                 </div>
               </div>
