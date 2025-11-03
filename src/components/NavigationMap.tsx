@@ -484,7 +484,7 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
       {/* Barra de control inferior - ocupa todo el ancho */}
       {userLocation && (
         <div className="absolute bottom-0 left-0 right-0 z-[1000]">
-          <Card className="rounded-none border-x-0 border-b-0 bg-background/95 backdrop-blur-md shadow-2xl">
+          <Card className="rounded-none border-x-0 border-b-0 border-t-4 border-t-yellow-500 bg-background/95 backdrop-blur-md shadow-2xl">
             <div className="container mx-auto px-4 py-3">
               <div className="flex items-center gap-3">
                 {/* Botón Ir/Detener */}
