@@ -7,6 +7,8 @@ import Footer from '@/components/Footer';
 import PropertyCard from '@/components/PropertyCard';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2 } from 'lucide-react';
+import { FunctionsHttpError } from '@supabase/supabase-js';
+import { toast } from 'sonner';
 
 const PropertiesCatalog = () => {
   const [searchParams] = useSearchParams();
@@ -27,6 +29,19 @@ const PropertiesCatalog = () => {
         const { data, error } = await supabase.functions.invoke('interpret-search', {
           body: { query: queryParam }
         });
+
+        if (error instanceof FunctionsHttpError) {
+          const errorData = await error.context.json();
+          if (errorData?.error === 'invalid_query') {
+            toast.error(errorData.message || 'Por favor describe mejor qué buscas', {
+              duration: 5000,
+              description: "💡 Ejemplo: 'Apartamento de 2 habitaciones cerca del metro'"
+            });
+            setFilters({});
+            setIsLoadingFilters(false);
+            return;
+          }
+        }
 
         if (error) throw error;
 
