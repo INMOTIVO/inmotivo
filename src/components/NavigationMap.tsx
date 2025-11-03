@@ -127,7 +127,7 @@ const NavigationMap = ({
         };
       });
     },
-    enabled: !!userLocation
+    enabled: !!userLocation && !isPaused
   });
 
   // Track user location
@@ -200,10 +200,16 @@ const NavigationMap = ({
     previousPropertiesCount.current = currentCount;
   }, [properties]);
   const handleToggleNavigation = () => {
-    setIsPaused(!isPaused);
-    if (!isPaused) {
+    const newPausedState = !isPaused;
+    setIsPaused(newPausedState);
+    
+    if (newPausedState) {
+      // Pausar: zoom out a 500 metros
+      handleManualRadiusChange(500);
       toast.info("Navegación pausada");
     } else {
+      // Reanudar: zoom in a 100 metros
+      handleManualRadiusChange(100);
       toast.success("Navegación reanudada");
     }
   };
@@ -379,7 +385,7 @@ const NavigationMap = ({
       }} />}
 
         {/* Property markers */}
-        {properties?.map(property => {
+        {!isPaused && properties?.map(property => {
         if (!property.latitude || !property.longitude) return null;
         const priceFormatted = new Intl.NumberFormat('es-CO', {
           minimumFractionDigits: 0
