@@ -481,13 +481,13 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
         })}
       </GoogleMap>
       
-      {/* Botón Pausar/Reanudar - Móvil: bottom left, Desktop: bottom left */}
-      <div className="absolute bottom-4 left-4 z-[1000]">
+      {/* Botón Pausar/Reanudar y Buscador integrados - inferior centrado */}
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[1000] flex items-end gap-3 w-[90%] max-w-2xl">
         <Button
           onClick={handleToggleNavigation}
           variant={isPaused ? "default" : "destructive"}
           size="lg"
-          className={`shadow-lg px-4 py-2 md:px-6 md:py-2.5 h-auto ${
+          className={`shadow-lg px-4 py-3 h-auto shrink-0 ${
             isPaused ? 'bg-green-600 hover:bg-green-700' : ''
           }`}
         >
@@ -503,53 +503,39 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
             </>
           )}
         </Button>
-      </div>
 
-      {userLocation && (
-        <>
-          {/* Navigation Status - Mobile: top left, Desktop: top left */}
-          <div className="absolute top-4 right-4 md:top-20 md:right-4 z-[1000] bg-background/95 backdrop-blur p-3 md:p-4 rounded-lg shadow-lg">
-            <div className="flex items-center gap-2 mb-1">
-              <Navigation className="h-4 w-4 md:h-5 md:w-5 text-primary flex-shrink-0" />
-              <span className="font-semibold text-sm md:text-base leading-tight">Navegando</span>
-            </div>
-            <p className="text-xs md:text-sm text-muted-foreground leading-tight">
-              Actualizando en tiempo real
-            </p>
-          </div>
-
-          {/* Search Criteria Card - Mobile: bottom right, Desktop: bottom right */}
-          <Card className="absolute bottom-20 md:bottom-4 right-4 z-[1000] bg-background/90 backdrop-blur-md p-3 md:p-4 w-[calc(60%-1rem)] md:w-auto md:min-w-[280px] md:max-w-sm">
-            <div className="space-y-2 md:space-y-3">
+        {userLocation && (
+          <Card className="flex-1 bg-background/95 backdrop-blur-md p-3 shadow-xl">
+            <div className="space-y-2">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1 md:mb-2">
-                    <MapPin className="h-3.5 w-3.5 md:h-4 md:w-4 text-primary flex-shrink-0" />
-                    <span className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase">
+                  <div className="flex items-center gap-2 mb-1">
+                    <MapPin className="h-3.5 w-3.5 text-primary flex-shrink-0" />
+                    <span className="text-[10px] font-semibold text-muted-foreground uppercase">
                       Buscando
                     </span>
                   </div>
-                  <p className="text-xs md:text-sm font-medium leading-tight line-clamp-2">
+                  <p className="text-xs font-medium leading-tight line-clamp-1">
                     {searchCriteria || 'Propiedades cerca'}
                   </p>
                 </div>
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="h-7 w-7 md:h-8 md:w-8 p-0 shrink-0"
+                  className="h-7 w-7 p-0 shrink-0"
                   onClick={() => {
                     setEditSearchQuery(searchCriteria);
                     setIsEditDialogOpen(true);
                   }}
                 >
-                  <Edit2 className="h-3 w-3 md:h-4 md:w-4" />
+                  <Edit2 className="h-3.5 w-3.5" />
                 </Button>
               </div>
 
-              <div className="pt-2 md:pt-3 border-t space-y-2 md:space-y-3">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-[10px] md:text-xs">
-                    <span className="text-muted-foreground">Radio de búsqueda</span>
+              <div className="pt-2 border-t space-y-2">
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-[10px]">
+                    <span className="text-muted-foreground">Radio</span>
                     <span className="font-semibold text-primary">
                       {searchRadius >= 1000 ? `${(searchRadius / 1000).toFixed(1)} km` : `${searchRadius} m`}
                     </span>
@@ -562,20 +548,20 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
                     step={50}
                     className="w-full"
                   />
-                  <div className="flex justify-between text-[9px] md:text-[10px] text-muted-foreground">
+                  <div className="flex justify-between text-[9px] text-muted-foreground">
                     <span>100m</span>
                     <span>1km</span>
                   </div>
                 </div>
-                <div className="flex items-center justify-between text-[10px] md:text-xs pt-1 border-t">
+                <div className="flex items-center justify-between text-[10px] pt-1 border-t">
                   <span className="text-muted-foreground">Propiedades</span>
                   <span className="font-semibold text-primary">{properties?.length || 0}</span>
                 </div>
               </div>
             </div>
           </Card>
-        </>
-      )}
+        )}
+      </div>
 
       {/* Dialog para editar búsqueda */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
