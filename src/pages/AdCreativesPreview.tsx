@@ -26,12 +26,12 @@ const AdCreativesPreview = () => {
     <div className="min-h-screen bg-background p-8">
       <div className="max-w-7xl mx-auto space-y-16">
         <Button
-          variant="ghost"
+          variant="default"
+          size="icon"
           onClick={() => navigate('/')}
-          className="mb-4"
+          className="mb-4 rounded-full w-12 h-12 shadow-xl bg-primary hover:bg-primary/90"
         >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Volver al inicio
+          <ArrowLeft className="h-5 w-5" />
         </Button>
         
         <div className="text-center space-y-4">

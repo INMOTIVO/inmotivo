@@ -123,15 +123,15 @@ const PropertiesCatalog = () => {
       <main className="flex-1 pt-20 pb-12">
         <div className="container mx-auto px-4">
           <Button
-            variant="ghost"
+            variant="default"
+            size="icon"
             onClick={() => {
               const query = searchParams.get('query');
               navigate(`/?query=${encodeURIComponent(query || '')}&showOptions=true`);
             }}
-            className="mb-3"
+            className="mb-3 rounded-full w-12 h-12 shadow-xl bg-primary hover:bg-primary/90"
           >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Volver
+            <ArrowLeft className="h-5 w-5" />
           </Button>
 
           <div className="mb-6 text-center px-4">

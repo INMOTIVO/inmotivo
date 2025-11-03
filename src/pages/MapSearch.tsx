@@ -36,12 +36,12 @@ const MapSearch = () => {
       <main className="pt-16 md:pt-24 pb-12">
         <div className="container mx-auto px-4">
           <Button
-            variant="ghost"
+            variant="default"
+            size="icon"
             onClick={() => navigate(-1)}
-            className="mb-4"
+            className="mb-4 rounded-full w-12 h-12 shadow-xl bg-primary hover:bg-primary/90"
           >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Volver
+            <ArrowLeft className="h-5 w-5" />
           </Button>
           
           <div className="mb-6 md:mb-8 text-center px-4">

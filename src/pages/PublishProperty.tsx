@@ -102,13 +102,12 @@ const PublishProperty = () => {
       <section className="pt-32 pb-20 px-4">
         <div className="container mx-auto max-w-6xl">
           <Button
-            variant="ghost"
-            size="sm"
+            variant="default"
+            size="icon"
             onClick={() => navigate(-1)}
-            className="mb-6"
+            className="mb-6 rounded-full w-12 h-12 shadow-xl bg-primary hover:bg-primary/90"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Volver
+            <ArrowLeft className="h-5 w-5" />
           </Button>
           
           <div className="text-center space-y-6 mb-16">

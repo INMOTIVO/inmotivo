@@ -20,9 +20,8 @@ const NotFound = () => {
           Lo sentimos, la página que buscas no existe o ha sido movida.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center pt-4">
-          <Button onClick={() => navigate(-1)} variant="outline">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Volver
+          <Button onClick={() => navigate(-1)} variant="default" size="icon" className="rounded-full w-12 h-12 shadow-xl bg-primary hover:bg-primary/90">
+            <ArrowLeft className="h-5 w-5" />
           </Button>
           <Button onClick={() => navigate("/")}>
             Ir al inicio

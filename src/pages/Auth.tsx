@@ -135,13 +135,12 @@ const Auth = () => {
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-accent/20 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <Button
-          variant="ghost"
-          size="sm"
+          variant="default"
+          size="icon"
           onClick={() => navigate("/")}
-          className="mb-4"
+          className="mb-4 rounded-full w-12 h-12 shadow-xl bg-primary hover:bg-primary/90"
         >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Volver al inicio
+          <ArrowLeft className="h-5 w-5" />
         </Button>
 
         <Card>

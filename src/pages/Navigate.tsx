@@ -105,12 +105,12 @@ const Navigate = () => {
         {!isNavigating ? (
           <div className="container mx-auto px-4 py-8">
             <Button
-              variant="ghost"
+              variant="default"
+              size="icon"
               onClick={() => navigate('/mapa')}
-              className="mb-4"
+              className="mb-4 rounded-full w-12 h-12 shadow-xl bg-primary hover:bg-primary/90"
             >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Volver al mapa
+              <ArrowLeft className="h-5 w-5" />
             </Button>
             <NavigationControls 
               onStartNavigation={handleStartNavigation}
@@ -126,9 +126,9 @@ const Navigate = () => {
                 const query = searchParams.get('query');
                 navigate(`/?query=${encodeURIComponent(query || '')}&showOptions=true`);
               }}
-              className="absolute top-6 left-6 z-[9999] shadow-xl bg-primary hover:bg-primary/90"
+              className="absolute top-24 left-6 z-[9999] shadow-xl bg-primary hover:bg-primary/90 rounded-full w-12 h-12"
             >
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="h-5 w-5" />
             </Button>
             <NavigationMap
               destination={destination!}

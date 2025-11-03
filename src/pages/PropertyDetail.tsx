@@ -93,13 +93,12 @@ const PropertyDetail = () => {
       <main className="pt-14 md:pt-16">
         <div className="container mx-auto px-4 py-4 md:py-8">
           <Button
-            variant="ghost"
-            size="sm"
+            variant="default"
+            size="icon"
             onClick={() => navigate(-1)}
-            className="mb-4 md:mb-6"
+            className="mb-4 md:mb-6 rounded-full w-12 h-12 shadow-xl bg-primary hover:bg-primary/90"
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Volver
+            <ArrowLeft className="h-5 w-5" />
           </Button>
 
           <div className="grid lg:grid-cols-3 gap-4 md:gap-8">

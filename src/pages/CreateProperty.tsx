@@ -330,12 +330,12 @@ const CreateProperty = () => {
 
       <main className="container mx-auto px-4 pt-24 pb-12 max-w-4xl">
         <Button
-          variant="ghost"
+          variant="default"
+          size="icon"
           onClick={() => navigate('/dashboard')}
-          className="mb-4"
+          className="mb-4 rounded-full w-12 h-12 shadow-xl bg-primary hover:bg-primary/90"
         >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Volver al Dashboard
+          <ArrowLeft className="h-5 w-5" />
         </Button>
         
         <div className="mb-8">
