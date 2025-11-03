@@ -12,6 +12,8 @@ import { X, Navigation, Edit2, MapPin, Car } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { playNotificationSound } from '@/utils/notificationSound';
+import { DrivingModeOverlay } from './DrivingModeOverlay';
+import { SavedPropertiesReview } from './SavedPropertiesReview';
 interface NavigationMapProps {
   destination: [number, number];
   filters: any;
@@ -143,7 +145,7 @@ const NavigationMap = ({
   useEffect(() => {
     let watchId: number;
     let lastUpdate = 0;
-    const UPDATE_INTERVAL = 800; // Actualización cada 0.8 segundos (menor a 1 segundo)
+    const UPDATE_INTERVAL = 3000; // Detección de velocidad cada 3 segundos
     
     watchId = navigator.geolocation.watchPosition(position => {
       if (isPaused) return;
@@ -184,16 +186,17 @@ const NavigationMap = ({
         }
       }
       
-      // Detectar modo vehículo (>10 km/h)
-      if (speed > 10 && !isVehicleMode) {
+      // Detectar modo vehículo (>20 km/h)
+      if (speed > 20 && !isVehicleMode) {
         setIsVehicleMode(true);
         travelDistance.current = 0;
         collectedPropertyIds.current.clear();
         setCollectedProperties([]);
         toast.info("Modo conducción activado", {
-          description: "Las propiedades se guardarán automáticamente"
+          description: "Pantalla bloqueada por seguridad. Las propiedades se guardarán automáticamente",
+          duration: 4000
         });
-      } else if (speed <= 10 && isVehicleMode) {
+      } else if (speed <= 20 && isVehicleMode) {
         setIsVehicleMode(false);
         if (collectedProperties.length > 0) {
           setShowCollectedProperties(true);
@@ -207,8 +210,8 @@ const NavigationMap = ({
       if (position.coords.heading !== null) {
         setHeading(position.coords.heading);
       }
-      if (mapRef.current && !isVehicleMode) {
-        // Pan suave como Google Maps
+      if (mapRef.current) {
+        // Pan suave en todos los modos
         mapRef.current.panTo(newLocation);
       }
     }, error => {
@@ -596,107 +599,27 @@ const NavigationMap = ({
         </DialogContent>
       </Dialog>
 
-      {/* Overlay de modo vehículo */}
+      {/* Overlay de modo conducción con pantalla bloqueada */}
       {isVehicleMode && (
-        <div className="absolute inset-0 z-[9999] bg-gradient-to-br from-primary/95 to-accent/95 backdrop-blur-sm flex flex-col items-center justify-center">
-          <div className="text-center space-y-8 px-4">
-            {/* Ícono de carro animado */}
-            <div className="relative">
-              <div className="absolute inset-0 animate-ping">
-                <Car className="w-32 h-32 text-white/30 mx-auto" />
-              </div>
-              <Car className="w-32 h-32 text-white mx-auto relative z-10 animate-pulse" />
-            </div>
-
-            {/* Información */}
-            <div className="space-y-4">
-              <h2 className="text-3xl font-bold text-white">Modo Conducción</h2>
-              <p className="text-xl text-white/90">
-                Velocidad: <span className="font-bold">{Math.round(currentSpeed)} km/h</span>
-              </p>
-              <p className="text-lg text-white/80">
-                Guardando propiedades en tu recorrido...
-              </p>
-              <p className="text-sm text-white/70">
-                Propiedades detectadas: <span className="font-semibold">{collectedProperties.length}</span>
-              </p>
-              <p className="text-sm text-white/70">
-                Distancia recorrida: <span className="font-semibold">{(travelDistance.current * 1000).toFixed(0)}m</span>
-              </p>
-            </div>
-
-            {/* Mensaje de seguridad */}
-            <div className="bg-white/10 backdrop-blur-md rounded-lg p-6 max-w-md mx-auto border border-white/20">
-              <p className="text-white text-sm leading-relaxed">
-                🚗 Por tu seguridad, la pantalla está bloqueada mientras conduces.
-                Las propiedades se guardarán automáticamente y las verás cuando te detengas.
-              </p>
-            </div>
-          </div>
-        </div>
+        <DrivingModeOverlay 
+          speed={currentSpeed}
+          propertiesCount={collectedProperties.length}
+        />
       )}
 
-      {/* Dialog de propiedades recolectadas */}
-      <Dialog open={showCollectedProperties} onOpenChange={setShowCollectedProperties}>
-        <DialogContent className="sm:max-w-2xl z-[10000] max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Propiedades en tu Recorrido</DialogTitle>
-            <DialogDescription>
-              Encontramos {collectedProperties.length} propiedad{collectedProperties.length !== 1 ? 'es' : ''} durante tu viaje
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            {collectedProperties.map((property) => {
-              const priceFormatted = new Intl.NumberFormat('es-CO', {
-                minimumFractionDigits: 0
-              }).format(property.price);
-              
-              return (
-                <Card 
-                  key={property.id} 
-                  className="p-4 cursor-pointer hover:shadow-lg transition-shadow"
-                  onClick={() => {
-                    setShowCollectedProperties(false);
-                    navigate(`/property/${property.id}`);
-                  }}
-                >
-                  <div className="flex gap-4">
-                    {property.images && property.images[0] && (
-                      <img 
-                        src={property.images[0]} 
-                        alt={property.title}
-                        className="w-24 h-24 object-cover rounded-lg"
-                      />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-lg line-clamp-1">{property.title}</h3>
-                      <p className="text-2xl font-bold text-primary">${priceFormatted}</p>
-                      <p className="text-sm text-muted-foreground line-clamp-2">
-                        {property.neighborhood}, {property.city}
-                      </p>
-                      <div className="flex gap-2 mt-2 text-xs text-muted-foreground">
-                        {property.bedrooms > 0 && <span>{property.bedrooms} hab</span>}
-                        {property.bathrooms > 0 && <span>• {property.bathrooms} baños</span>}
-                        {property.area_m2 && <span>• {property.area_m2} m²</span>}
-                      </div>
-                    </div>
-                  </div>
-                </Card>
-              );
-            })}
-          </div>
-          <div className="flex gap-2 justify-end">
-            <Button onClick={() => {
-              setShowCollectedProperties(false);
-              setCollectedProperties([]);
-              collectedPropertyIds.current.clear();
-              travelDistance.current = 0;
-            }}>
-              Cerrar
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Pantalla de revisión de propiedades guardadas */}
+      {showCollectedProperties && (
+        <SavedPropertiesReview
+          properties={collectedProperties}
+          userLocation={userLocation}
+          onClose={() => {
+            setShowCollectedProperties(false);
+            setCollectedProperties([]);
+            collectedPropertyIds.current.clear();
+            travelDistance.current = 0;
+          }}
+        />
+      )}
     </div>;
 };
 export default NavigationMap;
