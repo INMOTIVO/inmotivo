@@ -62,6 +62,16 @@ const Navigate = () => {
 
           if (error) throw error;
 
+          // También manejar respuesta inválida con 200
+          if (data?.error === 'invalid_query') {
+            toast.error(data.message || 'Por favor describe mejor qué buscas', {
+              duration: 5000,
+              description: data.suggestion || "💡 Ejemplo: 'Apartamento de 2 habitaciones cerca del metro'"
+            });
+            setIsInitializing(false);
+            return;
+          }
+
           const interpretedFilters = data?.filters || {};
           
           // Use user's location as destination (they will discover properties while moving)

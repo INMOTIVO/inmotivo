@@ -83,9 +83,10 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: "invalid_query",
-          message: "Lo siento, soy un buscador especializado en propiedades inmobiliarias. Por favor describe qué tipo de inmueble buscas (apartamento, casa, oficina, local, etc.) y sus características."
+          message: "Lo siento, soy un buscador especializado en propiedades inmobiliarias. Por favor describe qué tipo de inmueble buscas (apartamento, casa, oficina, local, etc.) y sus características.",
+          suggestion: "Ejemplo: Apartamento de 2 habitaciones en Medellín cerca del metro, máximo 2.5 millones"
         }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 

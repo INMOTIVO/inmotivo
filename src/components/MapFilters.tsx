@@ -60,6 +60,16 @@ const MapFilters = ({ onFiltersChange, initialQuery = '' }: MapFiltersProps) => 
         throw error;
       }
 
+      // También manejar respuesta inválida con 200
+      if (data?.error === 'invalid_query') {
+        toast.error(data.message || "Esta búsqueda no es sobre propiedades", {
+          duration: 5000,
+          description: data.suggestion || "💡 Ejemplo: 'Apartamento de 2 habitaciones cerca del metro'"
+        });
+        setIsProcessing(false);
+        return;
+      }
+
       const filters = data.filters;
       onFiltersChange({
         radius: filters.radius || 5,
