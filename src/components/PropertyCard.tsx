@@ -1,8 +1,12 @@
-import { MapPin, Bed, Bath, Maximize } from "lucide-react";
+import { MapPin, Bed, Bath, Maximize, Heart } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface PropertyCardProps {
   id: string;
@@ -18,6 +22,65 @@ interface PropertyCardProps {
 
 const PropertyCard = ({ id, title, price, location, beds, baths, area, imageUrl, type }: PropertyCardProps) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // Verificar si la propiedad está en favoritos
+  const { data: isFavorite, refetch: refetchFavorite } = useQuery({
+    queryKey: ["favorite", id, user?.id],
+    queryFn: async () => {
+      if (!user) return false;
+      
+      const { data, error } = await supabase
+        .from("property_favorites")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("property_id", id)
+        .maybeSingle();
+
+      if (error) throw error;
+      return !!data;
+    },
+    enabled: !!user && !!id,
+  });
+
+  const handleToggleFavorite = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!user) {
+      toast.error("Debes iniciar sesión para guardar favoritos");
+      navigate("/auth");
+      return;
+    }
+
+    try {
+      if (isFavorite) {
+        const { error } = await supabase
+          .from("property_favorites")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("property_id", id);
+
+        if (error) throw error;
+        toast.success("Eliminado de favoritos");
+      } else {
+        const { error } = await supabase
+          .from("property_favorites")
+          .insert({
+            user_id: user.id,
+            property_id: id,
+          });
+
+        if (error) throw error;
+        toast.success("Agregado a favoritos");
+      }
+      
+      refetchFavorite();
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+      toast.error("Error al actualizar favoritos");
+    }
+  };
+
   return (
     <Card 
       className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group"
@@ -32,6 +95,24 @@ const PropertyCard = ({ id, title, price, location, beds, baths, area, imageUrl,
         <Badge className="absolute top-3 left-3 bg-primary text-primary-foreground text-xs">
           {type}
         </Badge>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleToggleFavorite}
+          className={`absolute top-3 right-3 w-8 h-8 rounded-full shadow-lg ${
+            isFavorite 
+              ? 'bg-red-50 hover:bg-red-100' 
+              : 'bg-white/90 hover:bg-white'
+          }`}
+        >
+          <Heart 
+            className={`h-4 w-4 ${
+              isFavorite 
+                ? 'fill-red-500 text-red-500' 
+                : 'text-gray-600'
+            }`} 
+          />
+        </Button>
       </div>
       
       <div className="p-4 space-y-3 flex flex-col">
