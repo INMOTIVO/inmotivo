@@ -1,8 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import 'leaflet-routing-machine';
-import 'leaflet-routing-machine/dist/leaflet-routing-machine.css';
+import { GoogleMap, useJsApiLoader, Marker, Circle, DirectionsRenderer, OverlayView } from '@react-google-maps/api';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -25,20 +22,19 @@ interface NavigationMapProps {
 
 const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria = '' }: NavigationMapProps) => {
   const navigate = useNavigate();
-  const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<L.Map | null>(null);
-  const routingControl = useRef<any>(null);
-  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
-  const markers = useRef<L.Marker[]>([]);
-  const userMarker = useRef<L.Marker | null>(null);
-  const radiusCircle = useRef<L.Circle | null>(null);
-  const directionArrow = useRef<L.Marker | null>(null);
+  const mapRef = useRef<google.maps.Map | null>(null);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [heading, setHeading] = useState<number>(0);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editSearchQuery, setEditSearchQuery] = useState(searchCriteria);
-  const [searchRadius, setSearchRadius] = useState<number>(300); // Default 300 meters
+  const [searchRadius, setSearchRadius] = useState<number>(300);
   const [isPaused, setIsPaused] = useState(false);
   const previousPropertiesCount = useRef<number>(0);
+  const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
+  
+  const { isLoaded } = useJsApiLoader({
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
+  });
 
   // Fetch real properties from database and position them around user location
   // More radius = more properties (200m-1km range)
@@ -69,12 +65,11 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
       // Position real properties within search radius around user
       return (data || []).map((property, index) => {
         const angle = (index / Math.max(data.length, 1)) * 2 * Math.PI;
-        // Convert meters to degrees (approximate: 1 degree ≈ 111km)
         const maxDistanceDegrees = (searchRadius / 111000);
-        const minDistanceDegrees = (searchRadius * 0.3 / 111000); // Min 30% of radius
+        const minDistanceDegrees = (searchRadius * 0.3 / 111000);
         const distance = minDistanceDegrees + Math.random() * (maxDistanceDegrees - minDistanceDegrees);
-        const lat = userLocation[0] + distance * Math.cos(angle);
-        const lng = userLocation[1] + distance * Math.sin(angle);
+        const lat = userLocation.lat + distance * Math.cos(angle);
+        const lng = userLocation.lng + distance * Math.sin(angle);
 
         return {
           ...property,
@@ -86,178 +81,32 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
     enabled: !!userLocation,
   });
 
-  // Initialize map
+  // Track user location
   useEffect(() => {
-    if (!mapContainer.current || map.current) return;
-
-    map.current = L.map(mapContainer.current, {
-      zoomControl: true,
-    }).setView([6.2476, -75.5658], 13);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
-    }).addTo(map.current);
-
-    return () => {
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
-      }
-    };
-  }, []);
-
-  // Track user location and draw radius circle + heading arrow
-  useEffect(() => {
-    if (!map.current) return;
-
+    let watchId: number;
     let lastUpdate = 0;
     const UPDATE_INTERVAL = 5000;
 
-    const watchId = navigator.geolocation.watchPosition(
+    watchId = navigator.geolocation.watchPosition(
       (position) => {
-        // Don't update if navigation is paused
         if (isPaused) return;
 
         const now = Date.now();
-        if (now - lastUpdate < UPDATE_INTERVAL) {
-          return;
-        }
+        if (now - lastUpdate < UPDATE_INTERVAL) return;
         lastUpdate = now;
 
-        const newLocation: [number, number] = [
-          position.coords.latitude,
-          position.coords.longitude,
-        ];
+        const newLocation = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+        };
         setUserLocation(newLocation);
         
-        // Update heading if available
         if (position.coords.heading !== null) {
           setHeading(position.coords.heading);
         }
 
-        if (userMarker.current) {
-          userMarker.current.setLatLng(newLocation);
-        } else {
-          const icon = L.divIcon({
-            html: `
-              <div style="
-                position: relative;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                animation: bounce 1s ease-in-out infinite;
-              ">
-                <!-- Persona caminando -->
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 4px 12px rgba(139, 92, 246, 0.5));">
-                  <!-- Cabeza -->
-                  <circle cx="12" cy="5" r="2.5" fill="#8b5cf6" stroke="white" stroke-width="1.5"/>
-                  <!-- Cuerpo -->
-                  <path d="M12 7.5 L12 14" stroke="#8b5cf6" stroke-width="2.5" stroke-linecap="round"/>
-                  <!-- Brazo izquierdo -->
-                  <path d="M12 9 L9 11" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round">
-                    <animate attributeName="d" 
-                      values="M12 9 L9 11;M12 9 L9 13;M12 9 L9 11" 
-                      dur="1s" 
-                      repeatCount="indefinite"/>
-                  </path>
-                  <!-- Brazo derecho -->
-                  <path d="M12 9 L15 13" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round">
-                    <animate attributeName="d" 
-                      values="M12 9 L15 13;M12 9 L15 11;M12 9 L15 13" 
-                      dur="1s" 
-                      repeatCount="indefinite"/>
-                  </path>
-                  <!-- Pierna izquierda -->
-                  <path d="M12 14 L10 19" stroke="#8b5cf6" stroke-width="2.5" stroke-linecap="round">
-                    <animate attributeName="d" 
-                      values="M12 14 L10 19;M12 14 L11 20;M12 14 L10 19" 
-                      dur="1s" 
-                      repeatCount="indefinite"/>
-                  </path>
-                  <!-- Pierna derecha -->
-                  <path d="M12 14 L14 20" stroke="#8b5cf6" stroke-width="2.5" stroke-linecap="round">
-                    <animate attributeName="d" 
-                      values="M12 14 L14 20;M12 14 L13 19;M12 14 L14 20" 
-                      dur="1s" 
-                      repeatCount="indefinite"/>
-                  </path>
-                </svg>
-                <!-- Círculo de ubicación debajo -->
-                <div style="
-                  width: 16px;
-                  height: 16px;
-                  background: linear-gradient(135deg, #8b5cf6, #a78bfa);
-                  border-radius: 50%;
-                  border: 3px solid white;
-                  box-shadow: 0 0 20px rgba(139, 92, 246, 0.6);
-                  animation: pulse 2s ease-in-out infinite;
-                "></div>
-              </div>
-              <style>
-                @keyframes bounce {
-                  0%, 100% { transform: translateY(0px); }
-                  50% { transform: translateY(-4px); }
-                }
-                @keyframes pulse {
-                  0%, 100% { transform: scale(1); opacity: 1; }
-                  50% { transform: scale(1.2); opacity: 0.8; }
-                }
-              </style>
-            `,
-            className: '',
-            iconSize: [40, 60],
-            iconAnchor: [20, 60],
-          });
-
-          userMarker.current = L.marker(newLocation, { icon }).addTo(map.current!);
-        }
-        
-        // Update or create direction arrow
-        if (position.coords.heading !== null && position.coords.heading >= 0) {
-          const arrowIcon = L.divIcon({
-            html: `
-              <div style="transform: rotate(${position.coords.heading}deg); transform-origin: center;">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 4px 8px rgba(16, 185, 129, 0.4));">
-                  <path d="M12 4 L18 12 L12 10 L6 12 Z" fill="#10b981" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
-                  <path d="M12 10 L12 20" stroke="#10b981" stroke-width="2.5" stroke-linecap="round"/>
-                </svg>
-              </div>
-            `,
-            className: '',
-            iconSize: [48, 48],
-            iconAnchor: [24, 48],
-          });
-          
-          // Calculate position 30 meters in front of user
-          const arrowLat = newLocation[0] + (0.00027 * Math.cos(position.coords.heading * Math.PI / 180));
-          const arrowLng = newLocation[1] + (0.00027 * Math.sin(position.coords.heading * Math.PI / 180));
-          
-          if (directionArrow.current) {
-            directionArrow.current.setLatLng([arrowLat, arrowLng]);
-            directionArrow.current.setIcon(arrowIcon);
-          } else {
-            directionArrow.current = L.marker([arrowLat, arrowLng], { icon: arrowIcon }).addTo(map.current!);
-          }
-        }
-
-        // Create radius circle if it doesn't exist
-        if (!radiusCircle.current) {
-          radiusCircle.current = L.circle(newLocation, {
-            radius: searchRadius,
-            color: '#8b5cf6',
-            fillColor: '#a78bfa',
-            fillOpacity: 0.15,
-            weight: 3,
-            dashArray: '8, 12',
-          }).addTo(map.current!);
-        } else {
-          radiusCircle.current.setLatLng(newLocation);
-        }
-
-        const currentCenter = map.current!.getCenter();
-        const distance = currentCenter.distanceTo(L.latLng(newLocation[0], newLocation[1]));
-        if (distance > 50) {
-          map.current!.panTo(newLocation, { animate: true, duration: 1 });
+        if (mapRef.current) {
+          mapRef.current.panTo(newLocation);
         }
       },
       (error) => {
@@ -267,83 +116,41 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
         }
       },
       {
-        enableHighAccuracy: true, // Enable for heading
+        enableHighAccuracy: true,
         maximumAge: 5000,
         timeout: 10000,
       }
     );
 
     return () => {
-      navigator.geolocation.clearWatch(watchId);
-      if (radiusCircle.current && map.current) {
-        radiusCircle.current.remove();
-        radiusCircle.current = null;
-      }
-      if (directionArrow.current && map.current) {
-        directionArrow.current.remove();
-      }
+      if (watchId) navigator.geolocation.clearWatch(watchId);
     };
-  }, [searchRadius]);
+  }, [isPaused]);
 
-  // Update radius circle when searchRadius changes - No auto zoom to prevent erratic behavior
+  // Calculate directions when user location or destination changes
   useEffect(() => {
-    if (radiusCircle.current && userLocation) {
-      radiusCircle.current.setRadius(searchRadius);
-    }
-  }, [searchRadius, userLocation]);
+    if (!userLocation || !isLoaded || isPaused) return;
 
-  // Setup routing - Only when not paused
-  useEffect(() => {
-    if (!map.current || !userLocation || isPaused) return;
-
-    if (routingControl.current) {
-      try {
-        map.current.removeControl(routingControl.current);
-      } catch (e) {
-        // Ignorar error si ya fue removido
-        console.log('Routing control already removed');
-      }
-    }
-
-    routingControl.current = (L as any).Routing.control({
-      waypoints: [L.latLng(userLocation[0], userLocation[1]), L.latLng(destination[0], destination[1])],
-      routeWhileDragging: false,
-      showAlternatives: false,
-      addWaypoints: false, // Evitar agregar waypoints al hacer click
-      lineOptions: {
-        styles: [{ color: '#8b5cf6', weight: 7, opacity: 0.8 }],
+    const directionsService = new google.maps.DirectionsService();
+    
+    directionsService.route(
+      {
+        origin: userLocation,
+        destination: { lat: destination[0], lng: destination[1] },
+        travelMode: google.maps.TravelMode.DRIVING,
       },
-      createMarker: () => null, // Don't create default markers
-    }).addTo(map.current!);
-
-    return () => {
-      if (routingControl.current && map.current) {
-        try {
-          map.current.removeControl(routingControl.current);
-        } catch (e) {
-          // Ignorar error si ya fue removido
-          console.log('Cleanup: routing control already removed');
+      (result, status) => {
+        if (status === google.maps.DirectionsStatus.OK && result) {
+          setDirections(result);
         }
       }
-    };
-  }, [userLocation, destination, isPaused]);
+    );
+  }, [userLocation, destination, isPaused, isLoaded]);
 
-  // Setup navigation handler for property details
+  // Detect new properties and play notification
   useEffect(() => {
-    (window as any).navigateToProperty = (propertyId: string) => {
-      navigate(`/property/${propertyId}`);
-    };
-    
-    return () => {
-      delete (window as any).navigateToProperty;
-    };
-  }, [navigate]);
+    if (!properties) return;
 
-  // Update property markers with real data
-  useEffect(() => {
-    if (!map.current || !userLocation || !properties) return;
-
-    // Detectar nuevas propiedades y reproducir sonido
     const currentCount = properties.length;
     if (previousPropertiesCount.current > 0 && currentCount > previousPropertiesCount.current) {
       const newPropertiesCount = currentCount - previousPropertiesCount.current;
@@ -353,107 +160,7 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
       });
     }
     previousPropertiesCount.current = currentCount;
-
-    // Clear existing markers
-    markers.current.forEach((marker) => marker.remove());
-    markers.current = [];
-
-    const createPropertyIcon = (price: number) => {
-      const priceFormatted = new Intl.NumberFormat('es-CO', {
-        minimumFractionDigits: 0,
-      }).format(price);
-
-      return L.divIcon({
-        html: `
-          <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
-            <!-- Price Label -->
-            <div style="
-              background: linear-gradient(135deg, #10b981, #059669);
-              color: white;
-              padding: 6px 12px;
-              border-radius: 10px;
-              font-size: 14px;
-              font-weight: 700;
-              white-space: nowrap;
-              box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
-            ">
-              ${priceFormatted} $
-            </div>
-            <!-- Pin Marker -->
-            <svg width="32" height="40" viewBox="0 0 32 40" style="filter: drop-shadow(0 6px 10px rgba(16, 185, 129, 0.4));">
-              <path d="M16 0C7.163 0 0 7.163 0 16c0 12 16 24 16 24s16-12 16-24C32 7.163 24.837 0 16 0z" 
-                    fill="#10b981" />
-              <circle cx="16" cy="16" r="6" fill="white" />
-            </svg>
-          </div>
-        `,
-        className: '',
-        iconSize: [120, 80],
-        iconAnchor: [60, 80],
-      });
-    };
-
-    // Show real properties from database
-    properties.forEach((property) => {
-      if (!property.latitude || !property.longitude) return;
-
-      const icon = createPropertyIcon(property.price);
-      const marker = L.marker([property.latitude, property.longitude], { icon });
-
-      const priceFormatted = new Intl.NumberFormat('es-CO', {
-        style: 'currency',
-        currency: property.currency || 'COP',
-        minimumFractionDigits: 0,
-      }).format(property.price);
-
-      const imageUrl = property.images && property.images[0] 
-        ? (typeof property.images[0] === 'string' ? property.images[0] : property.images[0])
-        : 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400&q=80';
-
-      marker.bindPopup(`
-        <div style="min-width: 280px; max-width: 320px;">
-          <img src="${imageUrl}" alt="${property.title}" 
-               style="width: 100%; height: 160px; object-fit: cover; border-radius: 8px; margin-bottom: 12px;" 
-               onerror="this.src='https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400&q=80'"/>
-          <h3 style="font-weight: bold; margin-bottom: 8px; font-size: 16px;">${property.title}</h3>
-          <p style="color: #10b981; font-weight: bold; margin-bottom: 8px; font-size: 18px;">${priceFormatted}</p>
-          <p style="margin-bottom: 8px; color: #666; font-size: 14px;">${property.neighborhood || 'N/A'}, ${property.city}</p>
-          <p style="margin-bottom: 12px; color: #666; font-size: 13px;">
-            ${property.bedrooms} hab • ${property.bathrooms} baños • ${property.area_m2} m²
-          </p>
-          <button 
-             onclick="window.navigateToProperty('${property.id}')"
-             style="
-               width: 100%;
-               display: block;
-               background: linear-gradient(135deg, #10b981, #059669);
-               color: white;
-               text-decoration: none;
-               padding: 12px 20px;
-               border-radius: 8px;
-               text-align: center;
-               font-weight: 600;
-               font-size: 14px;
-               border: 2px solid #10b981;
-               box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-               transition: all 0.2s;
-               cursor: pointer;
-             "
-             onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 6px 16px rgba(16, 185, 129, 0.4)';"
-             onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 4px 12px rgba(16, 185, 129, 0.3)';"
-          >
-            Ver Detalles
-          </button>
-        </div>
-      `, {
-        maxWidth: 320,
-        className: 'custom-popup'
-      });
-
-      marker.addTo(map.current!);
-      markers.current.push(marker);
-    });
-  }, [userLocation, properties]);
+  }, [properties]);
 
   const handleToggleNavigation = () => {
     setIsPaused(!isPaused);
@@ -479,9 +186,153 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
     toast.success("Búsqueda actualizada");
   };
 
+  if (!isLoaded) {
+    return <div className="w-full h-full flex items-center justify-center">Cargando mapa...</div>;
+  }
+
   return (
     <div className="relative w-full h-full">
-      <div ref={mapContainer} className="w-full h-full" />
+      <GoogleMap
+        mapContainerStyle={{ width: '100%', height: '100%' }}
+        center={userLocation || { lat: 6.2476, lng: -75.5658 }}
+        zoom={15}
+        onLoad={(map) => { mapRef.current = map; }}
+        options={{
+          zoomControl: true,
+          streetViewControl: false,
+          mapTypeControl: false,
+          fullscreenControl: false,
+        }}
+      >
+        {/* User location marker with animation */}
+        {userLocation && (
+          <>
+            <OverlayView
+              position={userLocation}
+              mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+            >
+              <div style={{ position: 'relative', transform: 'translate(-50%, -100%)' }}>
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  animation: 'bounce 1s ease-in-out infinite',
+                }}>
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" style={{ filter: 'drop-shadow(0 4px 12px rgba(139, 92, 246, 0.5))' }}>
+                    <circle cx="12" cy="5" r="2.5" fill="#8b5cf6" stroke="white" strokeWidth="1.5"/>
+                    <path d="M12 7.5 L12 14" stroke="#8b5cf6" strokeWidth="2.5" strokeLinecap="round"/>
+                    <path d="M12 9 L9 11" stroke="#8b5cf6" strokeWidth="2" strokeLinecap="round">
+                      <animate attributeName="d" values="M12 9 L9 11;M12 9 L9 13;M12 9 L9 11" dur="1s" repeatCount="indefinite"/>
+                    </path>
+                    <path d="M12 9 L15 13" stroke="#8b5cf6" strokeWidth="2" strokeLinecap="round">
+                      <animate attributeName="d" values="M12 9 L15 13;M12 9 L15 11;M12 9 L15 13" dur="1s" repeatCount="indefinite"/>
+                    </path>
+                    <path d="M12 14 L10 19" stroke="#8b5cf6" strokeWidth="2.5" strokeLinecap="round">
+                      <animate attributeName="d" values="M12 14 L10 19;M12 14 L11 20;M12 14 L10 19" dur="1s" repeatCount="indefinite"/>
+                    </path>
+                    <path d="M12 14 L14 20" stroke="#8b5cf6" strokeWidth="2.5" strokeLinecap="round">
+                      <animate attributeName="d" values="M12 14 L14 20;M12 14 L13 19;M12 14 L14 20" dur="1s" repeatCount="indefinite"/>
+                    </path>
+                  </svg>
+                  <div style={{
+                    width: '16px',
+                    height: '16px',
+                    background: 'linear-gradient(135deg, #8b5cf6, #a78bfa)',
+                    borderRadius: '50%',
+                    border: '3px solid white',
+                    boxShadow: '0 0 20px rgba(139, 92, 246, 0.6)',
+                    animation: 'pulse 2s ease-in-out infinite',
+                  }}></div>
+                </div>
+                <style>{`
+                  @keyframes bounce {
+                    0%, 100% { transform: translateY(0px); }
+                    50% { transform: translateY(-4px); }
+                  }
+                  @keyframes pulse {
+                    0%, 100% { transform: scale(1); opacity: 1; }
+                    50% { transform: scale(1.2); opacity: 0.8; }
+                  }
+                `}</style>
+              </div>
+            </OverlayView>
+
+            {/* Search radius circle */}
+            <Circle
+              center={userLocation}
+              radius={searchRadius}
+              options={{
+                strokeColor: '#8b5cf6',
+                strokeOpacity: 1,
+                strokeWeight: 3,
+                fillColor: '#a78bfa',
+                fillOpacity: 0.15,
+              }}
+            />
+          </>
+        )}
+
+        {/* Directions route */}
+        {directions && !isPaused && (
+          <DirectionsRenderer
+            directions={directions}
+            options={{
+              suppressMarkers: true,
+              polylineOptions: {
+                strokeColor: '#8b5cf6',
+                strokeWeight: 7,
+                strokeOpacity: 0.8,
+              },
+            }}
+          />
+        )}
+
+        {/* Property markers */}
+        {properties?.map((property) => {
+          if (!property.latitude || !property.longitude) return null;
+
+          const priceFormatted = new Intl.NumberFormat('es-CO', {
+            minimumFractionDigits: 0,
+          }).format(property.price);
+
+          return (
+            <OverlayView
+              key={property.id}
+              position={{ lat: property.latitude, lng: property.longitude }}
+              mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+            >
+              <div 
+                style={{ 
+                  transform: 'translate(-50%, -100%)', 
+                  cursor: 'pointer',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+                onClick={() => navigate(`/property/${property.id}`)}
+              >
+                <div style={{
+                  background: 'linear-gradient(135deg, #10b981, #059669)',
+                  color: 'white',
+                  padding: '6px 12px',
+                  borderRadius: '10px',
+                  fontSize: '14px',
+                  fontWeight: '700',
+                  whiteSpace: 'nowrap',
+                  boxShadow: '0 4px 16px rgba(16, 185, 129, 0.4)',
+                }}>
+                  {priceFormatted} $
+                </div>
+                <svg width="32" height="40" viewBox="0 0 32 40" style={{ filter: 'drop-shadow(0 6px 10px rgba(16, 185, 129, 0.4))' }}>
+                  <path d="M16 0C7.163 0 0 7.163 0 16c0 12 16 24 16 24s16-12 16-24C32 7.163 24.837 0 16 0z" fill="#10b981" />
+                  <circle cx="16" cy="16" r="6" fill="white" />
+                </svg>
+              </div>
+            </OverlayView>
+          );
+        })}
+      </GoogleMap>
       
       {/* Botón Pausar/Reanudar - Móvil: bottom left, Desktop: bottom left */}
       <div className="absolute bottom-4 left-4 z-[1000]">
