@@ -83,7 +83,12 @@ const SearchOptions = ({
                 </li>
               </ul>
 
-              <Button onClick={handleGPSNavigation} variant="default" className="w-full bg-gradient-to-r from-accent to-accent/80 mt-auto" size="lg">
+              <Button 
+                onClick={handleGPSNavigation} 
+                variant="default" 
+                className="w-full bg-gradient-to-r from-accent to-accent/80 mt-auto shadow-[0_8px_0_0_hsl(var(--accent)/.4)] hover:shadow-[0_12px_0_0_hsl(var(--accent)/.4)] active:shadow-[0_4px_0_0_hsl(var(--accent)/.4)] active:translate-y-[4px] transition-all duration-150" 
+                size="lg"
+              >
                 <Navigation className="mr-2 h-5 w-5 md:h-6 md:w-6" />
                 Iniciar Navegación
               </Button>
@@ -120,7 +125,12 @@ const SearchOptions = ({
               </li>
             </ul>
 
-            <Button onClick={handleFixedView} variant="default" size="lg" className="w-full mt-auto">
+            <Button 
+              onClick={handleFixedView} 
+              variant="default" 
+              size="lg" 
+              className="w-full mt-auto shadow-[0_8px_0_0_hsl(var(--primary)/.4)] hover:shadow-[0_12px_0_0_hsl(var(--primary)/.4)] active:shadow-[0_4px_0_0_hsl(var(--primary)/.4)] active:translate-y-[4px] transition-all duration-150"
+            >
               <Map className="mr-2 h-5 w-5 md:h-6 md:w-6" />
               Ver Propiedades
             </Button>
