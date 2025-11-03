@@ -60,16 +60,6 @@ const Navbar = () => {
             <a href="/" className="text-foreground hover:text-primary transition-colors font-medium">
               Home
             </a>
-            {user && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => navigate("/favorites")}
-                className="relative"
-              >
-                <Heart className="h-5 w-5" />
-              </Button>
-            )}
             {user ? (
               <>
                 <Button 
@@ -106,25 +96,28 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Mobile - Favorites Icon */}
-          {user && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate("/favorites")}
-              className="md:hidden"
-            >
-              <Heart className="h-5 w-5" />
-            </Button>
-          )}
+          {/* Right side - Favorites & Mobile Menu */}
+          <div className="flex items-center gap-2">
+            {/* Favorites Button - Always visible when logged in */}
+            {user && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => navigate("/favorites")}
+                className="relative"
+                aria-label="Ver favoritos"
+              >
+                <Heart className="h-5 w-5" />
+              </Button>
+            )}
 
-          {/* Mobile menu */}
-          <Sheet open={isOpen} onOpenChange={setIsOpen}>
-            <SheetTrigger asChild>
-              <button className="md:hidden p-2 hover:bg-accent/10 rounded-lg transition-colors">
-                <Menu className="h-6 w-6" />
-              </button>
-            </SheetTrigger>
+            {/* Mobile menu */}
+            <Sheet open={isOpen} onOpenChange={setIsOpen}>
+              <SheetTrigger asChild>
+                <button className="md:hidden p-2 hover:bg-accent/10 rounded-lg transition-colors">
+                  <Menu className="h-6 w-6" />
+                </button>
+              </SheetTrigger>
             <SheetContent side="right" className="w-[300px] z-[100]">
               <SheetHeader>
                 <SheetTitle className="text-left">Menú</SheetTitle>
@@ -182,7 +175,8 @@ const Navbar = () => {
                 )}
               </div>
             </SheetContent>
-          </Sheet>
+            </Sheet>
+          </div>
         </div>
       </div>
     </nav>
