@@ -31,10 +31,59 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
   const [isPaused, setIsPaused] = useState(false);
   const previousPropertiesCount = useRef<number>(0);
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
+  const [mapZoom, setMapZoom] = useState<number>(17);
+  const isManualRadiusChange = useRef(false);
   
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
   });
+
+  // Convertir zoom a radio de búsqueda
+  const zoomToRadius = (zoom: number): number => {
+    // Zoom 18+ = 200m, Zoom 17 = 300m, Zoom 16 = 500m, Zoom 15 = 750m, Zoom 14- = 1000m
+    if (zoom >= 18) return 200;
+    if (zoom >= 17) return 300;
+    if (zoom >= 16) return 500;
+    if (zoom >= 15) return 750;
+    return 1000;
+  };
+
+  // Sincronizar radio con zoom cuando no sea cambio manual
+  useEffect(() => {
+    if (!isManualRadiusChange.current) {
+      const newRadius = zoomToRadius(mapZoom);
+      setSearchRadius(newRadius);
+    }
+    isManualRadiusChange.current = false;
+  }, [mapZoom]);
+
+  // Manejar cambios en el zoom del mapa
+  const handleZoomChanged = () => {
+    if (mapRef.current) {
+      const zoom = mapRef.current.getZoom();
+      if (zoom !== undefined) {
+        setMapZoom(zoom);
+      }
+    }
+  };
+
+  // Manejar cambios manuales en el radio
+  const handleManualRadiusChange = (value: number) => {
+    isManualRadiusChange.current = true;
+    setSearchRadius(value);
+    
+    // Ajustar zoom del mapa según el radio manual
+    if (mapRef.current) {
+      let targetZoom = 17;
+      if (value <= 200) targetZoom = 18;
+      else if (value <= 300) targetZoom = 17;
+      else if (value <= 500) targetZoom = 16;
+      else if (value <= 750) targetZoom = 15;
+      else targetZoom = 14;
+      
+      mapRef.current.setZoom(targetZoom);
+    }
+  };
 
   // Fetch real properties from database and position them around user location
   // More radius = more properties (200m-1km range)
@@ -195,8 +244,9 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
       <GoogleMap
         mapContainerStyle={{ width: '100%', height: '100%' }}
         center={userLocation || { lat: 6.2476, lng: -75.5658 }}
-        zoom={15}
+        zoom={mapZoom}
         onLoad={(map) => { mapRef.current = map; }}
+        onZoomChanged={handleZoomChanged}
         options={{
           zoomControl: true,
           streetViewControl: false,
@@ -503,7 +553,7 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
                   </div>
                   <Slider
                     value={[searchRadius]}
-                    onValueChange={(value) => setSearchRadius(value[0])}
+                    onValueChange={(value) => handleManualRadiusChange(value[0])}
                     min={200}
                     max={1000}
                     step={50}
