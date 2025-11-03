@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Navigation, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useVoiceRecording } from '@/hooks/useVoiceRecording';
+import VoiceButton from './VoiceButton';
 
 interface NavigationControlsProps {
   onStartNavigation: (destination: [number, number], criteria: string, filters: any) => void;
@@ -17,6 +19,20 @@ const NavigationControls = ({ onStartNavigation, initialCriteria = '' }: Navigat
   const [destination, setDestination] = useState('');
   const [criteria, setCriteria] = useState(initialCriteria);
   const [isProcessing, setIsProcessing] = useState(false);
+  const { isRecording, isProcessing: isTranscribing, audioLevel, startRecording, stopRecording } = useVoiceRecording();
+
+  const handleVoiceRecording = async () => {
+    if (isRecording) {
+      try {
+        const transcript = await stopRecording();
+        setCriteria(transcript);
+      } catch (error) {
+        console.error('Error with voice recording:', error);
+      }
+    } else {
+      startRecording();
+    }
+  };
 
   const handleStartNavigation = async () => {
     if (!destination.trim()) {
@@ -95,18 +111,31 @@ const NavigationControls = ({ onStartNavigation, initialCriteria = '' }: Navigat
 
           <div>
             <Label htmlFor="criteria">Características que buscas</Label>
-            <Textarea
-              id="criteria"
-              placeholder="Ej: Apartamento de 3 habitaciones, con parqueadero, cerca del metro..."
-              value={criteria}
-              onChange={(e) => setCriteria(e.target.value)}
-              className="mt-1 min-h-[100px]"
-            />
+            <div className="flex gap-2 mt-1">
+              <Textarea
+                id="criteria"
+                placeholder="Ej: Apartamento de 3 habitaciones, con parqueadero, cerca del metro..."
+                value={criteria}
+                onChange={(e) => setCriteria(e.target.value)}
+                className="min-h-[100px]"
+                disabled={isRecording || isTranscribing}
+              />
+              <VoiceButton
+                isRecording={isRecording}
+                isProcessing={isTranscribing}
+                audioLevel={audioLevel}
+                onStart={handleVoiceRecording}
+                onStop={handleVoiceRecording}
+                disabled={isProcessing}
+                variant="outline"
+                size="icon"
+              />
+            </div>
           </div>
 
           <Button
             onClick={handleStartNavigation}
-            disabled={isProcessing}
+            disabled={isProcessing || isRecording || isTranscribing}
             className="w-full"
             size="lg"
           >

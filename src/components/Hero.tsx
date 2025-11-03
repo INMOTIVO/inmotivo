@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Search, MapPin, Loader2, Mic, MicOff, ArrowLeft } from "lucide-react";
+import { Search, MapPin, Loader2, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,6 +10,8 @@ import { toast } from "sonner";
 import SearchOptions from './SearchOptions';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
+import { useVoiceRecording } from "@/hooks/useVoiceRecording";
+import VoiceButton from './VoiceButton';
 
 const Hero = () => {
   const navigate = useNavigate();
@@ -21,14 +23,13 @@ const Hero = () => {
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
   const [showFixedSearch, setShowFixedSearch] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
   const [showLocationDialog, setShowLocationDialog] = useState(false);
   const [useCustomLocation, setUseCustomLocation] = useState(false);
   const [customDepartment, setCustomDepartment] = useState("");
   const [customMunicipality, setCustomMunicipality] = useState("");
   const [customNeighborhood, setCustomNeighborhood] = useState("");
-  const recognitionRef = useRef<any>(null);
   const isMobile = useIsMobile();
+  const { isRecording, isProcessing, audioLevel, startRecording, stopRecording } = useVoiceRecording();
 
   // Check if we should show options from URL params
   useEffect(() => {
@@ -160,49 +161,17 @@ const Hero = () => {
     getCurrentLocation();
   }, []);
 
-  const startRecording = async () => {
-    // Use Web Speech API for all devices (free, no API key needed)
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    
-    if (!SpeechRecognition) {
-      toast.error("Tu navegador no soporta reconocimiento de voz. Intenta con Chrome o Edge.");
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'es-ES';
-    recognition.continuous = false;
-    recognition.interimResults = false;
-
-    recognition.onstart = () => {
-      setIsRecording(true);
-      toast.success("Escuchando... Habla ahora");
-    };
-
-    recognition.onresult = async (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      setSearchQuery(transcript);
-      await handleSearch(transcript);
-    };
-
-    recognition.onerror = (event: any) => {
-      console.error('Error en reconocimiento de voz:', event.error);
-      setIsRecording(false);
-      toast.error("No se pudo procesar el audio. Intenta de nuevo.");
-    };
-
-    recognition.onend = () => {
-      setIsRecording(false);
-    };
-
-    recognitionRef.current = recognition;
-    recognition.start();
-  };
-
-  const stopRecording = () => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
-      setIsRecording(false);
+  const handleVoiceRecording = async () => {
+    if (isRecording) {
+      try {
+        const transcript = await stopRecording();
+        setSearchQuery(transcript);
+        await handleSearch(transcript);
+      } catch (error) {
+        console.error('Error with voice recording:', error);
+      }
+    } else {
+      startRecording();
     }
   };
 
@@ -374,24 +343,19 @@ const Hero = () => {
                             variant="hero" 
                             size="lg"
                             onClick={() => handleSearch()}
-                            disabled={!searchQuery.trim() || isRecording || loadingLocation}
+                            disabled={!searchQuery.trim() || isRecording || isProcessing || loadingLocation}
                             className="flex-1 sm:flex-initial min-w-[120px] text-base font-semibold"
                           >
-                            {isRecording ? 'Escuchando...' : 'Buscar'}
+                            Buscar
                           </Button>
-                          <Button 
-                            onClick={isRecording ? stopRecording : startRecording}
+                          <VoiceButton
+                            isRecording={isRecording}
+                            isProcessing={isProcessing}
+                            audioLevel={audioLevel}
+                            onStart={handleVoiceRecording}
+                            onStop={handleVoiceRecording}
                             disabled={loadingLocation}
-                            variant={isRecording ? "destructive" : "default"}
-                            size="lg"
-                            className="flex-shrink-0"
-                          >
-                            {isRecording ? (
-                              <MicOff className="h-5 w-5" />
-                            ) : (
-                              <Mic className="h-5 w-5" />
-                            )}
-                          </Button>
+                          />
                         </div>
                       </>
                     )}
@@ -424,28 +388,25 @@ const Hero = () => {
                     handleSearch();
                   }
                 }}
-                disabled={isRecording}
+                disabled={isRecording || isProcessing}
               />
-              <Button 
-                onClick={isRecording ? stopRecording : startRecording}
-                variant={isRecording ? "destructive" : "outline"}
+              <VoiceButton
+                isRecording={isRecording}
+                isProcessing={isProcessing}
+                audioLevel={audioLevel}
+                onStart={handleVoiceRecording}
+                onStop={handleVoiceRecording}
                 size="icon"
-                className="flex-shrink-0"
-              >
-                {isRecording ? (
-                  <MicOff className="h-4 w-4" />
-                ) : (
-                  <Mic className="h-4 w-4" />
-                )}
-              </Button>
+                variant="outline"
+              />
               <Button 
                 variant="hero" 
                 size="sm"
                 onClick={() => handleSearch()}
-                disabled={!searchQuery.trim() || isRecording}
+                disabled={!searchQuery.trim() || isRecording || isProcessing}
                 className="flex-shrink-0"
               >
-                {isRecording ? 'Escuchando...' : 'Buscar'}
+                Buscar
               </Button>
             </div>
           </div>

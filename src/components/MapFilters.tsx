@@ -1,10 +1,12 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from './ui/card';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Mic, MicOff, Loader2, Send } from 'lucide-react';
+import { Loader2, Send } from 'lucide-react';
+import { useVoiceRecording } from '@/hooks/useVoiceRecording';
+import VoiceButton from './VoiceButton';
 
 interface MapFiltersProps {
   onFiltersChange: (filters: {
@@ -19,9 +21,8 @@ interface MapFiltersProps {
 
 const MapFilters = ({ onFiltersChange, initialQuery = '' }: MapFiltersProps) => {
   const [searchQuery, setSearchQuery] = useState(initialQuery);
-  const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const recognitionRef = useRef<any>(null);
+  const { isRecording, isProcessing: isTranscribing, audioLevel, startRecording, stopRecording } = useVoiceRecording();
 
   useEffect(() => {
     if (initialQuery) {
@@ -70,48 +71,17 @@ const MapFilters = ({ onFiltersChange, initialQuery = '' }: MapFiltersProps) => 
     }
   };
 
-  const startRecording = async () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    
-    if (!SpeechRecognition) {
-      toast.error("Tu navegador no soporta reconocimiento de voz. Intenta con Chrome o Edge.");
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = 'es-ES';
-    recognition.continuous = false;
-    recognition.interimResults = false;
-
-    recognition.onstart = () => {
-      setIsRecording(true);
-      toast.success("Escuchando... Habla ahora");
-    };
-
-    recognition.onresult = async (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      setSearchQuery(transcript);
-      await handleInterpretSearch(transcript);
-    };
-
-    recognition.onerror = (event: any) => {
-      console.error('Error en reconocimiento de voz:', event.error);
-      setIsRecording(false);
-      toast.error("No se pudo procesar el audio. Intenta de nuevo.");
-    };
-
-    recognition.onend = () => {
-      setIsRecording(false);
-    };
-
-    recognitionRef.current = recognition;
-    recognition.start();
-  };
-
-  const stopRecording = () => {
-    if (recognitionRef.current && isRecording) {
-      recognitionRef.current.stop();
-      setIsRecording(false);
+  const handleVoiceRecording = async () => {
+    if (isRecording) {
+      try {
+        const transcript = await stopRecording();
+        setSearchQuery(transcript);
+        await handleInterpretSearch(transcript);
+      } catch (error) {
+        console.error('Error with voice recording:', error);
+      }
+    } else {
+      startRecording();
     }
   };
 
@@ -135,7 +105,7 @@ const MapFilters = ({ onFiltersChange, initialQuery = '' }: MapFiltersProps) => 
       <div className="flex gap-2">
         <Button
           onClick={() => handleInterpretSearch(searchQuery)}
-          disabled={isProcessing || isRecording || !searchQuery.trim()}
+          disabled={isProcessing || isRecording || isTranscribing || !searchQuery.trim()}
           className="flex-1"
         >
           {isProcessing ? (
@@ -151,18 +121,16 @@ const MapFilters = ({ onFiltersChange, initialQuery = '' }: MapFiltersProps) => 
           )}
         </Button>
 
-        <Button
-          onClick={isRecording ? stopRecording : startRecording}
+        <VoiceButton
+          isRecording={isRecording}
+          isProcessing={isTranscribing}
+          audioLevel={audioLevel}
+          onStart={handleVoiceRecording}
+          onStop={handleVoiceRecording}
           disabled={isProcessing}
-          variant={isRecording ? "destructive" : "outline"}
+          variant="outline"
           size="icon"
-        >
-          {isRecording ? (
-            <MicOff className="h-4 w-4" />
-          ) : (
-            <Mic className="h-4 w-4" />
-          )}
-        </Button>
+        />
       </div>
 
       <div className="text-xs text-muted-foreground space-y-1">
