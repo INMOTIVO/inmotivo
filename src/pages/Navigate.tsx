@@ -101,7 +101,7 @@ const Navigate = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1 pt-20">
+      <main className={`flex-1 ${!isNavigating ? 'pt-20' : ''}`}>
         {!isNavigating ? (
           <div className="container mx-auto px-4 py-8">
             <Button
@@ -118,7 +118,7 @@ const Navigate = () => {
             />
           </div>
         ) : (
-          <div className="relative h-[calc(100vh-5rem)]">
+          <div className="relative h-screen">
             <Button
               variant="default"
               size="icon"
