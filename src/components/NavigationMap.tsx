@@ -27,11 +27,11 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
   const [heading, setHeading] = useState<number>(0);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editSearchQuery, setEditSearchQuery] = useState(searchCriteria);
-  const [searchRadius, setSearchRadius] = useState<number>(300);
+  const [searchRadius, setSearchRadius] = useState<number>(200);
   const [isPaused, setIsPaused] = useState(false);
   const previousPropertiesCount = useRef<number>(0);
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
-  const [mapZoom, setMapZoom] = useState<number>(17);
+  const [mapZoom, setMapZoom] = useState<number>(18);
   const isManualRadiusChange = useRef(false);
   
   const { isLoaded } = useJsApiLoader({
@@ -40,7 +40,8 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
 
   // Convertir zoom a radio de búsqueda
   const zoomToRadius = (zoom: number): number => {
-    // Zoom 18+ = 200m, Zoom 17 = 300m, Zoom 16 = 500m, Zoom 15 = 750m, Zoom 14- = 1000m
+    // Zoom 19+ = 100m, Zoom 18 = 200m, Zoom 17 = 300m, Zoom 16 = 500m, Zoom 15 = 750m, Zoom 14- = 1000m
+    if (zoom >= 19) return 100;
     if (zoom >= 18) return 200;
     if (zoom >= 17) return 300;
     if (zoom >= 16) return 500;
@@ -75,7 +76,8 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
     // Ajustar zoom del mapa según el radio manual
     if (mapRef.current) {
       let targetZoom = 17;
-      if (value <= 200) targetZoom = 18;
+      if (value <= 100) targetZoom = 19;
+      else if (value <= 200) targetZoom = 18;
       else if (value <= 300) targetZoom = 17;
       else if (value <= 500) targetZoom = 16;
       else if (value <= 750) targetZoom = 15;
@@ -86,8 +88,9 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
   };
 
   // Fetch real properties from database and position them around user location
-  // More radius = more properties (200m-1km range)
+  // More radius = more properties (100m-1km range)
   const getPropertyLimit = (radius: number) => {
+    if (radius <= 200) return 3;
     if (radius <= 400) return 5;
     if (radius <= 700) return 8;
     return 12;
@@ -554,13 +557,13 @@ const NavigationMap = ({ destination, filters, onStopNavigation, searchCriteria 
                   <Slider
                     value={[searchRadius]}
                     onValueChange={(value) => handleManualRadiusChange(value[0])}
-                    min={200}
+                    min={100}
                     max={1000}
                     step={50}
                     className="w-full"
                   />
                   <div className="flex justify-between text-[9px] md:text-[10px] text-muted-foreground">
-                    <span>200m</span>
+                    <span>100m</span>
                     <span>1km</span>
                   </div>
                 </div>
