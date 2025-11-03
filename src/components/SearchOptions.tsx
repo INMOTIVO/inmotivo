@@ -86,7 +86,7 @@ const SearchOptions = ({
               <Button 
                 onClick={handleGPSNavigation} 
                 variant="default" 
-                className="w-full bg-gradient-to-br from-accent via-accent to-accent/70 mt-auto shadow-[0_10px_0_0_hsl(var(--accent)/.5),0_15px_25px_-5px_hsl(var(--accent)/.4)] hover:shadow-[0_15px_0_0_hsl(var(--accent)/.5),0_20px_30px_-5px_hsl(var(--accent)/.6)] hover:translate-y-[-2px] active:shadow-[0_5px_0_0_hsl(var(--accent)/.5),0_10px_15px_-5px_hsl(var(--accent)/.3)] active:translate-y-[5px] transition-all duration-200 transform hover:scale-[1.02]" 
+                className="w-full bg-gradient-to-br from-accent via-accent to-accent/70 mt-auto shadow-lg hover:shadow-xl transition-all duration-200" 
                 size="lg"
               >
                 <Navigation className="mr-2 h-5 w-5 md:h-6 md:w-6" />
@@ -129,7 +129,7 @@ const SearchOptions = ({
               onClick={handleFixedView} 
               variant="default" 
               size="lg" 
-              className="w-full mt-auto bg-gradient-to-br from-primary via-primary to-primary/70 shadow-[0_10px_0_0_hsl(var(--primary)/.5),0_15px_25px_-5px_hsl(var(--primary)/.4)] hover:shadow-[0_15px_0_0_hsl(var(--primary)/.5),0_20px_30px_-5px_hsl(var(--primary)/.6)] hover:translate-y-[-2px] active:shadow-[0_5px_0_0_hsl(var(--primary)/.5),0_10px_15px_-5px_hsl(var(--primary)/.3)] active:translate-y-[5px] transition-all duration-200 transform hover:scale-[1.02]"
+              className="w-full mt-auto bg-gradient-to-br from-primary via-primary to-primary/70 shadow-lg hover:shadow-xl transition-all duration-200"
             >
               <Map className="mr-2 h-5 w-5 md:h-6 md:w-6" />
               Ver Propiedades
