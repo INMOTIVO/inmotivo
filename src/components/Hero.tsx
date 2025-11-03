@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import SearchOptions from './SearchOptions';
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
+import { FunctionsHttpError } from "@supabase/supabase-js";
 import { useVoiceRecording } from "@/hooks/useVoiceRecording";
 import VoiceButton from './VoiceButton';
 
@@ -189,9 +190,9 @@ const Hero = () => {
         body: { query: textToSearch.trim() }
       });
 
-      // Manejar errores de validación (error puede contener el mensaje)
-      if (error && typeof error === 'object' && 'error' in error) {
-        const errorData = error as any;
+      // Manejar errores HTTP (status 400)
+      if (error instanceof FunctionsHttpError) {
+        const errorData = await error.context.json();
         if (errorData.error === 'invalid_query') {
           toast.error(errorData.message || "Esta búsqueda no es sobre propiedades", {
             duration: 5000,
@@ -199,15 +200,6 @@ const Hero = () => {
           });
           return;
         }
-      }
-
-      // También verificar en data por si acaso
-      if (data?.error === 'invalid_query') {
-        toast.error(data.message, {
-          duration: 5000,
-          description: "💡 Ejemplo: 'Apartamento de 2 habitaciones cerca del metro'"
-        });
-        return;
       }
 
       if (error) {
