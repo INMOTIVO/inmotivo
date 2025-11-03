@@ -288,7 +288,7 @@ const Hero = () => {
               
               <div className="relative bg-white rounded-xl md:rounded-2xl shadow-2xl p-3 md:p-4">
                 <div className="space-y-2 md:space-y-3">
-                  <div className="flex items-start gap-2">
+                  <div className="flex items-start gap-2 border border-border rounded-lg p-2">
                     <Search className="h-4 w-4 text-muted-foreground mt-2 flex-shrink-0" />
                     <Textarea
                       placeholder="Describe la propiedad que buscas"
