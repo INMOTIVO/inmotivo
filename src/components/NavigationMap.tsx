@@ -577,7 +577,7 @@ const NavigationMap = ({
       {/* Barra de control inferior - ocupa todo el ancho */}
       {userLocation && <div className="absolute bottom-0 left-0 right-0 z-[1000]">
           <Card className={`rounded-none border-x-0 border-b-0 border-t-4 border-t-yellow-500 backdrop-blur-md shadow-2xl ${!isPaused ? 'bg-background/30' : 'bg-background/95'}`}>
-            <div className="container mx-auto px-4 py-3">
+            <div className="container mx-auto px-6 py-4">
               <div className="flex items-center gap-3">
                 {/* Botón Ir/Detener */}
                 <Button onClick={handleToggleNavigation} variant={isPaused ? "default" : "destructive"} size="lg" className={`shrink-0 px-6 py-6 h-auto ${isPaused ? 'bg-green-600 hover:bg-green-700' : ''}`}>
