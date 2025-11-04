@@ -5,3 +5,9 @@ verify_jwt = false
 
 [functions.interpret-search]
 verify_jwt = false
+
+[functions.rentals-nearby]
+verify_jwt = false
+
+[functions.rentals-route]
+verify_jwt = false

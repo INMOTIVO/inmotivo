@@ -14,6 +14,10 @@ import { useNavigate } from 'react-router-dom';
 import { playNotificationSound } from '@/utils/notificationSound';
 import { DrivingModeOverlay } from './DrivingModeOverlay';
 import { SavedPropertiesReview } from './SavedPropertiesReview';
+import { getCachedNearbyProperties, fetchRouteProperties, encodePolylineToGeoJSON } from '@/utils/navigationAPI';
+import { calculateScore } from '@/utils/mapHelpers';
+import { showPropertyAlert, requestNotificationPermission } from '@/utils/notificationManager';
+import { debounce } from '@/utils/mapHelpers';
 interface NavigationMapProps {
   destination: [number, number];
   filters: any;
@@ -101,47 +105,50 @@ const NavigationMap = ({
     }
   };
 
-  // Fetch real properties from database and position them around user location
-  // More radius = more properties (100m-1km range)
-  const getPropertyLimit = (radius: number) => {
-    if (radius <= 200) return 3;
-    if (radius <= 400) return 5;
-    if (radius <= 700) return 8;
-    return 12;
-  };
+  // Fetch properties using new API
   const {
-    data: properties
+    data: propertiesGeoJSON,
+    refetch: refetchProperties
   } = useQuery({
-    queryKey: ['navigation-properties', userLocation, searchRadius],
+    queryKey: ['navigation-properties', userLocation, searchRadius, filters],
     queryFn: async () => {
-      if (!userLocation) return [];
-      const limit = getPropertyLimit(searchRadius);
-      const {
-        data,
-        error
-      } = await supabase.from('properties').select('*').eq('status', 'available').limit(limit);
-      if (error) {
-        console.error('Error fetching navigation properties:', error);
-        return [];
+      if (!userLocation) return null;
+      
+      try {
+        const geojson = await getCachedNearbyProperties({
+          lat: userLocation.lat,
+          lon: userLocation.lng,
+          radius: searchRadius,
+          priceMax: filters.maxPrice,
+          type: filters.propertyType || 'all'
+        });
+        
+        return geojson;
+      } catch (error) {
+        console.error('Error fetching nearby properties:', error);
+        toast.error('Error al cargar propiedades cercanas');
+        return null;
       }
-
-      // Position real properties within search radius around user
-      return (data || []).map((property, index) => {
-        const angle = index / Math.max(data.length, 1) * 2 * Math.PI;
-        const maxDistanceDegrees = searchRadius / 111000;
-        const minDistanceDegrees = searchRadius * 0.3 / 111000;
-        const distance = minDistanceDegrees + Math.random() * (maxDistanceDegrees - minDistanceDegrees);
-        const lat = userLocation.lat + distance * Math.cos(angle);
-        const lng = userLocation.lng + distance * Math.sin(angle);
-        return {
-          ...property,
-          latitude: lat,
-          longitude: lng
-        };
-      });
     },
-    enabled: !!userLocation && !isPaused
+    enabled: !!userLocation && !isPaused,
+    refetchInterval: false,
+    staleTime: 30000 // 30 seconds
   });
+
+  // Convert GeoJSON to properties array
+  const properties = propertiesGeoJSON?.features?.map((feature: any) => ({
+    id: feature.properties.id,
+    title: feature.properties.title,
+    price: feature.properties.price,
+    bedrooms: feature.properties.bedrooms,
+    bathrooms: feature.properties.bathrooms,
+    area: feature.properties.area,
+    property_type: feature.properties.property_type,
+    images: feature.properties.images,
+    latitude: feature.geometry.coordinates[1],
+    longitude: feature.geometry.coordinates[0],
+    distance_km: feature.properties.distance_km
+  })) || [];
 
   // Track user location and speed
   useEffect(() => {
@@ -317,7 +324,12 @@ const NavigationMap = ({
     });
   }, [userLocation, destination, isPaused, isLoaded]);
 
-  // Detect new properties and play notification
+  // Request notification permission on mount
+  useEffect(() => {
+    requestNotificationPermission();
+  }, []);
+
+  // Detect new properties and play notification with smart alerts
   useEffect(() => {
     if (!properties) return;
     const currentCount = properties.length;
@@ -334,9 +346,30 @@ const NavigationMap = ({
         });
       }
     } else if (!isVehicleMode) {
-      // Modo normal
+      // Modo normal con alertas inteligentes
       if (previousPropertiesCount.current > 0 && currentCount > previousPropertiesCount.current) {
         const newPropertiesCount = currentCount - previousPropertiesCount.current;
+        
+        // Check for high-score properties to alert
+        properties.slice(-newPropertiesCount).forEach((property: any) => {
+          const score = calculateScore(property, {
+            priceMax: filters.maxPrice,
+            bedrooms: filters.bedrooms,
+            propertyType: filters.propertyType,
+            distance: property.distance_km * 1000 // convert to meters
+          });
+          
+          if (score >= 70) {
+            showPropertyAlert({
+              id: property.id,
+              title: property.title,
+              price: property.price,
+              image: property.images?.[0],
+              address: property.title
+            });
+          }
+        });
+        
         playNotificationSound();
         toast.success(`${newPropertiesCount} nueva${newPropertiesCount > 1 ? 's' : ''} propiedad${newPropertiesCount > 1 ? 'es' : ''} cerca de ti`, {
           duration: 3000
@@ -345,7 +378,7 @@ const NavigationMap = ({
     }
     
     previousPropertiesCount.current = currentCount;
-  }, [properties, isVehicleMode]);
+  }, [properties, isVehicleMode, filters]);
   const handleToggleNavigation = () => {
     const newPausedState = !isPaused;
     setIsPaused(newPausedState);
