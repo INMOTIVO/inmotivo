@@ -462,12 +462,12 @@ const NavigationMap = ({
               }} />
                   
                   {directions ?
-              // Navigation arrow when actively navigating - siempre apunta arriba ya que el mapa rota
+              // Navigation arrow when actively navigating - rota según la dirección de movimiento
               <svg width="56" height="56" viewBox="0 0 24 24" fill="none" style={{
                 filter: 'drop-shadow(0 8px 20px rgba(34, 197, 94, 0.7))',
                 position: 'relative',
                 zIndex: 10,
-                transform: 'rotate(0deg)', // Siempre apunta arriba, el mapa es el que rota
+                transform: `rotate(${heading}deg)`,
                 transition: 'transform 0.3s ease-out'
               }}>
                       {/* Arrow shadow */}
