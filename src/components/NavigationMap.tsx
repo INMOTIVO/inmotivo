@@ -545,6 +545,15 @@ const NavigationMap = ({
                 `}</style>
               </div>
             </OverlayView>
+
+            {/* Search radius circle */}
+            <Circle center={userLocation} radius={searchRadius} options={{
+          strokeColor: '#8b5cf6',
+          strokeOpacity: 1,
+          strokeWeight: 3,
+          fillColor: '#a78bfa',
+          fillOpacity: 0.15
+        }} />
           </>}
 
         {/* Directions route */}
