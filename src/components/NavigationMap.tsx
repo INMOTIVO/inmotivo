@@ -556,15 +556,6 @@ const NavigationMap = ({
         }} />
           </>}
 
-        {/* Directions route */}
-        {directions && !isPaused && <DirectionsRenderer directions={directions} options={{
-        suppressMarkers: true,
-        polylineOptions: {
-          strokeColor: '#8b5cf6',
-          strokeWeight: 7,
-          strokeOpacity: 0.8
-        }
-      }} />}
 
         {/* Property markers */}
         {!isPaused && properties?.map(property => {
