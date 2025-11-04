@@ -5,7 +5,6 @@ import { Map, Navigation, Edit2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { toast } from 'sonner';
-
 interface SearchOptionsProps {
   searchQuery: string;
   municipality: string;
@@ -24,12 +23,10 @@ const SearchOptions = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editedQuery, setEditedQuery] = useState(searchQuery);
   const [isStartingNav, setIsStartingNav] = useState(false);
-  
   const handleStartEdit = () => {
     setEditedQuery(searchQuery);
     setIsEditing(true);
   };
-
   const handleSaveEdit = () => {
     if (editedQuery.trim()) {
       onSearchChange?.(editedQuery);
@@ -37,14 +34,14 @@ const SearchOptions = ({
       toast.success("Búsqueda actualizada");
     }
   };
-
   const handleFixedView = () => {
     navigate(`/catalogo?query=${encodeURIComponent(editedQuery)}`);
   };
-  
   const handleGPSNavigation = () => {
     setIsStartingNav(true);
-    toast.success("Iniciando navegación GPS...", { duration: 2000 });
+    toast.success("Iniciando navegación GPS...", {
+      duration: 2000
+    });
     // Small delay to ensure UI feedback is visible before navigation
     setTimeout(() => {
       navigate(`/navegacion?query=${encodeURIComponent(editedQuery)}&autostart=true`);
@@ -52,7 +49,7 @@ const SearchOptions = ({
   };
   return <div className="w-full max-w-4xl mx-auto space-y-3 md:space-y-4 animate-fade-in px-4">
       <div className="text-center space-y-1">
-        <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold">¿Cómo quieres buscar?</h2>
+        <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-50">¿Cómo quieres buscar?</h2>
         <p className="text-sm md:text-lg text-white/90">
           Ubicación actual: {municipality}{sector && `, ${sector}`}
         </p>
@@ -60,8 +57,7 @@ const SearchOptions = ({
 
       <div className={`grid ${disableGPSNavigation ? 'md:grid-cols-1 max-w-md mx-auto' : 'md:grid-cols-2'} gap-3 md:gap-5`}>
         {/* Navegación GPS */}
-        {!disableGPSNavigation && (
-          <Card className="p-4 md:p-8 hover:shadow-xl transition-all duration-300 hover:border-primary/50 cursor-pointer group border-primary/30">
+        {!disableGPSNavigation && <Card className="p-4 md:p-8 hover:shadow-xl transition-all duration-300 hover:border-primary/50 cursor-pointer group border-primary/30">
             <div className="flex flex-col h-full space-y-3 md:space-y-5">
               <div className="inline-flex p-3 md:p-4 rounded-2xl bg-accent/10 text-accent group-hover:scale-110 transition-transform duration-300">
                 <Navigation className="h-8 w-8 md:h-10 md:w-10" />
@@ -89,28 +85,17 @@ const SearchOptions = ({
                 </li>
               </ul>
 
-              <Button 
-                onClick={handleGPSNavigation} 
-                variant="default" 
-                className="w-full bg-gradient-to-br from-accent via-accent to-accent/70 mt-auto shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95" 
-                size="lg"
-                disabled={isStartingNav}
-              >
-                {isStartingNav ? (
-                  <>
+              <Button onClick={handleGPSNavigation} variant="default" className="w-full bg-gradient-to-br from-accent via-accent to-accent/70 mt-auto shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95" size="lg" disabled={isStartingNav}>
+                {isStartingNav ? <>
                     <div className="mr-2 h-5 w-5 md:h-6 md:w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
                     Iniciando...
-                  </>
-                ) : (
-                  <>
+                  </> : <>
                     <Navigation className="mr-2 h-5 w-5 md:h-6 md:w-6" />
                     Iniciar Navegación
-                  </>
-                )}
+                  </>}
               </Button>
             </div>
-          </Card>
-        )}
+          </Card>}
 
         {/* Vista Fija */}
         <Card className="p-4 md:p-8 hover:shadow-xl transition-all duration-300 hover:border-primary/50 cursor-pointer group">
@@ -141,12 +126,7 @@ const SearchOptions = ({
               </li>
             </ul>
 
-            <Button 
-              onClick={handleFixedView} 
-              variant="default" 
-              size="lg" 
-              className="w-full mt-auto bg-gradient-to-br from-primary via-primary to-primary/70 shadow-lg hover:shadow-xl transition-all duration-200"
-            >
+            <Button onClick={handleFixedView} variant="default" size="lg" className="w-full mt-auto bg-gradient-to-br from-primary via-primary to-primary/70 shadow-lg hover:shadow-xl transition-all duration-200">
               <Map className="mr-2 h-5 w-5 md:h-6 md:w-6" />
               Ver Propiedades
             </Button>
