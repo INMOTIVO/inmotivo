@@ -41,6 +41,8 @@ const NavigationMap = ({
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
   const [mapZoom, setMapZoom] = useState<number>(18);
   const isManualRadiusChange = useRef(false);
+  const lastHeadingUpdate = useRef<number>(0);
+  const smoothHeading = useRef<number>(0);
   
   // Estados para detección de velocidad y modo vehículo
   const [currentSpeed, setCurrentSpeed] = useState<number>(0);
@@ -158,8 +160,10 @@ const NavigationMap = ({
         lng: position.coords.longitude
       };
       
-      // Calcular velocidad
+      // Calcular velocidad y heading desde movimiento
       let speed = 0;
+      let calculatedHeading = heading;
+      
       if (previousLocation.current) {
         const timeDiff = (now - previousLocation.current.time) / 1000 / 3600; // en horas
         const distance = calculateDistance(
@@ -171,6 +175,40 @@ const NavigationMap = ({
         
         speed = distance / timeDiff; // km/h
         setCurrentSpeed(speed);
+        
+        // Calcular heading basado en el movimiento real
+        const dLat = newLocation.lat - previousLocation.current.lat;
+        const dLng = newLocation.lng - previousLocation.current.lng;
+        
+        // Solo calcular nuevo heading si hay movimiento significativo
+        if (Math.abs(dLat) > 0.00001 || Math.abs(dLng) > 0.00001) {
+          // Calcular ángulo en radianes y convertir a grados
+          let angle = Math.atan2(dLng, dLat) * 180 / Math.PI;
+          
+          // Normalizar a 0-360
+          if (angle < 0) angle += 360;
+          
+          calculatedHeading = angle;
+          
+          // Suavizar el heading para evitar saltos bruscos
+          const headingDiff = calculatedHeading - smoothHeading.current;
+          if (Math.abs(headingDiff) > 180) {
+            // Manejo de cruce 0-360
+            if (headingDiff > 0) {
+              smoothHeading.current += (headingDiff - 360) * 0.3;
+            } else {
+              smoothHeading.current += (headingDiff + 360) * 0.3;
+            }
+          } else {
+            smoothHeading.current += headingDiff * 0.3;
+          }
+          
+          // Normalizar smooth heading
+          if (smoothHeading.current < 0) smoothHeading.current += 360;
+          if (smoothHeading.current >= 360) smoothHeading.current -= 360;
+          
+          lastHeadingUpdate.current = now;
+        }
         
         // Acumular distancia recorrida
         if (isVehicleMode) {
@@ -207,12 +245,28 @@ const NavigationMap = ({
       previousLocation.current = { lat: newLocation.lat, lng: newLocation.lng, time: now };
       setUserLocation(newLocation);
       
-      if (position.coords.heading !== null) {
-        setHeading(position.coords.heading);
+      // Usar heading del GPS si está disponible, sino usar el calculado
+      if (position.coords.heading !== null && position.coords.heading >= 0) {
+        const gpsHeading = position.coords.heading;
+        smoothHeading.current = gpsHeading;
+        setHeading(gpsHeading);
+      } else if (calculatedHeading !== heading) {
+        setHeading(smoothHeading.current);
       }
+      
       if (mapRef.current) {
-        // Pan suave en todos los modos
+        // Pan suave y rotar mapa según dirección (modo Google Maps)
         mapRef.current.panTo(newLocation);
+        
+        // Rotar mapa para navegación en vivo solo cuando hay movimiento
+        if (!isPaused && speed > 1) { // Solo rotar si se está moviendo (>1 km/h)
+          mapRef.current.setHeading(smoothHeading.current);
+          mapRef.current.setTilt(45); // Vista 3D para mejor perspectiva
+        } else if (speed <= 1) {
+          // Cuando está quieto, vista normal
+          mapRef.current.setHeading(0);
+          mapRef.current.setTilt(0);
+        }
       }
     }, error => {
       console.error('Geolocation error:', error);
@@ -337,7 +391,9 @@ const NavigationMap = ({
       zoomControl: true,
       streetViewControl: false,
       mapTypeControl: false,
-      fullscreenControl: false
+      fullscreenControl: false,
+      rotateControl: false,
+      gestureHandling: 'greedy'
     }}>
         {/* User location marker with animation */}
         {userLocation && <>
@@ -373,12 +429,12 @@ const NavigationMap = ({
               }} />
                   
                   {directions ?
-              // Navigation arrow when actively navigating
+              // Navigation arrow when actively navigating - siempre apunta arriba ya que el mapa rota
               <svg width="56" height="56" viewBox="0 0 24 24" fill="none" style={{
                 filter: 'drop-shadow(0 8px 20px rgba(34, 197, 94, 0.7))',
                 position: 'relative',
                 zIndex: 10,
-                transform: `rotate(${heading}deg)`,
+                transform: 'rotate(0deg)', // Siempre apunta arriba, el mapa es el que rota
                 transition: 'transform 0.3s ease-out'
               }}>
                       {/* Arrow shadow */}
