@@ -57,8 +57,10 @@ serve(async (req) => {
     const blob = new Blob([bytes], { type: "audio/webm" });
     formData.append("file", blob, "audio.webm");
     formData.append("model", "whisper-1");
-    // Forzar idioma español para mejores resultados
+    // Forzar idioma español y sesgo al dominio inmobiliario
     formData.append("language", "es");
+    formData.append("temperature", "0.2");
+    formData.append("prompt", "Transcribe en español (Colombia). Dominio inmobiliario: apartamento, casa, habitaciones, baños, garaje, estrato, arriendo, venta, presupuesto en millones, cerca del metro, Envigado, Sabaneta, Medellín, Itagüí, Laureles, Poblado.");
 
     const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
       method: "POST",
