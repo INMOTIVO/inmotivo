@@ -23,6 +23,7 @@ const SearchOptions = ({
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [editedQuery, setEditedQuery] = useState(searchQuery);
+  const [isStartingNav, setIsStartingNav] = useState(false);
   
   const handleStartEdit = () => {
     setEditedQuery(searchQuery);
@@ -42,7 +43,12 @@ const SearchOptions = ({
   };
   
   const handleGPSNavigation = () => {
-    navigate(`/navegacion?query=${encodeURIComponent(editedQuery)}&autostart=true`);
+    setIsStartingNav(true);
+    toast.success("Iniciando navegación GPS...", { duration: 2000 });
+    // Small delay to ensure UI feedback is visible before navigation
+    setTimeout(() => {
+      navigate(`/navegacion?query=${encodeURIComponent(editedQuery)}&autostart=true`);
+    }, 100);
   };
   return <div className="w-full max-w-4xl mx-auto space-y-3 md:space-y-4 animate-fade-in px-4">
       <div className="text-center space-y-1">
@@ -86,11 +92,21 @@ const SearchOptions = ({
               <Button 
                 onClick={handleGPSNavigation} 
                 variant="default" 
-                className="w-full bg-gradient-to-br from-accent via-accent to-accent/70 mt-auto shadow-lg hover:shadow-xl transition-all duration-200" 
+                className="w-full bg-gradient-to-br from-accent via-accent to-accent/70 mt-auto shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95" 
                 size="lg"
+                disabled={isStartingNav}
               >
-                <Navigation className="mr-2 h-5 w-5 md:h-6 md:w-6" />
-                Iniciar Navegación
+                {isStartingNav ? (
+                  <>
+                    <div className="mr-2 h-5 w-5 md:h-6 md:w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    Iniciando...
+                  </>
+                ) : (
+                  <>
+                    <Navigation className="mr-2 h-5 w-5 md:h-6 md:w-6" />
+                    Iniciar Navegación
+                  </>
+                )}
               </Button>
             </div>
           </Card>
