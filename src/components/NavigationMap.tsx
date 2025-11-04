@@ -590,22 +590,24 @@ const NavigationMap = ({
 
                 <div className="flex-1 min-w-0">
                   {/* Radio y propiedades */}
-                  <div className="flex items-center gap-4 mb-2">
+                  <div className="bg-background/50 rounded-lg p-3 mb-3 border border-border/50">
                     <div className="flex-1 space-y-1">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">Radio</span>
-                        <span className="font-semibold text-primary">
+                      <div className="flex items-center justify-between text-xs mb-2">
+                        <span className="text-muted-foreground font-medium">Radio de Búsqueda</span>
+                        <span className="font-bold text-primary">
                           {searchRadius >= 1000 ? `${(searchRadius / 1000).toFixed(1)} km` : `${searchRadius} m`}
                         </span>
                       </div>
                       <Slider value={[searchRadius]} onValueChange={value => handleManualRadiusChange(value[0])} min={100} max={1000} step={50} className="w-full" />
                     </div>
-                    
                   </div>
+
+                  {/* Separador visual */}
+                  <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent mb-3" />
 
                   {/* Información de búsqueda */}
                   <div 
-                    className="flex items-center justify-between gap-2 border-2 border-green-500 rounded-lg p-2 cursor-pointer hover:bg-accent/10 transition-colors"
+                    className="flex items-center justify-between gap-2 border-2 border-green-500 rounded-lg p-2.5 cursor-pointer hover:bg-accent/10 transition-colors shadow-sm"
                     onClick={() => {
                       setEditSearchQuery(searchCriteria);
                       setIsEditDialogOpen(true);
