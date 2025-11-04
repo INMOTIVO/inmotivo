@@ -47,7 +47,7 @@ const SearchOptions = ({
       navigate(`/navegacion?query=${encodeURIComponent(editedQuery)}&autostart=true`);
     }, 100);
   };
-  return <div className="w-full max-w-4xl mx-auto space-y-3 md:space-y-4 animate-fade-in px-4">
+  return <div className="w-full max-w-4xl mx-auto space-y-2 md:space-y-3 animate-fade-in px-4">
       <div className="text-center space-y-1">
         <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-50">¿Cómo quieres buscar?</h2>
         <p className="text-sm md:text-lg text-white/90">
