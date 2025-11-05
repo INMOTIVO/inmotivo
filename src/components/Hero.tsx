@@ -269,7 +269,7 @@ const Hero = () => {
         {/* Content */}
         <div className="relative z-10 container mx-auto px-4 py-8 md:py-20">
           <div className="max-w-4xl mx-auto text-center space-y-8">
-            <div className="space-y-4 animate-fade-in">
+            <div className="space-y-4 animate-fade-in -mt-8">
               <h1 className="text-3xl sm:text-4xl md:text-7xl font-bold text-white leading-tight">
                 Encuentra tu <span className="text-primary-glow">lugar ideal</span> de manera <span className="text-accent">inteligente</span>
               </h1>
