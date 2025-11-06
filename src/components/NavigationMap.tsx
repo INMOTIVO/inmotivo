@@ -612,15 +612,17 @@ const NavigationMap = ({
               path: 'M16 0C7.163 0 0 7.163 0 16c0 12 16 24 16 24s16-12 16-24C32 7.163 24.837 0 16 0z',
               fillColor: '#10b981',
               fillOpacity: 1,
-              strokeWeight: 0,
-              scale: 0.8,
+              strokeWeight: 3,
+              strokeColor: '#ffffff',
+              scale: 1.4,
               anchor: new google.maps.Point(16, 40)
             }}
             label={{
               text: `$${Math.round(property.price / 1000000)}M`,
               color: 'white',
-              fontSize: '12px',
-              fontWeight: 'bold'
+              fontSize: '14px',
+              fontWeight: 'bold',
+              className: 'marker-label'
             }}
           />;
         })}
