@@ -1,76 +1,24 @@
-<script>
-/* INMOTIVO – Enhancer de navegación (Lovable, no toca tu UI)
-   Sigue tu posición, calcula/alisado de rumbo, rota mapa 3D y flecha.
-*/
-(function(){
-  const GPS = { prevPos:null, heading:0, follow:true, arrow:null, map:null };
-  const toRad=d=>d*Math.PI/180, toDeg=r=>r*180/Math.PI;
-  function haversine(a,b){const R=6371000,dLat=toRad(b.lat-a.lat),dLng=toRad(b.lng-a.lng),la1=toRad(a.lat),la2=toRad(b.lat),x=Math.sin(dLat/2)**2+Math.cos(la1)*Math.cos(la2)*Math.sin(dLng/2)**2;return 2*R*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));}
-  function bearing(a,b){const φ1=toRad(a.lat),φ2=toRad(b.lat),λ1=toRad(a.lng),λ2=toRad(b.lng),y=Math.sin(λ2-λ1)*Math.cos(φ2),x=Math.cos(φ1)*Math.sin(φ2)-Math.sin(φ1)*Math.cos(φ2)*Math.cos(λ2-λ1);return (toDeg(Math.atan2(y,x))+360)%360;}
-  function smooth(prev,next){let d=((next-prev+540)%360)-180;const α=0.25;return (prev+α*d+360)%360;}
+import { useNavigate } from "react-router-dom";
+import Navbar from "@/components/Navbar";
+import Hero from "@/components/Hero";
+import HowItWorksVideo from "@/components/HowItWorksVideo";
+import PropertiesGrid from "@/components/PropertiesGrid";
+import CTASection from "@/components/CTASection";
+import Footer from "@/components/Footer";
+import { usePageView } from "@/hooks/usePageView";
 
-  function startHeadingSensorIOS(){
-    const isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent);
-    if(!isIOS||!window.DeviceOrientationEvent)return;
-    const req=window.DeviceOrientationEvent.requestPermission;
-    const enable=()=>window.addEventListener('deviceorientation',(ev)=>{
-      const h=(ev.webkitCompassHeading??(360-ev.alpha))%360;
-      if(Number.isFinite(h)) GPS.heading=smooth(GPS.heading,h);
-    },true);
-    if(typeof req==='function'){
-      const trigger=document.querySelector('#btn-start-nav')||document.body;
-      trigger.addEventListener('click',async function once(){try{const ok=await req();if(ok==='granted') enable();}catch(e){} trigger.removeEventListener('click',once);},{once:true});
-    }else enable();
-  }
-
-  function onPos({coords}){
-    if(!GPS.map) return;
-    const cur={lat:coords.latitude,lng:coords.longitude};
-    let raw=Number.isFinite(coords.heading)?coords.heading:GPS.heading;
-    if(!GPS.prevPos) GPS.prevPos=cur;
-    if(!Number.isFinite(raw)||haversine(GPS.prevPos,cur)>6){
-      raw=bearing(GPS.prevPos,cur); GPS.prevPos=cur;
-    }
-    GPS.heading=smooth(GPS.heading,raw);
-
-    // Rota mapa; si lo ves invertido, cambia a la línea comentada (🧭)
-    GPS.map.setHeading(GPS.heading);
-    // GPS.map.setHeading((GPS.heading+180)%360); // 🧭 invertir
-
-    if(GPS.arrow){ GPS.arrow.position=cur; GPS.arrow.content.style.transform=`rotate(${GPS.heading}deg)`; }
-
-    const c=GPS.map.getCenter(); const d=haversine({lat:c.lat(),lng:c.lng()},cur);
-    if(GPS.follow && d>55){ GPS.map.panTo(cur); }
-  }
-
-  function startWatching(){
-    if(!navigator.geolocation) return console.warn('Geolocalización no disponible');
-    navigator.geolocation.watchPosition(onPos,console.warn,{enableHighAccuracy:true,maximumAge:2000,timeout:8000});
-  }
-
-  function setupArrow(map){
-    const wrap=document.createElement('div');
-    wrap.innerHTML=`<div style="width:48px;height:48px;border-radius:24px;background:#3AA86622;display:grid;place-items:center;">
-      <svg viewBox="0 0 24 24" width="28" height="28" style="fill:#fff;filter:drop-shadow(0 1px 1px rgba(0,0,0,.25))">
-        <path d="M12 2l6 12-6-3-6 3z"/></svg></div>`;
-    const AM=google.maps.marker?.AdvancedMarkerElement;
-    if(!AM){ console.warn('Falta libraries=marker en el script de Google Maps'); return null; }
-    return new AM({ map, position: map.getCenter(), content: wrap });
-  }
-
-  // Llamable por si tienes acceso al objeto map
-  window.attachNavEnhancer=function(map){
-    GPS.map=map; map.setTilt(67.5);
-    GPS.arrow=setupArrow(map); startHeadingSensorIOS(); startWatching();
-    console.info('INMOTIVO nav enhancer activo');
-  };
-
-  // Auto-detectar el mapa si no puedes llamar a attachNavEnhancer()
-  const poll=setInterval(()=>{
-    if(!window.google?.maps) return;
-    const m = window.map || window.__inmotivoMap || (document.querySelector('#map')?null:null);
-    // Si tu app expone el mapa en window.map/.__inmotivoMap lo toma aquí.
-    if(m && typeof m.getCenter==='function'){ clearInterval(poll); window.attachNavEnhancer(m); }
-  },500);
-})();
-</script>
+const Index = () => {
+  usePageView();
+  
+  return <div className="min-h-screen">
+      <Navbar />
+      <main className="pt-16">
+        <Hero />
+        <HowItWorksVideo />
+        <PropertiesGrid />
+        <CTASection />
+      </main>
+      <Footer className="px-0 py-px" />
+    </div>;
+};
+export default Index;
