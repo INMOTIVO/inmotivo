@@ -6,14 +6,12 @@ import MapView from '@/components/MapView';
 import MapFilters from '@/components/MapFilters';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import { usePageView } from '@/hooks/usePageView';
 
 const MapSearch = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const typeParam = searchParams.get('type');
   const queryParam = searchParams.get('query');
-  usePageView();
   
   const [filters, setFilters] = useState<{
     radius: number;

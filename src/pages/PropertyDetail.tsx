@@ -11,7 +11,6 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ContactDialog from "@/components/ContactDialog";
 import { useAuth } from "@/hooks/useAuth";
-import { usePageView } from "@/hooks/usePageView";
 import { toast } from "sonner";
 
 const PropertyDetail = () => {
@@ -21,7 +20,6 @@ const PropertyDetail = () => {
   const queryClient = useQueryClient();
   const [showContactDialog, setShowContactDialog] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
-  usePageView();
 
   const { data: property, isLoading } = useQuery({
     queryKey: ["property", id],

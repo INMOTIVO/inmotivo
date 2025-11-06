@@ -5,11 +5,7 @@ import HowItWorksVideo from "@/components/HowItWorksVideo";
 import PropertiesGrid from "@/components/PropertiesGrid";
 import CTASection from "@/components/CTASection";
 import Footer from "@/components/Footer";
-import { usePageView } from "@/hooks/usePageView";
-
 const Index = () => {
-  usePageView();
-  
   return <div className="min-h-screen">
       <Navbar />
       <main className="pt-16">

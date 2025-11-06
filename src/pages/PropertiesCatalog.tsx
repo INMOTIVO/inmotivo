@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { toast } from 'sonner';
-import { usePageView } from '@/hooks/usePageView';
 
 const PropertiesCatalog = () => {
   const [searchParams] = useSearchParams();
@@ -17,7 +16,6 @@ const PropertiesCatalog = () => {
   const queryParam = searchParams.get('query');
   const [filters, setFilters] = useState<any>({});
   const [isLoadingFilters, setIsLoadingFilters] = useState(true);
-  usePageView();
 
   // Interpret search query to get filters
   useEffect(() => {
