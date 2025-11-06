@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Search, MapPin, Loader2, ArrowLeft } from "lucide-react";
+import { Search, MapPin, Loader2, ArrowLeft, Check, ChevronsUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import heroImage from "@/assets/hero-medellin.jpg";
 import { toast } from "sonner";
 import SearchOptions from './SearchOptions';
@@ -14,6 +15,7 @@ import { useVoiceRecording } from "@/hooks/useVoiceRecording";
 import { useInterpretSearch } from "@/hooks/useInterpretSearch";
 import VoiceButton from './VoiceButton';
 import { getDepartments, getMunicipalitiesByDepartment, getNeighborhoodsByMunicipality } from '@/data/colombiaLocations';
+import { cn } from "@/lib/utils";
 
 const Hero = () => {
   const navigate = useNavigate();
@@ -32,6 +34,9 @@ const Hero = () => {
   const [customNeighborhood, setCustomNeighborhood] = useState("");
   const [availableMunicipalities, setAvailableMunicipalities] = useState<string[]>([]);
   const [availableNeighborhoods, setAvailableNeighborhoods] = useState<string[]>([]);
+  const [openDept, setOpenDept] = useState(false);
+  const [openMuni, setOpenMuni] = useState(false);
+  const [openNeigh, setOpenNeigh] = useState(false);
   const isMobile = useIsMobile();
   const { interpretSearch, isProcessing: isInterpretingSearch } = useInterpretSearch();
   const {
@@ -361,48 +366,143 @@ const Hero = () => {
                   <label className="text-sm font-medium">
                     Departamento <span className="text-destructive">*</span>
                   </label>
-                  <Select value={customDepartment} onValueChange={handleDepartmentChange}>
-                    <SelectTrigger className="w-full bg-background">
-                      <SelectValue placeholder="Selecciona un departamento" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background z-50">
-                      {getDepartments().map(dept => (
-                        <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover open={openDept} onOpenChange={setOpenDept}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={openDept}
+                        className="w-full justify-between bg-background"
+                      >
+                        {customDepartment || "Selecciona un departamento"}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0 bg-popover" align="start">
+                      <Command>
+                        <CommandInput placeholder="Buscar departamento..." />
+                        <CommandList>
+                          <CommandEmpty>No se encontró departamento.</CommandEmpty>
+                          <CommandGroup>
+                            {getDepartments().map((dept) => (
+                              <CommandItem
+                                key={dept}
+                                value={dept}
+                                onSelect={(value) => {
+                                  handleDepartmentChange(value);
+                                  setOpenDept(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    customDepartment === dept ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                {dept}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium">
                     Municipio <span className="text-destructive">*</span>
                   </label>
-                  <Select value={customMunicipality} onValueChange={handleMunicipalityChange} disabled={!customDepartment}>
-                    <SelectTrigger className="w-full bg-background">
-                      <SelectValue placeholder={customDepartment ? "Selecciona un municipio" : "Primero selecciona un departamento"} />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background z-50">
-                      {availableMunicipalities.map(muni => (
-                        <SelectItem key={muni} value={muni}>{muni}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover open={openMuni} onOpenChange={setOpenMuni}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={openMuni}
+                        disabled={!customDepartment}
+                        className="w-full justify-between bg-background"
+                      >
+                        {customMunicipality || (customDepartment ? "Selecciona un municipio" : "Primero selecciona un departamento")}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0 bg-popover" align="start">
+                      <Command>
+                        <CommandInput placeholder="Buscar municipio..." />
+                        <CommandList>
+                          <CommandEmpty>No se encontró municipio.</CommandEmpty>
+                          <CommandGroup>
+                            {availableMunicipalities.map((muni) => (
+                              <CommandItem
+                                key={muni}
+                                value={muni}
+                                onSelect={(value) => {
+                                  handleMunicipalityChange(value);
+                                  setOpenMuni(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    customMunicipality === muni ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                {muni}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium">
                     Localidad o Barrio <span className="text-muted-foreground text-xs">(opcional)</span>
                   </label>
-                  <Select value={customNeighborhood} onValueChange={setCustomNeighborhood} disabled={!customMunicipality}>
-                    <SelectTrigger className="w-full bg-background">
-                      <SelectValue placeholder={customMunicipality ? "Selecciona un barrio (opcional)" : "Primero selecciona un municipio"} />
-                    </SelectTrigger>
-                    <SelectContent className="bg-background z-50">
-                      {availableNeighborhoods.map(neighborhood => (
-                        <SelectItem key={neighborhood} value={neighborhood}>{neighborhood}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover open={openNeigh} onOpenChange={setOpenNeigh}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={openNeigh}
+                        disabled={!customMunicipality}
+                        className="w-full justify-between bg-background"
+                      >
+                        {customNeighborhood || (customMunicipality ? "Selecciona un barrio (opcional)" : "Primero selecciona un municipio")}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0 bg-popover" align="start">
+                      <Command>
+                        <CommandInput placeholder="Buscar barrio..." />
+                        <CommandList>
+                          <CommandEmpty>No se encontró barrio.</CommandEmpty>
+                          <CommandGroup>
+                            {availableNeighborhoods.map((neighborhood) => (
+                              <CommandItem
+                                key={neighborhood}
+                                value={neighborhood}
+                                onSelect={(value) => {
+                                  setCustomNeighborhood(value);
+                                  setOpenNeigh(false);
+                                }}
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    customNeighborhood === neighborhood ? "opacity-100" : "opacity-0"
+                                  )}
+                                />
+                                {neighborhood}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
                 <Button onClick={handleUseCustomLocation} variant="outline" className="w-full">
