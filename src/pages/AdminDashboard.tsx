@@ -73,6 +73,12 @@ const AdminDashboard = () => {
     }
   }, [user, isAdmin]);
 
+  useEffect(() => {
+    if (user && isAdmin && !showPropertiesView) {
+      fetchDashboardData();
+    }
+  }, [showPropertiesView, user, isAdmin]);
+
   const fetchDashboardData = async () => {
     try {
       // Obtener estadísticas de propiedades
