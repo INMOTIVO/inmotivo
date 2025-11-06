@@ -189,10 +189,13 @@ const NavigationMap = ({
         
         // Solo calcular nuevo heading si hay movimiento significativo
         if (Math.abs(dLat) > 0.00001 || Math.abs(dLng) > 0.00001) {
-          // Calcular ángulo en radianes y convertir a grados
+          // Calcular bearing (rumbo) desde el punto anterior al nuevo
+          // Norte = 0°, Este = 90°, Sur = 180°, Oeste = 270°
           let angle = Math.atan2(dLng, dLat) * 180 / Math.PI;
           
-          // Normalizar a 0-360
+          // Convertir de ángulo matemático a bearing geográfico
+          // y normalizar a 0-360
+          angle = (90 - angle) % 360;
           if (angle < 0) angle += 360;
           
           calculatedHeading = angle;
