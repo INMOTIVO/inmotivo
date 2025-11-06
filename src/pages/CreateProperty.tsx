@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,6 +13,8 @@ import Navbar from '@/components/Navbar';
 import { Upload, X, Loader2, MapPin, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { useGoogleMapsPlaces } from '@/hooks/useGoogleMapsPlaces';
+import { useJsApiLoader } from '@react-google-maps/api';
 
 const propertySchema = z.object({
   title: z.string().min(5, 'Mínimo 5 caracteres').max(100, 'Máximo 100 caracteres'),
@@ -40,6 +42,72 @@ const CreateProperty = () => {
   const [loadingCoordinates, setLoadingCoordinates] = useState(false);
   const [images, setImages] = useState<string[]>([]);
   const [errors, setErrors] = useState<Partial<Record<keyof PropertyFormData, string>>>({});
+  const addressInputRef = useRef<HTMLInputElement>(null);
+
+  const { isLoaded } = useJsApiLoader({
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
+    libraries: ['places'],
+  });
+
+  const handlePlaceSelected = (place: google.maps.places.PlaceResult) => {
+    if (!place.geometry?.location) return;
+
+    const lat = place.geometry.location.lat();
+    const lng = place.geometry.location.lng();
+
+    let city = '';
+    let neighborhood = '';
+    let address = '';
+
+    // Extraer componentes de la dirección
+    place.address_components?.forEach((component) => {
+      const types = component.types;
+      
+      if (types.includes('locality')) {
+        city = component.long_name;
+      } else if (types.includes('administrative_area_level_2') && !city) {
+        city = component.long_name;
+      }
+      
+      if (types.includes('sublocality') || types.includes('sublocality_level_1')) {
+        neighborhood = component.long_name;
+      } else if (types.includes('neighborhood') && !neighborhood) {
+        neighborhood = component.long_name;
+      }
+      
+      if (types.includes('route')) {
+        address = component.long_name;
+      } else if (types.includes('street_address') && !address) {
+        address = component.long_name;
+      }
+    });
+
+    // Si no encontramos dirección específica, usar la dirección formateada
+    if (!address && place.formatted_address) {
+      address = place.formatted_address.split(',')[0];
+    }
+
+    // Actualizar todos los campos
+    setFormData({
+      ...formData,
+      address: address || formData.address,
+      city: city || formData.city,
+      neighborhood: neighborhood || formData.neighborhood,
+      latitude: lat,
+      longitude: lng,
+    });
+
+    toast.success('Dirección autocompletada correctamente');
+  };
+
+  useGoogleMapsPlaces({
+    inputRef: addressInputRef,
+    onPlaceSelected: handlePlaceSelected,
+    options: {
+      componentRestrictions: { country: 'co' },
+      fields: ['address_components', 'geometry', 'formatted_address'],
+    },
+  });
 
   const [formData, setFormData] = useState<PropertyFormData>({
     title: '',
@@ -450,13 +518,25 @@ const CreateProperty = () => {
               <div>
                 <Label htmlFor="address">Dirección completa *</Label>
                 <Input
+                  ref={addressInputRef}
                   id="address"
                   value={formData.address}
                   onChange={(e) =>
                     setFormData({ ...formData, address: e.target.value })
                   }
-                  placeholder="Carrera 43A #10-15"
+                  placeholder="Empieza a escribir la dirección..."
+                  disabled={!isLoaded}
                 />
+                {!isLoaded && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Cargando autocompletado...
+                  </p>
+                )}
+                {isLoaded && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Escribe para buscar direcciones exactas con Google Maps
+                  </p>
+                )}
                 {errors.address && (
                   <p className="text-sm text-destructive mt-1">{errors.address}</p>
                 )}
