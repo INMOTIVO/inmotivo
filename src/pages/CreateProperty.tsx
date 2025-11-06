@@ -65,7 +65,7 @@ const CreateProperty = () => {
 
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
-    libraries: ['places'],
+    libraries: ['maps', 'places'],
   });
 
   const handlePlaceSelected = useCallback((place: google.maps.places.PlaceResult) => {
