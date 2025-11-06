@@ -5,8 +5,12 @@ import videoThumbnail from "@/assets/inmotivo-hero-video.jpg";
 import demoVideo from "@/assets/inmotivo.mov";
 
 const HowItWorksVideo = () => {
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(true); // Auto-play
   const [flippedCards, setFlippedCards] = useState([false, false, false]);
+  const [hasPlayedWithSound, setHasPlayedWithSound] = useState(() => {
+    // Verificar si ya se reprodujo con sonido antes
+    return localStorage.getItem('inmotivo_video_played') === 'true';
+  });
 
   const handlePlayVideo = () => {
     setIsPlaying(true);
@@ -17,6 +21,31 @@ const HowItWorksVideo = () => {
       });
     }
   };
+
+  // Auto-reproducir video al montar el componente
+  useEffect(() => {
+    const videoElement = document.querySelector('video');
+    if (videoElement) {
+      // Si no ha sido reproducido con sonido antes, no mutear
+      if (!hasPlayedWithSound) {
+        videoElement.muted = false;
+        // Marcar como reproducido después de que empiece
+        videoElement.addEventListener('play', () => {
+          localStorage.setItem('inmotivo_video_played', 'true');
+          setHasPlayedWithSound(true);
+        }, { once: true });
+      } else {
+        videoElement.muted = true;
+      }
+      
+      videoElement.play().catch(error => {
+        console.error('Error auto-playing video:', error);
+        // Si falla el autoplay, intentar con muted
+        videoElement.muted = true;
+        videoElement.play();
+      });
+    }
+  }, [hasPlayedWithSound]);
 
   useEffect(() => {
     const flipCard = (index: number) => {
@@ -55,45 +84,24 @@ const HowItWorksVideo = () => {
           {/* Video Container */}
           <div className="relative rounded-2xl overflow-hidden shadow-2xl mb-6 group animate-scale-in">
             <div className="aspect-video bg-gradient-to-br from-primary/20 to-accent/20 relative">
-              {/* Video Thumbnail */}
-              <img 
-                src={videoThumbnail} 
-                alt="Cómo funciona INMOTIVO" 
-                className="w-full h-full object-cover"
-              />
-              
-              {/* Play Button Overlay */}
-              {!isPlaying && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/50 transition-all duration-300">
-                  <Button
-                    size="lg"
-                    onClick={handlePlayVideo}
-                    className="h-20 w-20 md:h-24 md:w-24 rounded-full bg-white hover:bg-white/90 text-primary hover:scale-110 transition-all duration-300 shadow-2xl"
-                  >
-                    <Play className="h-10 w-10 md:h-12 md:w-12 ml-1" fill="currentColor" />
-                  </Button>
-                </div>
-              )}
-              
-              {/* Video Player */}
-              {isPlaying && (
-                <div className="absolute inset-0 bg-black">
-                  <video
-                    className="w-full h-full object-cover"
-                    autoPlay
-                    controls
-                    playsInline
-                    loop
-                    preload="auto"
-                    onError={(e) => {
-                      console.error('Video error:', e);
-                    }}
-                  >
-                    <source src={demoVideo} type="video/mp4" />
-                    Tu navegador no soporta el elemento de video.
-                  </video>
-                </div>
-              )}
+              {/* Video Player - Always visible for auto-play */}
+              <div className="absolute inset-0 bg-black">
+                <video
+                  className="w-full h-full object-cover"
+                  autoPlay
+                  controls
+                  playsInline
+                  loop
+                  preload="auto"
+                  muted={hasPlayedWithSound}
+                  onError={(e) => {
+                    console.error('Video error:', e);
+                  }}
+                >
+                  <source src={demoVideo} type="video/mp4" />
+                  Tu navegador no soporta el elemento de video.
+                </video>
+              </div>
             </div>
           </div>
 
