@@ -690,8 +690,8 @@ const NavigationMap = ({
               <!-- Círculo interior blanco para el icono -->
               <circle cx="16" cy="14" r="10" fill="white" opacity="0.98"/>
               
-              <!-- Icono del tipo de propiedad -->
-              <g transform="translate(4, 2) scale(0.75)">
+              <!-- Icono del tipo de propiedad más pequeño -->
+              <g transform="translate(7, 5) scale(0.5)">
                 ${iconSVG}
               </g>
               
