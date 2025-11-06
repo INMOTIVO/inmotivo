@@ -10,7 +10,8 @@ import { usePageView } from "@/hooks/usePageView";
 const Index = () => {
   usePageView();
   
-  return <div className="min-h-screen">
+  return (
+    <div className="min-h-screen">
       <Navbar />
       <main className="pt-16">
         <Hero />
@@ -19,6 +20,8 @@ const Index = () => {
         <CTASection />
       </main>
       <Footer className="px-0 py-px" />
-    </div>;
+    </div>
+  );
 };
+
 export default Index;
