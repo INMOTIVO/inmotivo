@@ -458,7 +458,6 @@ const NavigationMap = ({
       replace: true
     });
     setIsEditDialogOpen(false);
-    toast.success("Búsqueda actualizada");
   };
   if (!isLoaded) {
     return <div className="w-full h-full flex items-center justify-center">Cargando mapa...</div>;

@@ -33,6 +33,44 @@ const Navigate = () => {
     }
   }, [autoStart, initialQuery]);
 
+  // Listen for query changes and re-interpret search while navigating
+  useEffect(() => {
+    const currentQuery = searchParams.get('query') || '';
+    
+    // Only re-interpret if navigating and query changed
+    if (isNavigating && currentQuery && currentQuery !== searchCriteria) {
+      const reinterpretSearch = async () => {
+        try {
+          const { data, error } = await supabase.functions.invoke('interpret-search', {
+            body: { query: currentQuery }
+          });
+
+          if (error) {
+            console.error('Error re-interpreting search:', error);
+            return;
+          }
+
+          if (data?.error === 'invalid_query') {
+            toast.error(data.message || 'Por favor describe mejor qué buscas');
+            return;
+          }
+
+          const interpretedFilters = data?.filters || {};
+          
+          // Update filters and search criteria
+          setSearchCriteria(currentQuery);
+          setFilters(interpretedFilters);
+          toast.success('Búsqueda actualizada');
+        } catch (error) {
+          console.error('Error:', error);
+          toast.error('Error al actualizar la búsqueda');
+        }
+      };
+
+      reinterpretSearch();
+    }
+  }, [searchParams, isNavigating]);
+
   const startAutoNavigation = async () => {
     try {
       // Get user's current location
