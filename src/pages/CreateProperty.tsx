@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -44,12 +44,31 @@ const CreateProperty = () => {
   const [errors, setErrors] = useState<Partial<Record<keyof PropertyFormData, string>>>({});
   const addressInputRef = useRef<HTMLInputElement>(null);
 
+  const [formData, setFormData] = useState<PropertyFormData>({
+    title: '',
+    description: '',
+    property_type: '',
+    price: 0,
+    address: '',
+    city: 'Medellín',
+    neighborhood: '',
+    bedrooms: 0,
+    bathrooms: 0,
+    area_m2: 0,
+    latitude: 6.2442,
+    longitude: -75.5812,
+  });
+
+  const [amenities, setAmenities] = useState<string[]>([]);
+  const [furnished, setFurnished] = useState(false);
+  const [petsAllowed, setPetsAllowed] = useState(false);
+
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
     libraries: ['places'],
   });
 
-  const handlePlaceSelected = (place: google.maps.places.PlaceResult) => {
+  const handlePlaceSelected = useCallback((place: google.maps.places.PlaceResult) => {
     if (!place.geometry?.location) return;
 
     const lat = place.geometry.location.lat();
@@ -87,18 +106,18 @@ const CreateProperty = () => {
       address = place.formatted_address.split(',')[0];
     }
 
-    // Actualizar todos los campos
-    setFormData({
-      ...formData,
-      address: address || formData.address,
-      city: city || formData.city,
-      neighborhood: neighborhood || formData.neighborhood,
+    // Actualizar todos los campos usando functional update para evitar dependencia
+    setFormData(prev => ({
+      ...prev,
+      address: address || prev.address,
+      city: city || prev.city,
+      neighborhood: neighborhood || prev.neighborhood,
       latitude: lat,
       longitude: lng,
-    });
+    }));
 
     toast.success('Dirección autocompletada correctamente');
-  };
+  }, []);
 
   useGoogleMapsPlaces({
     inputRef: addressInputRef,
@@ -109,24 +128,6 @@ const CreateProperty = () => {
     },
   });
 
-  const [formData, setFormData] = useState<PropertyFormData>({
-    title: '',
-    description: '',
-    property_type: '',
-    price: 0,
-    address: '',
-    city: 'Medellín',
-    neighborhood: '',
-    bedrooms: 0,
-    bathrooms: 0,
-    area_m2: 0,
-    latitude: 6.2442,
-    longitude: -75.5812,
-  });
-
-  const [amenities, setAmenities] = useState<string[]>([]);
-  const [furnished, setFurnished] = useState(false);
-  const [petsAllowed, setPetsAllowed] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {

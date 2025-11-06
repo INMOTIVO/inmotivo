@@ -14,7 +14,7 @@ export const useGoogleMapsPlaces = ({
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
   useEffect(() => {
-    if (!inputRef.current || !window.google) return;
+    if (!inputRef.current || !window.google?.maps?.places) return;
 
     // Initialize Autocomplete
     autocompleteRef.current = new google.maps.places.Autocomplete(
