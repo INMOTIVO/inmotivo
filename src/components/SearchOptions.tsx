@@ -57,8 +57,8 @@ const SearchOptions = ({
 
       <div className={`grid ${disableGPSNavigation ? 'md:grid-cols-1 max-w-md mx-auto' : 'md:grid-cols-2'} gap-3 md:gap-5`}>
         {/* Navegación GPS */}
-        {!disableGPSNavigation && <Card className="p-4 md:p-8 hover:shadow-xl transition-all duration-300 hover:border-primary/50 cursor-pointer group border-primary/30">
-            <div className="flex flex-col h-full space-y-3 md:space-y-5">
+        {!disableGPSNavigation && <Card onClick={handleGPSNavigation} className="p-4 md:p-8 hover:shadow-xl transition-all duration-300 hover:border-primary/50 cursor-pointer group border-primary/30">
+            <div className="flex flex-col h-full space-y-3 md:space-y-5 pointer-events-none">
               <div className="inline-flex p-3 md:p-4 rounded-2xl bg-accent/10 text-accent group-hover:scale-110 transition-transform duration-300">
                 <Navigation className="h-8 w-8 md:h-10 md:w-10" />
               </div>
@@ -85,7 +85,7 @@ const SearchOptions = ({
                 </li>
               </ul>
 
-              <Button onClick={handleGPSNavigation} variant="default" className="w-full bg-gradient-to-br from-accent via-accent to-accent/70 mt-auto shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95" size="lg" disabled={isStartingNav}>
+              <Button variant="default" className="w-full bg-gradient-to-br from-accent via-accent to-accent/70 mt-auto shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 pointer-events-auto" size="lg" disabled={isStartingNav}>
                 {isStartingNav ? <>
                     <div className="mr-2 h-5 w-5 md:h-6 md:w-6 animate-spin rounded-full border-2 border-white border-t-transparent" />
                     Iniciando...
