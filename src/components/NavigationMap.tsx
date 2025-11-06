@@ -663,8 +663,7 @@ const NavigationMap = ({
         {!isPaused && properties?.map(property => {
           if (!property.latitude || !property.longitude) return null;
           
-          // Crear SVG con icono personalizado
-          const iconSVG = getPropertyIconSVG(property.property_type);
+          // Crear SVG con círculo verde titilante
           const svgMarker = `
             <svg width="56" height="72" viewBox="0 0 32 48" xmlns="http://www.w3.org/2000/svg">
               <!-- Sombra del pin -->
@@ -687,13 +686,20 @@ const NavigationMap = ({
                     stroke-width="2.5"
                     filter="url(#shadow)"/>
               
-              <!-- Círculo interior blanco para el icono -->
-              <circle cx="16" cy="14" r="10" fill="white" opacity="0.98"/>
+              <!-- Círculo interior blanco -->
+              <circle cx="16" cy="14" r="9" fill="white" opacity="0.98"/>
               
-              <!-- Icono del tipo de propiedad más pequeño -->
-              <g transform="translate(7, 5) scale(0.5)">
-                ${iconSVG}
-              </g>
+              <!-- Círculo verde que titila -->
+              <circle cx="16" cy="14" r="5" fill="#22c55e">
+                <animate attributeName="r" values="5;7;5" dur="1.5s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" values="1;0.6;1" dur="1.5s" repeatCount="indefinite"/>
+              </circle>
+              
+              <!-- Anillo exterior del círculo titilante -->
+              <circle cx="16" cy="14" r="5" fill="none" stroke="#22c55e" stroke-width="1.5">
+                <animate attributeName="r" values="5;8;5" dur="1.5s" repeatCount="indefinite"/>
+                <animate attributeName="opacity" values="0.8;0;0.8" dur="1.5s" repeatCount="indefinite"/>
+              </circle>
               
               <!-- Etiqueta de precio con sombra -->
               <rect x="2" y="27" width="28" height="13" rx="6.5" 
