@@ -8,7 +8,7 @@ interface DrivingModeOverlayProps {
 
 export const DrivingModeOverlay = ({ speed, propertiesCount }: DrivingModeOverlayProps) => {
   return (
-    <div className="absolute inset-0 z-50 bg-background/95 backdrop-blur-sm flex flex-col items-center justify-center">
+    <div className="absolute inset-0 z-[10001] bg-background/95 backdrop-blur-sm flex flex-col items-center justify-center pointer-events-auto">
       {/* Ícono de carro animado */}
       <div className="relative mb-8">
         {/* Círculo pulsante de fondo */}
