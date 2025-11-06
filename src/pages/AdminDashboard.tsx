@@ -75,6 +75,8 @@ const AdminDashboard = () => {
   useEffect(() => {
     if (!user || !isAdmin) return;
 
+    console.log('🔴 Configurando suscripción en tiempo real para propiedades');
+    
     const channel = supabase
       .channel('properties-changes')
       .on(
@@ -84,14 +86,18 @@ const AdminDashboard = () => {
           schema: 'public',
           table: 'properties'
         },
-        () => {
+        (payload) => {
+          console.log('🟢 Cambio detectado en propiedades:', payload);
           // Refetch datos cuando hay cambios en propiedades
           fetchDashboardData();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 Estado de suscripción:', status);
+      });
 
     return () => {
+      console.log('🔴 Cerrando suscripción en tiempo real');
       supabase.removeChannel(channel);
     };
   }, [user, isAdmin]);
