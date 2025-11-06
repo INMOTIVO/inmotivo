@@ -12,43 +12,83 @@ export const colombiaLocations: Location[] = [
     municipalities: [
       {
         name: "Medellín",
-        neighborhoods: ["El Poblado", "Laureles", "Envigado Centro", "Belén", "Buenos Aires", "La Candelaria", "Robledo", "Estadio", "Aranjuez", "La América", "Manrique", "Santa Cruz", "Castilla", "Villa Hermosa", "Guayabal"]
+        neighborhoods: ["El Poblado", "Laureles", "Envigado Centro", "Belén", "Buenos Aires", "La Candelaria", "Robledo", "Estadio", "Aranjuez", "La América", "Manrique", "Santa Cruz", "Castilla", "Villa Hermosa", "Guayabal", "San Javier", "Popular", "Santo Domingo Savio", "Doce de Octubre", "San Antonio de Prado", "Santa Elena", "Altavista", "Córdoba", "San Cristóbal", "Campo Valdés", "Prado Centro", "Jesús Nazareno", "El Chagualo"]
       },
       {
         name: "Envigado",
-        neighborhoods: ["Envigado Centro", "La Paz", "Alcalá", "Otra Parte", "Zuniga", "Loma del Escobero", "Mesa"]
+        neighborhoods: ["Envigado Centro", "La Paz", "Alcalá", "Otra Parte", "Zuniga", "Loma del Escobero", "Mesa", "La Magnolia", "Las Antillas", "Jardines", "San Marcos", "Señorial", "Sebastián de Belalcázar"]
       },
       {
         name: "Sabaneta",
-        neighborhoods: ["Centro", "Cañaveralejo", "San José", "Las Casitas", "Holanda", "María Auxiliadora"]
+        neighborhoods: ["Centro", "Cañaveralejo", "San José", "Las Casitas", "Holanda", "María Auxiliadora", "San Joaquín", "Promesa de Dios", "Entreamigos", "La Florida"]
       },
       {
         name: "La Estrella",
-        neighborhoods: ["Centro", "La Tablaza", "Pueblo Viejo", "San José", "Ancón"]
+        neighborhoods: ["Centro", "La Tablaza", "Pueblo Viejo", "San José", "Ancón", "La Inmaculada", "La Ferrería", "Aranjuez"]
       },
       {
         name: "Itagüí",
-        neighborhoods: ["Centro", "San Pío", "Santa María", "Ditaires", "Suramérica", "Olivares", "Fátima", "Tablaza"]
+        neighborhoods: ["Centro", "San Pío", "Santa María", "Ditaires", "Suramérica", "Olivares", "Fátima", "Tablaza", "Calatrava", "Simón Bolívar", "Los Gómez", "Rosalía", "Santa Rita"]
       },
       {
         name: "Bello",
-        neighborhoods: ["Niquía", "Fontidueño", "La Madera", "Cabañas", "Suárez", "París", "Guadalupe", "Acevedo"]
+        neighborhoods: ["Niquía", "Fontidueño", "La Madera", "Cabañas", "Suárez", "París", "Guadalupe", "Acevedo", "Niquia", "Santa Ana", "La Cumbre", "Bellavista", "Manchester", "Pachelly"]
       },
       {
         name: "Rionegro",
-        neighborhoods: ["Centro", "Llanogrande", "San Antonio de Pereira", "La Convención", "Barro Blanco", "Porvenir"]
+        neighborhoods: ["Centro", "Llanogrande", "San Antonio de Pereira", "La Convención", "Barro Blanco", "Porvenir", "El Tablazo", "El Carmelo", "Capiro", "Santa Bárbara", "San Nicolás", "La Mosca"]
       },
       {
         name: "Caldas",
-        neighborhoods: ["Centro", "La Chinca", "La Quiebra", "La Salada", "La Valeria"]
+        neighborhoods: ["Centro", "La Chinca", "La Quiebra", "La Salada", "La Valeria", "La Miel", "La Clara", "Pueblo Viejo", "El Raizal"]
       },
       {
         name: "Copacabana",
-        neighborhoods: ["Centro", "La Paz", "Niquia", "La Veta", "Calle del Banco"]
+        neighborhoods: ["Centro", "La Paz", "Niquia", "La Veta", "Calle del Banco", "La Loma", "La Mota", "Restrepo Naranjo", "La Manguala"]
       },
       {
         name: "Marinilla",
-        neighborhoods: ["Centro", "Santa Elena", "La Mesa", "San Lorenzo"]
+        neighborhoods: ["Centro", "Santa Elena", "La Mesa", "San Lorenzo", "El Peñol", "La Cimarronas", "El Salado"]
+      },
+      {
+        name: "Apartadó",
+        neighborhoods: ["Centro", "El Reposo", "Popular", "Pablo VI", "La Chinita", "Nueva Esperanza", "Villa Estadio"]
+      },
+      {
+        name: "Turbo",
+        neighborhoods: ["Centro", "El Poblado", "Veranillo", "Los Córdobas", "Pueblo Nuevo", "La Lucila"]
+      },
+      {
+        name: "Carmen de Viboral",
+        neighborhoods: ["Centro", "La Chapa", "El Totumo", "La Milagrosa", "El Poblado"]
+      },
+      {
+        name: "La Ceja",
+        neighborhoods: ["Centro", "San Luis", "La Inmaculada", "El Capiro", "El Alto de Las Flores"]
+      },
+      {
+        name: "Caucasia",
+        neighborhoods: ["Centro", "Bolívar", "Cristo Rey", "La Paz", "Villa Nueva", "El Jardín"]
+      },
+      {
+        name: "Santa Rosa de Osos",
+        neighborhoods: ["Centro", "La Candelaria", "San Isidro", "Buenos Aires", "El Roble"]
+      },
+      {
+        name: "Guarne",
+        neighborhoods: ["Centro", "San José", "Chaparral", "La Mosca", "El Tambo"]
+      },
+      {
+        name: "San Pedro de los Milagros",
+        neighborhoods: ["Centro", "La Cumbre", "San Antonio", "Alto de Sabanas"]
+      },
+      {
+        name: "Yarumal",
+        neighborhoods: ["Centro", "Buenos Aires", "La Linda", "El Cedro", "Santa Rita"]
+      },
+      {
+        name: "Andes",
+        neighborhoods: ["Centro", "San Bartolomé", "Santa Rita", "La Chaparrala"]
       }
     ]
   },
@@ -57,43 +97,83 @@ export const colombiaLocations: Location[] = [
     municipalities: [
       {
         name: "Bogotá",
-        neighborhoods: ["Chapinero", "Usaquén", "Suba", "Engativá", "Fontibón", "Kennedy", "Teusaquillo", "Candelaria", "Santa Fe", "San Cristóbal", "Rafael Uribe Uribe", "Ciudad Bolívar", "Sumapaz", "Puente Aranda", "Los Mártires", "Antonio Nariño", "Bosa", "Tunjuelito", "Barrios Unidos", "Chicó", "Rosales"]
+        neighborhoods: ["Chapinero", "Usaquén", "Suba", "Engativá", "Fontibón", "Kennedy", "Teusaquillo", "Candelaria", "Santa Fe", "San Cristóbal", "Rafael Uribe Uribe", "Ciudad Bolívar", "Sumapaz", "Puente Aranda", "Los Mártires", "Antonio Nariño", "Bosa", "Tunjuelito", "Barrios Unidos", "Chicó", "Rosales", "Cedritos", "Modelia", "Hayuelos", "Tintal", "Portal de las Américas", "Patio Bonito", "Corabastos", "El Tunal", "Restrepo", "El Quiroga", "San Benito", "La Perseverancia", "Las Aguas", "La Macarena", "El Centro Internacional", "Santa Bárbara", "Normandía", "El Contador", "Los Alcázares", "Niza", "Colina Campestre", "San Antonio Norte", "Rincón del Chicó"]
       },
       {
         name: "Soacha",
-        neighborhoods: ["Centro", "Compartir", "Ciudadela Sucre", "San Mateo", "León XIII", "Altos de la Florida", "Ciudad Verde"]
+        neighborhoods: ["Centro", "Compartir", "Ciudadela Sucre", "San Mateo", "León XIII", "Altos de la Florida", "Ciudad Verde", "San Humberto", "Ducales", "Villa Esperanza", "Terreros", "El Oasis"]
       },
       {
         name: "Chía",
-        neighborhoods: ["Centro", "Bojacá", "Fonquetá", "Cerca de Piedra", "La Balsa", "Fagua"]
+        neighborhoods: ["Centro", "Bojacá", "Fonquetá", "Cerca de Piedra", "La Balsa", "Fagua", "Yerbabuena", "Santa Lucía", "Tíquiza", "San José"]
       },
       {
         name: "Zipaquirá",
-        neighborhoods: ["Centro", "Barandillas", "San Carlos", "Portones", "Julio Caro", "San Juanito"]
+        neighborhoods: ["Centro", "Barandillas", "San Carlos", "Portones", "Julio Caro", "San Juanito", "San Miguel", "La Paz", "Julio Flórez", "El Eucalipto"]
       },
       {
         name: "Facatativá",
-        neighborhoods: ["Centro", "El Jardín", "Santa Marta", "Pueblo Viejo", "La Esmeralda"]
+        neighborhoods: ["Centro", "El Jardín", "Santa Marta", "Pueblo Viejo", "La Esmeralda", "El Corzo", "Manablanca", "La Moya", "Santa Bárbara"]
       },
       {
         name: "Cajicá",
-        neighborhoods: ["Centro", "Calahorra", "Chuntame", "Río Grande"]
+        neighborhoods: ["Centro", "Calahorra", "Chuntame", "Río Grande", "La Palma", "El Misterio", "Capellanía"]
       },
       {
         name: "Madrid",
-        neighborhoods: ["Centro", "San Fernando", "La Caro", "Sector Industrial"]
+        neighborhoods: ["Centro", "San Fernando", "La Caro", "Sector Industrial", "Santa María del Río", "El Porvenir"]
       },
       {
         name: "Funza",
-        neighborhoods: ["Centro", "Casablanca", "La Feria", "Serrezuela"]
+        neighborhoods: ["Centro", "Casablanca", "La Feria", "Serrezuela", "Prados de Funza", "El Hato"]
       },
       {
         name: "Mosquera",
-        neighborhoods: ["Centro", "San Nicolás", "La Florida", "Serrezuela"]
+        neighborhoods: ["Centro", "San Nicolás", "La Florida", "Serrezuela", "Santa María", "Ciudad Sabana"]
       },
       {
         name: "Fusagasugá",
-        neighborhoods: ["Centro", "El Caney", "La Marichuela", "Pasquilla", "Obrero"]
+        neighborhoods: ["Centro", "El Caney", "La Marichuela", "Pasquilla", "Obrero", "Luxemburgo", "Pablo VI", "El Resguardo", "Santa María"]
+      },
+      {
+        name: "Girardot",
+        neighborhoods: ["Centro", "Kennedy", "Villa Gladys", "Pueblo Nuevo", "La Esmeralda", "Barzalosa"]
+      },
+      {
+        name: "Sopó",
+        neighborhoods: ["Centro", "San Gabriel", "Aposentos", "Hato Grande", "La Diana"]
+      },
+      {
+        name: "La Calera",
+        neighborhoods: ["Centro", "El Salitre", "Mundo Nuevo", "La Ramada"]
+      },
+      {
+        name: "Tocancipá",
+        neighborhoods: ["Centro", "Verganzo", "Canavita", "Tibitó", "La Fuente"]
+      },
+      {
+        name: "Tabio",
+        neighborhoods: ["Centro", "Punta Larga", "Carrón", "Llano Grande"]
+      },
+      {
+        name: "Tenjo",
+        neighborhoods: ["Centro", "Chince", "El Estanco", "Poveda"]
+      },
+      {
+        name: "Gachancipá",
+        neighborhoods: ["Centro", "Santa Bárbara", "Palo Verde", "Pueblo Viejo"]
+      },
+      {
+        name: "Cota",
+        neighborhoods: ["Centro", "Parcelas", "La Moya", "Siberia", "Vuelta Grande"]
+      },
+      {
+        name: "Ubaté",
+        neighborhoods: ["Centro", "San Cayetano", "Santa Bárbara", "Poveda"]
+      },
+      {
+        name: "Villeta",
+        neighborhoods: ["Centro", "El Carmen", "La Esmeralda", "La Trinidad"]
       }
     ]
   },
@@ -102,27 +182,51 @@ export const colombiaLocations: Location[] = [
     municipalities: [
       {
         name: "Cali",
-        neighborhoods: ["San Fernando", "El Peñón", "Granada", "Ciudad Jardín", "Normandía", "Limonar", "Santa Mónica", "El Ingenio", "Menga", "Tequendama", "Santa Anita", "Versalles", "San Antonio", "Santa Rita", "Flora Industrial", "Alfonso López", "Aguablanca"]
+        neighborhoods: ["San Fernando", "El Peñón", "Granada", "Ciudad Jardín", "Normandía", "Limonar", "Santa Mónica", "El Ingenio", "Menga", "Tequendama", "Santa Anita", "Versalles", "San Antonio", "Santa Rita", "Flora Industrial", "Alfonso López", "Aguablanca", "Juanchito", "Alameda", "Salomia", "La Merced", "El Lido", "Centenario", "Chipichape", "Pance", "La Hacienda", "Unicentro", "El Refugio", "La Flora", "Tejares", "Llano Verde", "Potrero Grande", "Marroquín"]
       },
       {
         name: "Palmira",
-        neighborhoods: ["Centro", "El Sembrador", "La Emilia", "Zamorano", "La Carbonera", "El Nogal"]
+        neighborhoods: ["Centro", "El Sembrador", "La Emilia", "Zamorano", "La Carbonera", "El Nogal", "El Placer", "Bolivariano", "La Torre", "Belalcázar"]
       },
       {
         name: "Buenaventura",
-        neighborhoods: ["Centro", "Bellavista", "El Piñal", "Muro Yusti", "La Playita", "San Antonio"]
+        neighborhoods: ["Centro", "Bellavista", "El Piñal", "Muro Yusti", "La Playita", "San Antonio", "Vientos Libres", "La Victoria", "Alfonso López", "San José"]
       },
       {
         name: "Yumbo",
-        neighborhoods: ["Centro", "San Marcos", "Brisas de los Álamos", "El Cortijo"]
+        neighborhoods: ["Centro", "San Marcos", "Brisas de los Álamos", "El Cortijo", "Belalcázar", "Villa Luz", "Navegantes"]
       },
       {
         name: "Jamundí",
-        neighborhoods: ["Centro", "Bocas del Palo", "Villa Paz", "Timba"]
+        neighborhoods: ["Centro", "Bocas del Palo", "Villa Paz", "Timba", "Piedra de Moler", "La Liberia"]
       },
       {
         name: "Tuluá",
-        neighborhoods: ["Centro", "Santa Elena", "San Rafael", "La María", "Matamoros"]
+        neighborhoods: ["Centro", "Santa Elena", "San Rafael", "La María", "Matamoros", "Alvernia", "San Carlos", "Barrancas", "El Jardín"]
+      },
+      {
+        name: "Cartago",
+        neighborhoods: ["Centro", "Santa Cecilia", "Alfonso López", "Los Ángeles", "Matadero", "Santa Rosa"]
+      },
+      {
+        name: "Buga",
+        neighborhoods: ["Centro", "San Gerardo", "La Libertad", "Nuevo Milenio", "Chapinero"]
+      },
+      {
+        name: "Candelaria",
+        neighborhoods: ["Centro", "Juanchito", "La Arroyohondo", "El Naranjo"]
+      },
+      {
+        name: "Florida",
+        neighborhoods: ["Centro", "La Paila", "Nueva Florida", "La Herradura"]
+      },
+      {
+        name: "Pradera",
+        neighborhoods: ["Centro", "Villa María", "Bolívar", "Vallegrande"]
+      },
+      {
+        name: "Dagua",
+        neighborhoods: ["Centro", "El Queremal", "Atuncela", "San Vicente"]
       }
     ]
   },
@@ -131,23 +235,43 @@ export const colombiaLocations: Location[] = [
     municipalities: [
       {
         name: "Barranquilla",
-        neighborhoods: ["El Prado", "Riomar", "Boston", "El Country", "Villa Santos", "El Poblado", "Alto Prado", "La Concepción", "Bellavista", "Las Flores", "Ciudad Jardín", "El Golf", "Los Nogales", "Altos del Limón", "Paraíso"]
+        neighborhoods: ["El Prado", "Riomar", "Boston", "El Country", "Villa Santos", "El Poblado", "Alto Prado", "La Concepción", "Bellavista", "Las Flores", "Ciudad Jardín", "El Golf", "Los Nogales", "Altos del Limón", "Paraíso", "Villa Carolina", "Los Andes", "El Recreo", "San Vicente", "Simón Bolívar", "La Paz", "El Bosque", "La Victoria", "Rebolo", "Barlovento", "Bellas Artes", "Olaya", "Montecristo", "Las Malvinas", "San Roque", "Centro", "El Castillo", "La Cumbre"]
       },
       {
         name: "Soledad",
-        neighborhoods: ["Centro", "La Central", "El Ferrocarril", "Ciudadela 20 de Julio", "Villa Estadio", "Mequejo"]
+        neighborhoods: ["Centro", "La Central", "El Ferrocarril", "Ciudadela 20 de Julio", "Villa Estadio", "Mequejo", "La Arboleda", "Juan XXIII", "Villa Katanga", "El Bosque", "Metropolitano"]
       },
       {
         name: "Malambo",
-        neighborhoods: ["Centro", "Pueblo Nuevo", "La Playa", "Aguada"]
+        neighborhoods: ["Centro", "Pueblo Nuevo", "La Playa", "Aguada", "Villa Marbella", "Los Almendros"]
       },
       {
         name: "Puerto Colombia",
-        neighborhoods: ["Centro", "Salgar", "Pradomar", "Sabanilla"]
+        neighborhoods: ["Centro", "Salgar", "Pradomar", "Sabanilla", "Miramar", "Villa Campestre"]
       },
       {
         name: "Galapa",
-        neighborhoods: ["Centro", "Villa Rosa", "San Antonio", "Nueva Galapa"]
+        neighborhoods: ["Centro", "Villa Rosa", "San Antonio", "Nueva Galapa", "La Pradera", "El Progreso"]
+      },
+      {
+        name: "Sabanalarga",
+        neighborhoods: ["Centro", "El Progreso", "7 de Agosto", "Prado", "San Roque"]
+      },
+      {
+        name: "Baranoa",
+        neighborhoods: ["Centro", "La Victoria", "El Carmen", "San Antonio"]
+      },
+      {
+        name: "Sabanagrande",
+        neighborhoods: ["Centro", "El Porvenir", "Villa del Rosario", "El Prado"]
+      },
+      {
+        name: "Santo Tomás",
+        neighborhoods: ["Centro", "El Porvenir", "El Carmen", "Villanueva"]
+      },
+      {
+        name: "Polonuevo",
+        neighborhoods: ["Centro", "La Esperanza", "Villa María", "El Progreso"]
       }
     ]
   },
@@ -156,27 +280,43 @@ export const colombiaLocations: Location[] = [
     municipalities: [
       {
         name: "Bucaramanga",
-        neighborhoods: ["Cabecera del Llano", "El Prado", "Álamos", "San Francisco", "Centro", "La Aurora", "Provenza", "Lagos del Cacique", "Sotomayor", "Morrorico", "García Rovira", "La Cumbre", "Real de Minas"]
+        neighborhoods: ["Cabecera del Llano", "El Prado", "Álamos", "San Francisco", "Centro", "La Aurora", "Provenza", "Lagos del Cacique", "Sotomayor", "Morrorico", "García Rovira", "La Cumbre", "Real de Minas", "La Floresta", "Terrazas", "Los Cedros", "Cañaveral", "La Juventud", "Toledo Plata", "Campo Hermoso", "Antonia Santos", "El Bosque", "La Victoria", "San Martín", "Alfonso López"]
       },
       {
         name: "Floridablanca",
-        neighborhoods: ["Centro", "Cañaveral", "Lagos I", "Altos de Bellavista", "Villabel", "Ruitoque"]
+        neighborhoods: ["Centro", "Cañaveral", "Lagos I", "Altos de Bellavista", "Villabel", "Ruitoque", "El Bosque", "San Expedito", "Conucos", "La Cumbre", "Ciudadela Real de Minas"]
       },
       {
         name: "Piedecuesta",
-        neighborhoods: ["Centro", "El Recreo", "Guatiguará", "La Esperanza", "Alto de Pamplona", "Alfonso López"]
+        neighborhoods: ["Centro", "El Recreo", "Guatiguará", "La Esperanza", "Alto de Pamplona", "Alfonso López", "El Bueno", "Los Cauchos", "Santa Teresa", "Villa Rosario"]
       },
       {
         name: "Girón",
-        neighborhoods: ["Centro", "La Esmeralda", "Kennedy", "Llano de Palmas", "Rincón"]
+        neighborhoods: ["Centro", "La Esmeralda", "Kennedy", "Llano de Palmas", "Rincón", "El Poblado", "Villa Blanca", "Versalles", "El Rhin"]
       },
       {
         name: "San Gil",
-        neighborhoods: ["Centro", "Cabecera", "Calle Real", "Pueblo Nuevo"]
+        neighborhoods: ["Centro", "Cabecera", "Calle Real", "Pueblo Nuevo", "El Poblado", "La Granja"]
       },
       {
         name: "Barrancabermeja",
-        neighborhoods: ["Centro", "La Victoria", "El Campín", "La Paz", "Boston"]
+        neighborhoods: ["Centro", "La Victoria", "El Campín", "La Paz", "Boston", "El Cincuentenario", "Pueblo Nuevo", "Kennedy", "Primero de Mayo", "Miraflores"]
+      },
+      {
+        name: "Socorro",
+        neighborhoods: ["Centro", "El Poblado", "Santa Bárbara", "San Roque"]
+      },
+      {
+        name: "Málaga",
+        neighborhoods: ["Centro", "El Concilio", "La Vega", "San Cristóbal"]
+      },
+      {
+        name: "Barbosa",
+        neighborhoods: ["Centro", "Los Cauchos", "El Jardín", "Villa Nueva"]
+      },
+      {
+        name: "Zapatoca",
+        neighborhoods: ["Centro", "El Carmen", "San Antonio", "La Aurora"]
       }
     ]
   },
@@ -185,19 +325,35 @@ export const colombiaLocations: Location[] = [
     municipalities: [
       {
         name: "Cartagena",
-        neighborhoods: ["Bocagrande", "Castillogrande", "El Laguito", "Manga", "Getsemaní", "Centro Histórico", "Crespo", "Pie de la Popa", "El Cabrero", "Pie del Cerro", "Chambacú", "Torices", "Escallon Villa"]
+        neighborhoods: ["Bocagrande", "Castillogrande", "El Laguito", "Manga", "Getsemaní", "Centro Histórico", "Crespo", "Pie de la Popa", "El Cabrero", "Pie del Cerro", "Chambacú", "Torices", "Escallon Villa", "España", "La Matuna", "San Diego", "Marbella", "Manga", "El Bosque", "Villa Estrella", "Boston", "El Pozón", "Olaya Herrera", "Nelson Mandela", "Bayunca", "Pasacaballos"]
       },
       {
         name: "Turbaco",
-        neighborhoods: ["Centro", "Ararca", "Gambote", "Varadero", "Membrillal"]
+        neighborhoods: ["Centro", "Ararca", "Gambote", "Varadero", "Membrillal", "Ballestas", "Villa Hermosa", "La Granja"]
       },
       {
         name: "Magangué",
-        neighborhoods: ["Centro", "Pueblo Nuevo", "Santa Ana", "Las Mercedes"]
+        neighborhoods: ["Centro", "Pueblo Nuevo", "Santa Ana", "Las Mercedes", "El Contento", "La Esperanza"]
       },
       {
         name: "El Carmen de Bolívar",
-        neighborhoods: ["Centro", "La Peña", "San Isidro", "Caracolí"]
+        neighborhoods: ["Centro", "La Peña", "San Isidro", "Caracolí", "El Carmelo", "La Esperanza"]
+      },
+      {
+        name: "Arjona",
+        neighborhoods: ["Centro", "La Libertad", "El Retiro", "Villa Fátima"]
+      },
+      {
+        name: "Santa Rosa del Sur",
+        neighborhoods: ["Centro", "El Prado", "La Esperanza", "Popular"]
+      },
+      {
+        name: "Mompox",
+        neighborhoods: ["Centro Histórico", "Santa Bárbara", "San Carlos", "San Juan de Dios"]
+      },
+      {
+        name: "Simití",
+        neighborhoods: ["Centro", "La Paz", "El Progreso", "La Unión"]
       }
     ]
   },
@@ -206,19 +362,27 @@ export const colombiaLocations: Location[] = [
     municipalities: [
       {
         name: "Pereira",
-        neighborhoods: ["Centro", "Álamos", "Cuba", "La Circunvalar", "Olímpica", "Pío XII", "El Poblado", "Pinares de San Martín", "Boston", "Centenario", "Villa Santana", "Ferrocarril"]
+        neighborhoods: ["Centro", "Álamos", "Cuba", "La Circunvalar", "Olímpica", "Pío XII", "El Poblado", "Pinares de San Martín", "Boston", "Centenario", "Villa Santana", "Ferrocarril", "San Nicolás", "El Jardín", "Ciudadela Tokio", "Kennedy", "El Danubio", "Mejía Robledo", "La Victoria", "El Rocío", "Villavicencio", "San Fernando", "Málaga", "El Plumón"]
       },
       {
         name: "Dosquebradas",
-        neighborhoods: ["Centro", "Frailes", "Palma de Oro", "Santa Teresita", "La Esneda", "El Japón"]
+        neighborhoods: ["Centro", "Frailes", "Palma de Oro", "Santa Teresita", "La Esneda", "El Japón", "Betania", "Los Álamos", "La Popa", "Villa Luz", "Bosques de la Acuarela"]
       },
       {
         name: "La Virginia",
-        neighborhoods: ["Centro", "Bombay", "Villa Pilar", "Samaria"]
+        neighborhoods: ["Centro", "Bombay", "Villa Pilar", "Samaria", "El Bosque", "La Platanera"]
       },
       {
         name: "Santa Rosa de Cabal",
-        neighborhoods: ["Centro", "La Capilla", "El Español", "Termales"]
+        neighborhoods: ["Centro", "La Capilla", "El Español", "Termales", "La Unión", "La Montaña", "Brisas de Santa Rosa"]
+      },
+      {
+        name: "Marsella",
+        neighborhoods: ["Centro", "El Trapiche", "San Isidro", "La Molina"]
+      },
+      {
+        name: "Belén de Umbría",
+        neighborhoods: ["Centro", "El Bosque", "La Selva", "Villa Nueva"]
       }
     ]
   },
@@ -227,27 +391,43 @@ export const colombiaLocations: Location[] = [
     municipalities: [
       {
         name: "Armenia",
-        neighborhoods: ["Centro", "La Fachada", "Zuldemayda", "Quimbaya", "Los Naranjos", "Bosques de Pinares", "La Castellana", "Alfonso López", "Las Colinas", "Portal del Edén"]
+        neighborhoods: ["Centro", "La Fachada", "Zuldemayda", "Quimbaya", "Los Naranjos", "Bosques de Pinares", "La Castellana", "Alfonso López", "Las Colinas", "Portal del Edén", "Ciudadela del Café", "La Secreta", "La Avanzada", "Uribe", "La Esperanza", "Villa del Prado", "Patio Bonito"]
       },
       {
         name: "Calarcá",
-        neighborhoods: ["Centro", "La Bella", "Villa Ligia", "San José", "El Caimo"]
+        neighborhoods: ["Centro", "La Bella", "Villa Ligia", "San José", "El Caimo", "Samaria", "El Danubio", "Dosquebradas"]
       },
       {
         name: "Montenegro",
-        neighborhoods: ["Centro", "Pueblo Tapao", "El Vergel", "La Esmeralda"]
+        neighborhoods: ["Centro", "Pueblo Tapao", "El Vergel", "La Esmeralda", "Villa Natalia", "Santa Isabel"]
       },
       {
         name: "Circasia",
-        neighborhoods: ["Centro", "La Virginia", "Buenavista", "Berlín"]
+        neighborhoods: ["Centro", "La Virginia", "Buenavista", "Berlín", "Villa Ligia"]
       },
       {
         name: "La Tebaida",
-        neighborhoods: ["Centro", "Chaparral", "Santa Eduviges", "Florida"]
+        neighborhoods: ["Centro", "Chaparral", "Santa Eduviges", "Florida", "Villa del Prado"]
       },
       {
         name: "Quimbaya",
-        neighborhoods: ["Centro", "Cruces", "Puerto Alejandría", "La Esmeralda"]
+        neighborhoods: ["Centro", "Cruces", "Puerto Alejandría", "La Esmeralda", "El Caimo"]
+      },
+      {
+        name: "Filandia",
+        neighborhoods: ["Centro", "La Estrella", "Cruces", "Barranquilla"]
+      },
+      {
+        name: "Salento",
+        neighborhoods: ["Centro", "Boquía", "Palestina", "El Rincón"]
+      },
+      {
+        name: "Córdoba",
+        neighborhoods: ["Centro", "Alto Bonito", "Buenos Aires", "El Cedro"]
+      },
+      {
+        name: "Pijao",
+        neighborhoods: ["Centro", "Baraya", "El Triunfo", "La Florida"]
       }
     ]
   },
