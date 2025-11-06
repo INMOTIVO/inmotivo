@@ -157,15 +157,6 @@ const PropertiesManagementTable = ({
 
   return (
     <div className="space-y-4">
-      <Button
-        variant="outline"
-        onClick={onBack || (() => navigate(-1))}
-        className="mb-4 gap-2"
-      >
-        <ArrowLeft className="h-5 w-5" />
-        Volver
-      </Button>
-      
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4">
@@ -187,6 +178,12 @@ const PropertiesManagementTable = ({
                   <SelectItem value="suspended">Suspendidas</SelectItem>
                 </SelectContent>
               </Select>
+              {onBack && (
+                <Button variant="outline" onClick={onBack}>
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Volver
+                </Button>
+              )}
             </div>
           </div>
         </CardHeader>
