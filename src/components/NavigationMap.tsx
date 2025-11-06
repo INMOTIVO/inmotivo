@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, Circle, DirectionsRenderer, OverlayView } from '@react-google-maps/api';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -56,6 +56,11 @@ const NavigationMap = ({
   const previousLocation = useRef<{ lat: number; lng: number; time: number } | null>(null);
   const collectedPropertyIds = useRef<Set<string>>(new Set());
   const travelDistance = useRef<number>(0);
+  
+  // Memoizar funciones para evitar re-renders
+  const handlePropertyClick = useCallback((propertyId: string) => {
+    navigate(`/property/${propertyId}`);
+  }, [navigate]);
   const {
     isLoaded
   } = useJsApiLoader({
@@ -105,7 +110,7 @@ const NavigationMap = ({
     }
   };
 
-  // Fetch properties using new API
+  // Fetch properties using new API - Optimizado con mejor caché
   const {
     data: propertiesGeoJSON,
     refetch: refetchProperties
@@ -126,41 +131,49 @@ const NavigationMap = ({
         return geojson;
       } catch (error) {
         console.error('Error fetching nearby properties:', error);
-        toast.error('Error al cargar propiedades cercanas');
-        return null;
+        return null; // No mostrar toast en cada error
       }
     },
     enabled: !!userLocation && !isPaused,
     refetchInterval: false,
-    staleTime: 30000 // 30 seconds
+    staleTime: isVehicleMode ? 15000 : 45000, // Caché más largo fuera de modo vehículo
+    gcTime: 300000 // Mantener en caché 5 minutos
   });
 
-  // Convert GeoJSON to properties array
-  const properties = propertiesGeoJSON?.features?.map((feature: any) => ({
-    id: feature.properties.id,
-    title: feature.properties.title,
-    price: feature.properties.price,
-    bedrooms: feature.properties.bedrooms,
-    bathrooms: feature.properties.bathrooms,
-    area: feature.properties.area,
-    property_type: feature.properties.property_type,
-    images: feature.properties.images,
-    latitude: feature.geometry.coordinates[1],
-    longitude: feature.geometry.coordinates[0],
-    distance_km: feature.properties.distance_km
-  })) || [];
+  // Convert GeoJSON to properties array - Limitado para mejor rendimiento
+  const properties = propertiesGeoJSON?.features
+    ?.slice(0, isVehicleMode ? 10 : 20) // Menos marcadores en modo vehículo
+    ?.map((feature: any) => ({
+      id: feature.properties.id,
+      title: feature.properties.title,
+      price: feature.properties.price,
+      bedrooms: feature.properties.bedrooms,
+      bathrooms: feature.properties.bathrooms,
+      area: feature.properties.area,
+      property_type: feature.properties.property_type,
+      images: feature.properties.images,
+      latitude: feature.geometry.coordinates[1],
+      longitude: feature.geometry.coordinates[0],
+      distance_km: feature.properties.distance_km
+    })) || [];
 
-  // Track user location and speed
+  // Track user location and speed - Optimizado para móvil
   useEffect(() => {
     let watchId: number;
     let lastUpdate = 0;
-    const UPDATE_INTERVAL = 3000; // Detección de velocidad cada 3 segundos
+    let animationFrameId: number;
+    const UPDATE_INTERVAL = isVehicleMode ? 2000 : 5000; // Más lento cuando no está en vehículo
     
     watchId = navigator.geolocation.watchPosition(position => {
       if (isPaused) return;
       const now = Date.now();
       if (now - lastUpdate < UPDATE_INTERVAL) return;
-      lastUpdate = now;
+      
+      // Usar requestAnimationFrame para suavizar actualizaciones
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
+      
+      animationFrameId = requestAnimationFrame(() => {
+        lastUpdate = now;
       
       const newLocation = {
         lat: position.coords.latitude,
@@ -264,20 +277,27 @@ const NavigationMap = ({
         setHeading(smoothHeading.current);
       }
       
-      if (mapRef.current) {
-        // Pan suave y rotar mapa según dirección (modo Google Maps)
-        mapRef.current.panTo(newLocation);
-        
-        // Rotar mapa para navegación en vivo solo cuando hay movimiento
-        if (!isPaused && speed > 1) { // Solo rotar si se está moviendo (>1 km/h)
-          mapRef.current.setHeading(smoothHeading.current);
-          mapRef.current.setTilt(45); // Vista 3D para mejor perspectiva
-        } else if (speed <= 1) {
-          // Cuando está quieto, vista normal
-          mapRef.current.setHeading(0);
-          mapRef.current.setTilt(0);
+        if (mapRef.current) {
+          // Pan suave - Solo actualizar si hay cambio significativo (>5 metros)
+          const lastPos = mapRef.current.getCenter();
+          if (lastPos) {
+            const dist = calculateDistance(lastPos.lat(), lastPos.lng(), newLocation.lat, newLocation.lng);
+            if (dist > 0.005) { // ~5 metros
+              mapRef.current.panTo(newLocation);
+            }
+          }
+          
+          // Rotar mapa solo en modo vehículo para mejor rendimiento
+          if (!isPaused && isVehicleMode && speed > 5) {
+            mapRef.current.setHeading(smoothHeading.current);
+            mapRef.current.setTilt(45);
+          } else if (!isVehicleMode) {
+            // Vista normal fuera de modo vehículo
+            mapRef.current.setHeading(0);
+            mapRef.current.setTilt(0);
+          }
         }
-      }
+      });
     }, error => {
       console.error('Geolocation error:', error);
       if (error.code === 1) {
@@ -287,14 +307,15 @@ const NavigationMap = ({
       }
     }, {
       enableHighAccuracy: true,
-      maximumAge: 0, // Sin caché, siempre obtener ubicación actual
-      timeout: 5000
+      maximumAge: 1000, // Permitir caché de 1 segundo
+      timeout: 10000 // Aumentar timeout
     });
     
     return () => {
       if (watchId) navigator.geolocation.clearWatch(watchId);
+      if (animationFrameId) cancelAnimationFrame(animationFrameId);
     };
-  }, [isPaused, isVehicleMode, collectedProperties.length]);
+  }, [isPaused, isVehicleMode, collectedProperties.length, heading]);
   
   // Función para calcular distancia entre dos puntos (Haversine)
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
@@ -309,9 +330,21 @@ const NavigationMap = ({
     return R * c;
   };
 
-  // Calculate directions when user location or destination changes
+  // Calculate directions - Optimizado para actualizar menos frecuentemente
   useEffect(() => {
     if (!userLocation || !isLoaded || isPaused) return;
+    
+    // Solo recalcular si nos movimos más de 50 metros
+    const shouldRecalculate = !directions || (previousLocation.current && 
+      calculateDistance(
+        previousLocation.current.lat,
+        previousLocation.current.lng,
+        userLocation.lat,
+        userLocation.lng
+      ) > 0.05);
+    
+    if (!shouldRecalculate) return;
+    
     const directionsService = new google.maps.DirectionsService();
     directionsService.route({
       origin: userLocation,
@@ -429,7 +462,10 @@ const NavigationMap = ({
       mapTypeControl: false,
       fullscreenControl: false,
       rotateControl: false,
-      gestureHandling: 'greedy'
+      gestureHandling: 'greedy',
+      disableDefaultUI: true, // Menos UI = mejor rendimiento
+      clickableIcons: false, // Menos interactividad = mejor rendimiento
+      keyboardShortcuts: false
     }}>
         {/* User location marker with animation */}
         {userLocation && <>
@@ -560,45 +596,34 @@ const NavigationMap = ({
           </>}
 
 
-        {/* Property markers */}
+
+        {/* Property markers - Optimizado con renderizado mínimo */}
         {!isPaused && properties?.map(property => {
-        if (!property.latitude || !property.longitude) return null;
-        const priceFormatted = new Intl.NumberFormat('es-CO', {
-          minimumFractionDigits: 0
-        }).format(property.price);
-        return <OverlayView key={property.id} position={{
-          lat: property.latitude,
-          lng: property.longitude
-        }} mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}>
-              <div style={{
-            transform: 'translate(-50%, -100%)',
-            cursor: 'pointer',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '4px'
-          }} onClick={() => navigate(`/property/${property.id}`)}>
-                <div style={{
-              background: 'linear-gradient(135deg, #10b981, #059669)',
+          if (!property.latitude || !property.longitude) return null;
+          
+          return <Marker 
+            key={property.id}
+            position={{
+              lat: property.latitude,
+              lng: property.longitude
+            }}
+            onClick={() => handlePropertyClick(property.id)}
+            icon={{
+              path: 'M16 0C7.163 0 0 7.163 0 16c0 12 16 24 16 24s16-12 16-24C32 7.163 24.837 0 16 0z',
+              fillColor: '#10b981',
+              fillOpacity: 1,
+              strokeWeight: 0,
+              scale: 0.8,
+              anchor: new google.maps.Point(16, 40)
+            }}
+            label={{
+              text: `$${Math.round(property.price / 1000000)}M`,
               color: 'white',
-              padding: '6px 12px',
-              borderRadius: '10px',
-              fontSize: '14px',
-              fontWeight: '700',
-              whiteSpace: 'nowrap',
-              boxShadow: '0 4px 16px rgba(16, 185, 129, 0.4)'
-            }}>
-                  {priceFormatted} $
-                </div>
-                <svg width="32" height="40" viewBox="0 0 32 40" style={{
-              filter: 'drop-shadow(0 6px 10px rgba(16, 185, 129, 0.4))'
-            }}>
-                  <path d="M16 0C7.163 0 0 7.163 0 16c0 12 16 24 16 24s16-12 16-24C32 7.163 24.837 0 16 0z" fill="#10b981" />
-                  <circle cx="16" cy="16" r="6" fill="white" />
-                </svg>
-              </div>
-            </OverlayView>;
-      })}
+              fontSize: '12px',
+              fontWeight: 'bold'
+            }}
+          />;
+        })}
       </GoogleMap>
       
       {/* Barra de control inferior - ocupa todo el ancho */}
