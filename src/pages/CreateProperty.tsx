@@ -14,7 +14,7 @@ import { Upload, X, Loader2, MapPin, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { useGoogleMapsPlaces } from '@/hooks/useGoogleMapsPlaces';
-import { useJsApiLoader } from '@react-google-maps/api';
+import { useGoogleMapsLoader } from '@/hooks/useGoogleMapsLoader';
 
 const propertySchema = z.object({
   title: z.string().min(5, 'Mínimo 5 caracteres').max(100, 'Máximo 100 caracteres'),
@@ -63,10 +63,7 @@ const CreateProperty = () => {
   const [furnished, setFurnished] = useState(false);
   const [petsAllowed, setPetsAllowed] = useState(false);
 
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
-    libraries: ['maps', 'places'],
-  });
+  const { isLoaded } = useGoogleMapsLoader();
 
   const handlePlaceSelected = useCallback((place: google.maps.places.PlaceResult) => {
     if (!place.geometry?.location) return;

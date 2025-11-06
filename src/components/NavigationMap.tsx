@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
-import { GoogleMap, useJsApiLoader, Marker, Circle, DirectionsRenderer, OverlayView } from '@react-google-maps/api';
+import { GoogleMap, Marker, Circle, DirectionsRenderer, OverlayView } from '@react-google-maps/api';
+import { useGoogleMapsLoader } from '@/hooks/useGoogleMapsLoader';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -126,10 +127,7 @@ const NavigationMap = ({
   };
   const {
     isLoaded
-  } = useJsApiLoader({
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
-    libraries: ['maps', 'places']
-  });
+  } = useGoogleMapsLoader();
 
   // Convertir zoom a radio de búsqueda
   const zoomToRadius = (zoom: number): number => {

@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
-import { GoogleMap, useJsApiLoader, Marker, Circle } from '@react-google-maps/api';
+import { GoogleMap, Marker, Circle } from '@react-google-maps/api';
+import { useGoogleMapsLoader } from '@/hooks/useGoogleMapsLoader';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -21,10 +22,7 @@ export const SavedPropertiesReview = ({
   const mapRef = useRef<google.maps.Map | null>(null);
   const [selectedProperty, setSelectedProperty] = useState<any>(null);
 
-  const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
-    libraries: ['maps', 'places']
-  });
+  const { isLoaded } = useGoogleMapsLoader();
 
   const handlePropertyClick = (property: any) => {
     setSelectedProperty(property);
