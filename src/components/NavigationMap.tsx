@@ -127,7 +127,8 @@ const NavigationMap = ({
   const {
     isLoaded
   } = useJsApiLoader({
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || ''
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '',
+    libraries: ['places']
   });
 
   // Convertir zoom a radio de búsqueda
