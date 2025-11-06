@@ -18,78 +18,7 @@ serve(async (req) => {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
 
-    // Primero validar si la consulta es sobre inmuebles
-    const validationResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          {
-            role: "system",
-            content: "Eres un validador de consultas para un buscador de inmuebles. Determina si la consulta del usuario está relacionada con búsqueda de propiedades inmobiliarias (apartamentos, casas, apartaestudios, habitaciones, bodegas, oficinas, locales, estudios, lofts, fincas, etc.) o si está preguntando algo completamente diferente."
-          },
-          {
-            role: "user",
-            content: query
-          }
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "validate_query",
-              description: "Valida si la consulta es sobre búsqueda de inmuebles",
-              parameters: {
-                type: "object",
-                properties: {
-                  is_valid: {
-                    type: "boolean",
-                    description: "true si la consulta es sobre búsqueda de propiedades inmobiliarias, false si es sobre otro tema"
-                  },
-                  reason: {
-                    type: "string",
-                    description: "Breve explicación de por qué es válida o no válida"
-                  }
-                },
-                required: ["is_valid", "reason"],
-                additionalProperties: false
-              }
-            }
-          }
-        ],
-        tool_choice: { type: "function", function: { name: "validate_query" } }
-      }),
-    });
-
-    if (!validationResponse.ok) {
-      throw new Error("Error en validación AI");
-    }
-
-    const validationData = await validationResponse.json();
-    const validationCall = validationData.choices[0]?.message?.tool_calls?.[0];
-    
-    if (!validationCall) {
-      throw new Error("No se pudo validar la consulta");
-    }
-
-    const validation = JSON.parse(validationCall.function.arguments);
-    
-    // Si la consulta no es válida, retornar error específico
-    if (!validation.is_valid) {
-      return new Response(
-        JSON.stringify({ 
-          error: "invalid_query",
-          message: "Lo siento, soy un buscador especializado en propiedades inmobiliarias. Por favor describe qué tipo de inmueble buscas (apartamento, casa, oficina, local, etc.) y sus características.",
-          suggestion: "Ejemplo: Apartamento de 2 habitaciones en Medellín cerca del metro, máximo 2.5 millones"
-        }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
+    // Combinar validación y extracción en una sola llamada para velocidad
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -97,11 +26,11 @@ serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "google/gemini-2.5-flash-lite", // Modelo más rápido
         messages: [
           {
             role: "system",
-            content: "Eres un asistente que interpreta búsquedas de propiedades inmobiliarias en lenguaje natural y extrae filtros estructurados."
+            content: "Extrae filtros de búsqueda de propiedades. Si no es una búsqueda de inmuebles, marca is_valid=false."
           },
           {
             role: "user",
@@ -117,21 +46,25 @@ serve(async (req) => {
               parameters: {
                 type: "object",
                 properties: {
+                  is_valid: {
+                    type: "boolean",
+                    description: "true si es búsqueda de inmuebles, false si no"
+                  },
                   radius: {
                     type: "number",
-                    description: "Radio de búsqueda en kilómetros (1-20). Por defecto 5."
+                    description: "Radio en km (1-20). Default 5."
                   },
                   minPrice: {
                     type: "number",
-                    description: "Precio mínimo en COP"
+                    description: "Precio mínimo COP"
                   },
                   maxPrice: {
                     type: "number",
-                    description: "Precio máximo en COP"
+                    description: "Precio máximo COP"
                   },
                   bedrooms: {
                     type: "number",
-                    description: "Número mínimo de habitaciones"
+                    description: "Habitaciones mínimas"
                   },
                   propertyType: {
                     type: "string",
@@ -139,6 +72,7 @@ serve(async (req) => {
                     description: "Tipo de propiedad"
                   }
                 },
+                required: ["is_valid"],
                 additionalProperties: false
               }
             }
@@ -171,7 +105,22 @@ serve(async (req) => {
       throw new Error("No se pudieron extraer filtros");
     }
 
-    const filters = JSON.parse(toolCall.function.arguments);
+    const result = JSON.parse(toolCall.function.arguments);
+    
+    // Validar si es búsqueda válida
+    if (result.is_valid === false) {
+      return new Response(
+        JSON.stringify({ 
+          error: "invalid_query",
+          message: "Lo siento, soy un buscador especializado en propiedades inmobiliarias.",
+          suggestion: "Ejemplo: Apartamento de 2 habitaciones cerca del metro, máximo 2.5 millones"
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Remover is_valid antes de enviar filtros
+    const { is_valid, ...filters } = result;
 
     return new Response(
       JSON.stringify({ filters }),

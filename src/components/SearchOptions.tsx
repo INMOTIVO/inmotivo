@@ -39,13 +39,8 @@ const SearchOptions = ({
   };
   const handleGPSNavigation = () => {
     setIsStartingNav(true);
-    toast.success("Iniciando navegación GPS...", {
-      duration: 2000
-    });
-    // Small delay to ensure UI feedback is visible before navigation
-    setTimeout(() => {
-      navigate(`/navegacion?query=${encodeURIComponent(editedQuery)}&autostart=true`);
-    }, 100);
+    // Navegar inmediatamente sin delay
+    navigate(`/navegacion?query=${encodeURIComponent(editedQuery)}&autostart=true`);
   };
   return <div className="w-full max-w-4xl mx-auto space-y-1 md:space-y-2 animate-fade-in px-4">
       <div className="text-center space-y-1">

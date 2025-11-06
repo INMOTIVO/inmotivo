@@ -9,9 +9,8 @@ import heroImage from "@/assets/hero-medellin.jpg";
 import { toast } from "sonner";
 import SearchOptions from './SearchOptions';
 import { useIsMobile } from "@/hooks/use-mobile";
-import { supabase } from "@/integrations/supabase/client";
-import { FunctionsHttpError } from "@supabase/supabase-js";
 import { useVoiceRecording } from "@/hooks/useVoiceRecording";
+import { useInterpretSearch } from "@/hooks/useInterpretSearch";
 import VoiceButton from './VoiceButton';
 const Hero = () => {
   const navigate = useNavigate();
@@ -29,6 +28,7 @@ const Hero = () => {
   const [customMunicipality, setCustomMunicipality] = useState("");
   const [customNeighborhood, setCustomNeighborhood] = useState("");
   const isMobile = useIsMobile();
+  const { interpretSearch, isProcessing: isInterpretingSearch } = useInterpretSearch();
   const {
     isRecording,
     isProcessing,
@@ -169,51 +169,12 @@ const Hero = () => {
       return;
     }
 
-    // Validar que la búsqueda sea sobre inmuebles
-    try {
-      const {
-        data,
-        error
-      } = await supabase.functions.invoke('interpret-search', {
-        body: {
-          query: textToSearch.trim()
-        }
-      });
+    // Usar el hook optimizado con caché
+    const result = await interpretSearch(textToSearch);
+    if (!result) return; // El hook ya maneja los errores
 
-      // Manejar errores HTTP (status 400)
-      if (error instanceof FunctionsHttpError) {
-        const errorData = await error.context.json();
-        if (errorData.error === 'invalid_query') {
-          toast.error(errorData.message || "Esta búsqueda no es sobre propiedades", {
-            duration: 5000,
-            description: "💡 Ejemplo: 'Apartamento de 2 habitaciones cerca del metro'"
-          });
-          return;
-        }
-      }
-      if (error) {
-        throw error;
-      }
-
-      // También manejar respuesta inválida con 200
-      if (data?.error === 'invalid_query') {
-        toast.error(data.message || "Esta búsqueda no es sobre propiedades", {
-          duration: 5000,
-          description: data.suggestion || "💡 Ejemplo: 'Apartamento de 2 habitaciones cerca del metro'"
-        });
-        return;
-      }
-
-      // Si es válida, continuar con el flujo normal
-      setShowOptions(true);
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
-    } catch (err) {
-      console.error('Error validating search:', err);
-      toast.error("Error al validar la búsqueda");
-    }
+    // Mostrar opciones de búsqueda
+    setShowOptions(true);
   };
   const handleContinueCurrentLocation = () => {
     setUseCustomLocation(false);
@@ -303,10 +264,13 @@ const Hero = () => {
                           {municipality && sector ? <span className="text-sm font-medium truncate">{municipality}, {sector}</span> : municipality ? <span className="text-sm font-medium truncate">{municipality}</span> : <span className="text-sm font-medium truncate">Medellín</span>}
                         </div>
                         <div className="flex items-center gap-2 w-full sm:w-auto">
-                          <Button variant="hero" size="lg" onClick={() => handleSearch()} disabled={!searchQuery.trim() || isRecording || isProcessing || loadingLocation} className="flex-1 sm:flex-initial min-w-[120px] text-base font-semibold">
-                            Buscar
+                          <Button variant="hero" size="lg" onClick={() => handleSearch()} disabled={!searchQuery.trim() || isRecording || isProcessing || isInterpretingSearch || loadingLocation} className="flex-1 sm:flex-initial min-w-[120px] text-base font-semibold">
+                            {isInterpretingSearch ? <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Procesando...
+                              </> : 'Buscar'}
                           </Button>
-                          <VoiceButton isRecording={isRecording} isProcessing={isProcessing} audioLevel={audioLevel} onStart={handleVoiceRecording} onStop={handleVoiceRecording} disabled={loadingLocation} />
+                          <VoiceButton isRecording={isRecording} isProcessing={isProcessing} audioLevel={audioLevel} onStart={handleVoiceRecording} onStop={handleVoiceRecording} disabled={loadingLocation || isInterpretingSearch} />
                         </div>
                       </>}
                   </div>
@@ -331,10 +295,10 @@ const Hero = () => {
               e.preventDefault();
               handleSearch();
             }
-          }} disabled={isRecording || isProcessing} />
-              <VoiceButton isRecording={isRecording} isProcessing={isProcessing} audioLevel={audioLevel} onStart={handleVoiceRecording} onStop={handleVoiceRecording} size="icon" variant="outline" />
-              <Button variant="hero" size="sm" onClick={() => handleSearch()} disabled={!searchQuery.trim() || isRecording || isProcessing} className="flex-shrink-0">
-                Buscar
+              }} disabled={isRecording || isProcessing || isInterpretingSearch} />
+              <VoiceButton isRecording={isRecording} isProcessing={isProcessing} audioLevel={audioLevel} onStart={handleVoiceRecording} onStop={handleVoiceRecording} size="icon" variant="outline" disabled={isInterpretingSearch} />
+              <Button variant="hero" size="sm" onClick={() => handleSearch()} disabled={!searchQuery.trim() || isRecording || isProcessing || isInterpretingSearch} className="flex-shrink-0">
+                {isInterpretingSearch ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Buscar'}
               </Button>
             </div>
           </div>
