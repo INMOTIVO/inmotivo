@@ -89,7 +89,7 @@ const HowItWorksVideo = () => {
                 <video
                   className="w-full h-full object-cover"
                   autoPlay
-                  controls
+                  controls={!hasPlayedWithSound}
                   playsInline
                   loop
                   preload="auto"
