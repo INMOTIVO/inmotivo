@@ -79,7 +79,7 @@ const HowItWorksVideo = () => {
               {isPlaying && (
                 <div className="absolute inset-0 bg-black">
                   <video
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-cover"
                     autoPlay
                     controls
                     playsInline
