@@ -64,18 +64,65 @@ const NavigationMap = ({
 
   // Función para obtener el icono según el tipo de propiedad
   const getPropertyIconSVG = (propertyType: string) => {
-    const iconPaths: { [key: string]: string } = {
-      'apartamento': 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10', // Home/Building
-      'casa': 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10', // House
-      'oficina': 'M3 3h18v18H3z M3 9h18 M3 15h18 M9 3v18 M15 3v18', // Office building grid
-      'local': 'M3 3h18v18H3z M3 3l9 9 9-9', // Store/Shop
-      'lote': 'M3 3h18v18H3z M3 3l18 18 M21 3L3 21', // Land/Lot
-      'bodega': 'M3 3h18v18H3z M8 3v18 M16 3v18', // Warehouse
-      'consultorio': 'M12 2v20 M2 12h20', // Medical/Consulting
-      'default': 'M12 2L2 7v13h20V7z M12 2v8' // Default building
+    const icons: { [key: string]: string } = {
+      'apartamento': `
+        <rect x="2" y="4" width="20" height="18" rx="1" stroke="#10b981" stroke-width="2.5" fill="none"/>
+        <line x1="2" y1="9" x2="22" y2="9" stroke="#10b981" stroke-width="2"/>
+        <line x1="2" y1="14" x2="22" y2="14" stroke="#10b981" stroke-width="2"/>
+        <line x1="2" y1="19" x2="22" y2="19" stroke="#10b981" stroke-width="2"/>
+        <line x1="8" y1="4" x2="8" y2="22" stroke="#10b981" stroke-width="2"/>
+        <line x1="16" y1="4" x2="16" y2="22" stroke="#10b981" stroke-width="2"/>
+      `,
+      'casa': `
+        <path d="M3 12L12 3L21 12" stroke="#10b981" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M5 12V21H10V16H14V21H19V12" stroke="#10b981" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="7" y="7" width="3" height="3" fill="#10b981"/>
+        <rect x="14" y="7" width="3" height="3" fill="#10b981"/>
+      `,
+      'oficina': `
+        <rect x="3" y="3" width="18" height="20" rx="1" stroke="#10b981" stroke-width="2.5" fill="none"/>
+        <line x1="3" y1="8" x2="21" y2="8" stroke="#10b981" stroke-width="2"/>
+        <line x1="3" y1="13" x2="21" y2="13" stroke="#10b981" stroke-width="2"/>
+        <line x1="3" y1="18" x2="21" y2="18" stroke="#10b981" stroke-width="2"/>
+        <line x1="9" y1="3" x2="9" y2="23" stroke="#10b981" stroke-width="2"/>
+        <line x1="15" y1="3" x2="15" y2="23" stroke="#10b981" stroke-width="2"/>
+        <circle cx="6" cy="5.5" r="0.8" fill="#10b981"/>
+        <circle cx="12" cy="5.5" r="0.8" fill="#10b981"/>
+        <circle cx="18" cy="5.5" r="0.8" fill="#10b981"/>
+      `,
+      'local': `
+        <path d="M4 4H20V9L18 11V22H6V11L4 9V4Z" stroke="#10b981" stroke-width="2.5" fill="none" stroke-linejoin="round"/>
+        <rect x="9" y="14" width="6" height="8" fill="#10b981" opacity="0.3"/>
+        <path d="M8 14H16M8 17H16" stroke="#10b981" stroke-width="1.5"/>
+        <path d="M4 9H20" stroke="#10b981" stroke-width="2.5" stroke-linecap="round"/>
+      `,
+      'lote': `
+        <rect x="3" y="3" width="18" height="18" stroke="#10b981" stroke-width="2.5" fill="none" stroke-dasharray="3,2"/>
+        <path d="M3 3L21 21M21 3L3 21" stroke="#10b981" stroke-width="1.5" opacity="0.5"/>
+        <circle cx="7" cy="7" r="1.5" fill="#10b981"/>
+        <circle cx="17" cy="7" r="1.5" fill="#10b981"/>
+        <circle cx="7" cy="17" r="1.5" fill="#10b981"/>
+        <circle cx="17" cy="17" r="1.5" fill="#10b981"/>
+      `,
+      'bodega': `
+        <rect x="3" y="8" width="18" height="14" rx="1" stroke="#10b981" stroke-width="2.5" fill="none"/>
+        <path d="M3 8L12 3L21 8" stroke="#10b981" stroke-width="2.5" fill="none" stroke-linejoin="round"/>
+        <rect x="9" y="15" width="6" height="7" stroke="#10b981" stroke-width="2" fill="none"/>
+        <line x1="12" y1="15" x2="12" y2="22" stroke="#10b981" stroke-width="2"/>
+        <path d="M6 12H9M15 12H18" stroke="#10b981" stroke-width="2" stroke-linecap="round"/>
+      `,
+      'consultorio': `
+        <circle cx="12" cy="12" r="9" stroke="#10b981" stroke-width="2.5" fill="none"/>
+        <path d="M12 6V18M6 12H18" stroke="#10b981" stroke-width="3" stroke-linecap="round"/>
+      `,
+      'default': `
+        <rect x="4" y="6" width="16" height="16" rx="1" stroke="#10b981" stroke-width="2.5" fill="none"/>
+        <path d="M4 10L12 4L20 10" stroke="#10b981" stroke-width="2.5" fill="none" stroke-linejoin="round"/>
+        <rect x="9" y="14" width="6" height="8" fill="#10b981" opacity="0.3"/>
+      `
     };
 
-    return iconPaths[propertyType?.toLowerCase()] || iconPaths['default'];
+    return icons[propertyType?.toLowerCase()] || icons['default'];
   };
   const {
     isLoaded
@@ -617,39 +664,49 @@ const NavigationMap = ({
           if (!property.latitude || !property.longitude) return null;
           
           // Crear SVG con icono personalizado
-          const iconPath = getPropertyIconSVG(property.property_type);
+          const iconSVG = getPropertyIconSVG(property.property_type);
           const svgMarker = `
-            <svg width="48" height="64" viewBox="0 0 32 48" xmlns="http://www.w3.org/2000/svg">
-              <!-- Pin principal -->
+            <svg width="56" height="72" viewBox="0 0 32 48" xmlns="http://www.w3.org/2000/svg">
+              <!-- Sombra del pin -->
+              <ellipse cx="16" cy="46" rx="8" ry="2" fill="rgba(0,0,0,0.3)"/>
+              
+              <!-- Pin principal con gradiente -->
+              <defs>
+                <linearGradient id="pinGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" style="stop-color:#22c55e;stop-opacity:1" />
+                  <stop offset="100%" style="stop-color:#16a34a;stop-opacity:1" />
+                </linearGradient>
+                <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.4"/>
+                </filter>
+              </defs>
+              
               <path d="M16 0C7.163 0 0 7.163 0 16c0 12 16 24 16 24s16-12 16-24C32 7.163 24.837 0 16 0z" 
-                    fill="#10b981" 
+                    fill="url(#pinGrad)" 
                     stroke="#ffffff" 
-                    stroke-width="2"/>
+                    stroke-width="2.5"
+                    filter="url(#shadow)"/>
               
               <!-- Círculo interior blanco para el icono -->
-              <circle cx="16" cy="14" r="9" fill="white" opacity="0.95"/>
+              <circle cx="16" cy="14" r="10" fill="white" opacity="0.98"/>
               
               <!-- Icono del tipo de propiedad -->
-              <g transform="translate(10, 8) scale(0.25)" 
-                 stroke="#10b981" 
-                 stroke-width="2" 
-                 fill="none" 
-                 stroke-linecap="round" 
-                 stroke-linejoin="round">
-                <path d="${iconPath}"/>
+              <g transform="translate(4, 2) scale(0.75)">
+                ${iconSVG}
               </g>
               
-              <!-- Etiqueta de precio -->
-              <rect x="4" y="26" width="24" height="12" rx="6" 
-                    fill="#10b981" 
-                    stroke="#ffffff" 
-                    stroke-width="1.5"/>
-              <text x="16" y="34" 
-                    font-size="7" 
-                    font-weight="bold" 
-                    fill="white" 
+              <!-- Etiqueta de precio con sombra -->
+              <rect x="2" y="27" width="28" height="13" rx="6.5" 
+                    fill="#ffffff" 
+                    stroke="#16a34a" 
+                    stroke-width="2"
+                    filter="url(#shadow)"/>
+              <text x="16" y="36" 
+                    font-size="8" 
+                    font-weight="900" 
+                    fill="#16a34a" 
                     text-anchor="middle" 
-                    font-family="Arial, sans-serif">
+                    font-family="system-ui, -apple-system, sans-serif">
                 $${Math.round(property.price / 1000000)}M
               </text>
             </svg>
