@@ -312,6 +312,11 @@ const CreateProperty = () => {
       return;
     }
 
+    if (!window.google?.maps?.Geocoder) {
+      toast.error('Cargando servicios de Google Maps...');
+      return;
+    }
+
     setLoadingCoordinates(true);
     
     // Construir dirección completa
@@ -325,46 +330,39 @@ const CreateProperty = () => {
     const fullAddress = addressParts.join(', ');
     
     try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-          fullAddress
-        )}&limit=1&countrycodes=co`,
+      const geocoder = new google.maps.Geocoder();
+      
+      geocoder.geocode(
         {
-          headers: {
-            'Accept-Language': 'es',
-            'User-Agent': 'INMOTIVO-App/1.0'
+          address: fullAddress,
+          componentRestrictions: {
+            country: 'CO',
           },
+        },
+        (results, status) => {
+          if (status === 'OK' && results && results[0]) {
+            const location = results[0].geometry.location;
+            const lat = location.lat();
+            const lng = location.lng();
+            
+            // Actualizar coordenadas
+            setFormData(prev => ({
+              ...prev,
+              latitude: lat,
+              longitude: lng,
+            }));
+            
+            toast.success(`Coordenadas obtenidas: ${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+          } else {
+            console.error('Geocoding error:', status);
+            toast.error('No se encontraron coordenadas para esta dirección. Verifica que sea correcta.');
+          }
+          setLoadingCoordinates(false);
         }
       );
-
-      if (!response.ok) {
-        throw new Error('Error en la respuesta del servidor');
-      }
-
-      const data = await response.json();
-      
-      if (data && data.length > 0 && data[0].lat && data[0].lon) {
-        const lat = parseFloat(data[0].lat);
-        const lon = parseFloat(data[0].lon);
-        
-        // Validar que las coordenadas sean válidas para Colombia
-        if (lat >= -4.2 && lat <= 13.4 && lon >= -81.7 && lon <= -66.9) {
-          setFormData({
-            ...formData,
-            latitude: lat,
-            longitude: lon,
-          });
-          toast.success(`Coordenadas obtenidas: ${lat.toFixed(6)}, ${lon.toFixed(6)}`);
-        } else {
-          toast.error('Las coordenadas obtenidas están fuera de Colombia. Verifica la dirección.');
-        }
-      } else {
-        toast.error('No se encontraron coordenadas para esta dirección. Verifica que sea correcta.');
-      }
     } catch (error) {
       console.error('Error getting coordinates:', error);
       toast.error('Error al obtener coordenadas. Intenta nuevamente.');
-    } finally {
       setLoadingCoordinates(false);
     }
   };
@@ -612,7 +610,7 @@ const CreateProperty = () => {
                 variant="outline"
                 onClick={getCoordinatesFromAddress}
                 className="w-full"
-                disabled={loadingCoordinates || !formData.address || !formData.city}
+                disabled={loadingCoordinates || !formData.address || !formData.city || !isLoaded}
               >
                 {loadingCoordinates ? (
                   <>
