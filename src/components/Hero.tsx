@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import heroImage from "@/assets/hero-medellin.jpg";
 import { toast } from "sonner";
 import SearchOptions from './SearchOptions';
@@ -12,6 +13,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useVoiceRecording } from "@/hooks/useVoiceRecording";
 import { useInterpretSearch } from "@/hooks/useInterpretSearch";
 import VoiceButton from './VoiceButton';
+import { getDepartments, getMunicipalitiesByDepartment, getNeighborhoodsByMunicipality } from '@/data/colombiaLocations';
+
 const Hero = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -27,6 +30,8 @@ const Hero = () => {
   const [customDepartment, setCustomDepartment] = useState("");
   const [customMunicipality, setCustomMunicipality] = useState("");
   const [customNeighborhood, setCustomNeighborhood] = useState("");
+  const [availableMunicipalities, setAvailableMunicipalities] = useState<string[]>([]);
+  const [availableNeighborhoods, setAvailableNeighborhoods] = useState<string[]>([]);
   const isMobile = useIsMobile();
   const { interpretSearch, isProcessing: isInterpretingSearch } = useInterpretSearch();
   const {
@@ -181,6 +186,22 @@ const Hero = () => {
     setShowLocationDialog(false);
     toast.success("Usando tu ubicación actual");
   };
+  const handleDepartmentChange = (value: string) => {
+    setCustomDepartment(value);
+    setCustomMunicipality("");
+    setCustomNeighborhood("");
+    const municipalities = getMunicipalitiesByDepartment(value);
+    setAvailableMunicipalities(municipalities);
+    setAvailableNeighborhoods([]);
+  };
+
+  const handleMunicipalityChange = (value: string) => {
+    setCustomMunicipality(value);
+    setCustomNeighborhood("");
+    const neighborhoods = getNeighborhoodsByMunicipality(customDepartment, value);
+    setAvailableNeighborhoods(neighborhoods);
+  };
+
   const handleUseCustomLocation = () => {
     if (!customDepartment.trim()) {
       toast.error("El departamento es obligatorio");
@@ -340,25 +361,48 @@ const Hero = () => {
                   <label className="text-sm font-medium">
                     Departamento <span className="text-destructive">*</span>
                   </label>
-                  <Input placeholder="Ej: Antioquia" value={customDepartment} onChange={e => setCustomDepartment(e.target.value)} />
+                  <Select value={customDepartment} onValueChange={handleDepartmentChange}>
+                    <SelectTrigger className="w-full bg-background">
+                      <SelectValue placeholder="Selecciona un departamento" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background z-50">
+                      {getDepartments().map(dept => (
+                        <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium">
                     Municipio <span className="text-destructive">*</span>
                   </label>
-                  <Input placeholder="Ej: Medellín" value={customMunicipality} onChange={e => setCustomMunicipality(e.target.value)} />
+                  <Select value={customMunicipality} onValueChange={handleMunicipalityChange} disabled={!customDepartment}>
+                    <SelectTrigger className="w-full bg-background">
+                      <SelectValue placeholder={customDepartment ? "Selecciona un municipio" : "Primero selecciona un departamento"} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background z-50">
+                      {availableMunicipalities.map(muni => (
+                        <SelectItem key={muni} value={muni}>{muni}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium">
                     Localidad o Barrio <span className="text-muted-foreground text-xs">(opcional)</span>
                   </label>
-                  <Input placeholder="Ej: El Poblado" value={customNeighborhood} onChange={e => setCustomNeighborhood(e.target.value)} onKeyDown={e => {
-                  if (e.key === 'Enter') {
-                    handleUseCustomLocation();
-                  }
-                }} />
+                  <Select value={customNeighborhood} onValueChange={setCustomNeighborhood} disabled={!customMunicipality}>
+                    <SelectTrigger className="w-full bg-background">
+                      <SelectValue placeholder={customMunicipality ? "Selecciona un barrio (opcional)" : "Primero selecciona un municipio"} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-background z-50">
+                      {availableNeighborhoods.map(neighborhood => (
+                        <SelectItem key={neighborhood} value={neighborhood}>{neighborhood}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <Button onClick={handleUseCustomLocation} variant="outline" className="w-full">
