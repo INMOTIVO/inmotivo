@@ -99,6 +99,26 @@ const AdminDashboard = () => {
 
       if (usersError) throw usersError;
 
+      // Obtener visitas de hoy
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const { count: todayVisitsCount, error: todayError } = await supabase
+        .from('page_views')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', today.toISOString());
+
+      if (todayError) throw todayError;
+
+      // Obtener visitas de la última semana
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      const { count: weeklyVisitsCount, error: weeklyError } = await supabase
+        .from('page_views')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', weekAgo.toISOString());
+
+      if (weeklyError) throw weeklyError;
+
       // Obtener propiedades recientes
       const { data: recentProps, error: recentError } = await supabase
         .from('properties')
@@ -118,8 +138,8 @@ const AdminDashboard = () => {
         totalProperties,
         activeProperties,
         totalMessages: messagesCount || 0,
-        todayVisits: 0, // Placeholder - would need analytics integration
-        weeklyVisits: 0, // Placeholder - would need analytics integration
+        todayVisits: todayVisitsCount || 0,
+        weeklyVisits: weeklyVisitsCount || 0,
         totalUsers: usersCount || 0,
       });
 
