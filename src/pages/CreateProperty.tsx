@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import Navbar from '@/components/Navbar';
-import { Upload, X, Loader2, MapPin, ArrowLeft } from 'lucide-react';
+import { Upload, X, Loader2, MapPin, ArrowLeft, Star } from 'lucide-react';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { useGoogleMapsPlaces } from '@/hooks/useGoogleMapsPlaces';
@@ -41,6 +41,7 @@ const CreateProperty = () => {
   const [uploadingImages, setUploadingImages] = useState(false);
   const [loadingCoordinates, setLoadingCoordinates] = useState(false);
   const [images, setImages] = useState<string[]>([]);
+  const [coverImageIndex, setCoverImageIndex] = useState(0);
   const [errors, setErrors] = useState<Partial<Record<keyof PropertyFormData, string>>>({});
   const addressInputRef = useRef<HTMLInputElement>(null);
 
@@ -222,7 +223,20 @@ const CreateProperty = () => {
   };
 
   const removeImage = (index: number) => {
-    setImages(images.filter((_, i) => i !== index));
+    const newImages = images.filter((_, i) => i !== index);
+    setImages(newImages);
+    
+    // Ajustar el índice de la portada si es necesario
+    if (index === coverImageIndex) {
+      setCoverImageIndex(0);
+    } else if (index < coverImageIndex) {
+      setCoverImageIndex(coverImageIndex - 1);
+    }
+  };
+
+  const setCoverImage = (index: number) => {
+    setCoverImageIndex(index);
+    toast.success('Foto de portada actualizada');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -251,6 +265,13 @@ const CreateProperty = () => {
     setLoading(true);
 
     try {
+      // Reordenar imágenes para que la portada esté primero
+      const orderedImages = [...images];
+      if (coverImageIndex > 0) {
+        const coverImage = orderedImages.splice(coverImageIndex, 1)[0];
+        orderedImages.unshift(coverImage);
+      }
+
       const propertyData = {
         title: validation.data.title,
         description: validation.data.description,
@@ -265,7 +286,7 @@ const CreateProperty = () => {
         latitude: validation.data.latitude,
         longitude: validation.data.longitude,
         owner_id: user?.id,
-        images: images,
+        images: orderedImages,
         amenities: amenities,
         furnished,
         pets_allowed: petsAllowed,
@@ -778,25 +799,56 @@ const CreateProperty = () => {
               </div>
 
               {images.length > 0 && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {images.map((url, index) => (
-                    <div key={index} className="relative group">
-                      <img
-                        src={url}
-                        alt={`Foto ${index + 1}`}
-                        className="w-full h-32 object-cover rounded-lg"
-                      />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon"
-                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={() => removeImage(index)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    Click en la estrella para marcar como foto de portada
+                  </p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {images.map((url, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={url}
+                          alt={`Foto ${index + 1}`}
+                          className="w-full h-32 object-cover rounded-lg"
+                        />
+                        
+                        {/* Indicador de portada */}
+                        {index === coverImageIndex && (
+                          <div className="absolute top-2 left-2 bg-primary text-primary-foreground px-2 py-1 rounded-md text-xs font-semibold flex items-center gap-1">
+                            <Star className="h-3 w-3 fill-current" />
+                            Portada
+                          </div>
+                        )}
+                        
+                        {/* Botón para marcar como portada */}
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          size="icon"
+                          className={`absolute top-2 left-2 transition-opacity ${
+                            index === coverImageIndex 
+                              ? 'opacity-0' 
+                              : 'opacity-0 group-hover:opacity-100'
+                          }`}
+                          onClick={() => setCoverImage(index)}
+                          title="Marcar como portada"
+                        >
+                          <Star className="h-4 w-4" />
+                        </Button>
+                        
+                        {/* Botón eliminar */}
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon"
+                          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => removeImage(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </CardContent>
