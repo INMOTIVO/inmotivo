@@ -74,28 +74,18 @@ const AdminDashboard = () => {
   // Suscripción en tiempo real a cambios en propiedades
   useEffect(() => {
     if (!user || !isAdmin) return;
-
     console.log('🔴 Configurando suscripción en tiempo real para propiedades');
-    
-    const channel = supabase
-      .channel('properties-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'properties'
-        },
-        (payload) => {
-          console.log('🟢 Cambio detectado en propiedades:', payload);
-          // Refetch datos cuando hay cambios en propiedades
-          fetchDashboardData();
-        }
-      )
-      .subscribe((status) => {
-        console.log('📡 Estado de suscripción:', status);
-      });
-
+    const channel = supabase.channel('properties-changes').on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'properties'
+    }, payload => {
+      console.log('🟢 Cambio detectado en propiedades:', payload);
+      // Refetch datos cuando hay cambios en propiedades
+      fetchDashboardData();
+    }).subscribe(status => {
+      console.log('📡 Estado de suscripción:', status);
+    });
     return () => {
       console.log('🔴 Cerrando suscripción en tiempo real');
       supabase.removeChannel(channel);
@@ -341,9 +331,7 @@ const AdminDashboard = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Actividad Reciente</CardTitle>
-                <CardDescription>
-                  Últimas propiedades modificadas o publicadas
-                </CardDescription>
+                
               </CardHeader>
               <CardContent>
                 {recentProperties.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">
@@ -353,13 +341,8 @@ const AdminDashboard = () => {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
                             <h4 className="font-medium truncate">{property.title}</h4>
-                            <span className={`text-xs px-2 py-0.5 rounded-full ${
-                              property.status === 'available' ? 'bg-green-100 text-green-700' :
-                              property.status === 'draft' ? 'bg-gray-100 text-gray-700' :
-                              'bg-red-100 text-red-700'
-                            }`}>
-                              {property.status === 'available' ? 'Activa' :
-                               property.status === 'draft' ? 'Borrador' : 'Suspendida'}
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${property.status === 'available' ? 'bg-green-100 text-green-700' : property.status === 'draft' ? 'bg-gray-100 text-gray-700' : 'bg-red-100 text-red-700'}`}>
+                              {property.status === 'available' ? 'Activa' : property.status === 'draft' ? 'Borrador' : 'Suspendida'}
                             </span>
                           </div>
                           <p className="text-sm text-muted-foreground">
