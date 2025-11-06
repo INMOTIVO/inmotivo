@@ -61,6 +61,22 @@ const NavigationMap = ({
   const handlePropertyClick = useCallback((propertyId: string) => {
     navigate(`/property/${propertyId}`);
   }, [navigate]);
+
+  // Función para obtener el icono según el tipo de propiedad
+  const getPropertyIconSVG = (propertyType: string) => {
+    const iconPaths: { [key: string]: string } = {
+      'apartamento': 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10', // Home/Building
+      'casa': 'M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z M9 22V12h6v10', // House
+      'oficina': 'M3 3h18v18H3z M3 9h18 M3 15h18 M9 3v18 M15 3v18', // Office building grid
+      'local': 'M3 3h18v18H3z M3 3l9 9 9-9', // Store/Shop
+      'lote': 'M3 3h18v18H3z M3 3l18 18 M21 3L3 21', // Land/Lot
+      'bodega': 'M3 3h18v18H3z M8 3v18 M16 3v18', // Warehouse
+      'consultorio': 'M12 2v20 M2 12h20', // Medical/Consulting
+      'default': 'M12 2L2 7v13h20V7z M12 2v8' // Default building
+    };
+
+    return iconPaths[propertyType?.toLowerCase()] || iconPaths['default'];
+  };
   const {
     isLoaded
   } = useJsApiLoader({
@@ -601,6 +617,51 @@ const NavigationMap = ({
         {!isPaused && properties?.map(property => {
           if (!property.latitude || !property.longitude) return null;
           
+          // Crear SVG con icono personalizado
+          const iconPath = getPropertyIconSVG(property.property_type);
+          const svgMarker = `
+            <svg width="48" height="64" viewBox="0 0 32 48" xmlns="http://www.w3.org/2000/svg">
+              <!-- Pin principal -->
+              <path d="M16 0C7.163 0 0 7.163 0 16c0 12 16 24 16 24s16-12 16-24C32 7.163 24.837 0 16 0z" 
+                    fill="#10b981" 
+                    stroke="#ffffff" 
+                    stroke-width="2"/>
+              
+              <!-- Círculo interior blanco para el icono -->
+              <circle cx="16" cy="14" r="9" fill="white" opacity="0.95"/>
+              
+              <!-- Icono del tipo de propiedad -->
+              <g transform="translate(10, 8) scale(0.25)" 
+                 stroke="#10b981" 
+                 stroke-width="2" 
+                 fill="none" 
+                 stroke-linecap="round" 
+                 stroke-linejoin="round">
+                <path d="${iconPath}"/>
+              </g>
+              
+              <!-- Etiqueta de precio -->
+              <rect x="4" y="26" width="24" height="12" rx="6" 
+                    fill="#10b981" 
+                    stroke="#ffffff" 
+                    stroke-width="1.5"/>
+              <text x="16" y="34" 
+                    font-size="7" 
+                    font-weight="bold" 
+                    fill="white" 
+                    text-anchor="middle" 
+                    font-family="Arial, sans-serif">
+                $${Math.round(property.price / 1000000)}M
+              </text>
+            </svg>
+          `;
+          
+          const icon = {
+            url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svgMarker)}`,
+            scaledSize: new google.maps.Size(48, 64),
+            anchor: new google.maps.Point(24, 64)
+          };
+          
           return <Marker 
             key={property.id}
             position={{
@@ -608,22 +669,7 @@ const NavigationMap = ({
               lng: property.longitude
             }}
             onClick={() => handlePropertyClick(property.id)}
-            icon={{
-              path: 'M16 0C7.163 0 0 7.163 0 16c0 12 16 24 16 24s16-12 16-24C32 7.163 24.837 0 16 0z',
-              fillColor: '#10b981',
-              fillOpacity: 1,
-              strokeWeight: 3,
-              strokeColor: '#ffffff',
-              scale: 1.4,
-              anchor: new google.maps.Point(16, 40)
-            }}
-            label={{
-              text: `$${Math.round(property.price / 1000000)}M`,
-              color: 'white',
-              fontSize: '14px',
-              fontWeight: 'bold',
-              className: 'marker-label'
-            }}
+            icon={icon}
           />;
         })}
       </GoogleMap>
