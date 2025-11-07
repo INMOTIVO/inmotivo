@@ -192,7 +192,7 @@ const AdminDashboard = () => {
       <Navbar />
       
       <main className="container mx-auto px-4 pt-24 pb-12">
-        <div className="flex items-center gap-4 mb-6">
+        <div className="flex items-center justify-between mb-6">
           <Button
             variant="default"
             size="icon"
