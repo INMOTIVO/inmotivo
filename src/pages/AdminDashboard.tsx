@@ -192,6 +192,15 @@ const AdminDashboard = () => {
       <Navbar />
       
       <main className="container mx-auto px-4 pt-24 pb-12">
+        <Button
+          variant="default"
+          size="icon"
+          onClick={() => navigate('/')}
+          className="mb-4 rounded-full w-12 h-12 shadow-xl bg-primary hover:bg-primary/90"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
           <div>
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">Dashboard de Administrador</h1>
