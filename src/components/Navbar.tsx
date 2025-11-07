@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu, LogOut, Home, Shield, Heart } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useRole } from "@/hooks/useRole";
 import { toast } from "sonner";
@@ -17,9 +17,11 @@ import {
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, signOut } = useAuth();
   const { isAdmin } = useRole();
   const [isOpen, setIsOpen] = useState(false);
+  const isAdminPage = location.pathname === '/admin';
 
   // Query to count favorites
   const { data: favoritesCount = 0 } = useQuery({
@@ -114,8 +116,8 @@ const Navbar = () => {
 
           {/* Right side - Favorites & Mobile Menu */}
           <div className="flex items-center gap-2">
-            {/* Favorites Button - Always visible when logged in */}
-            {user && (
+            {/* Favorites Button - Hidden in admin dashboard */}
+            {user && !isAdminPage && (
               <Button
                 variant="ghost"
                 size="icon"
