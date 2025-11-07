@@ -76,7 +76,7 @@ const Navbar = () => {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-4">
             <a href="/" className="text-foreground hover:text-primary transition-colors font-medium">
-              Home
+              Inicio
             </a>
             {user ? (
               <>
@@ -88,10 +88,10 @@ const Navbar = () => {
                   {isAdmin ? (
                     <>
                       <Shield className="h-4 w-4 mr-2" />
-                      Dashboard Admin
+                      Panel Administrador
                     </>
                   ) : (
-                    'Mi Dashboard'
+                    'Mi Panel'
                   )}
                 </Button>
                 <Button 
@@ -152,7 +152,7 @@ const Navbar = () => {
                   onClick={() => handleNavigation("/")}
                 >
                   <Home className="h-5 w-5 mr-3" />
-                  Home
+                  Inicio
                 </Button>
                 {user ? (
                   <>
@@ -174,10 +174,10 @@ const Navbar = () => {
                       {isAdmin ? (
                         <>
                           <Shield className="h-5 w-5 mr-3" />
-                          Dashboard Admin
+                          Panel Administrador
                         </>
                       ) : (
-                        'Mi Dashboard'
+                        'Mi Panel'
                       )}
                     </Button>
                     <Button

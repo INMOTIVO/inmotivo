@@ -208,7 +208,7 @@ const AdminDashboard = () => {
         </div>
         
         <div className="mb-8">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">Dashboard de Administrador</h1>
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">Panel de Administrador</h1>
           <p className="text-sm sm:text-base text-muted-foreground mt-2">
             Panel de control y métricas de la plataforma
           </p>

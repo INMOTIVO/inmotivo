@@ -290,7 +290,7 @@ const ProviderDashboard = () => {
             <p className="text-base sm:text-lg text-muted-foreground mb-2">
               Bienvenido, <span className="text-foreground font-semibold">{profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'Usuario'}</span>
             </p>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">Dashboard de Proveedor</h1>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">Panel de Proveedor</h1>
             <p className="text-sm sm:text-base text-muted-foreground mt-2">
               Gestiona tus propiedades y mensajes
             </p>
