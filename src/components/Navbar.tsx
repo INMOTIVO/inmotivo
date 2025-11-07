@@ -116,8 +116,8 @@ const Navbar = () => {
 
           {/* Right side - Favorites & Mobile Menu */}
           <div className="flex items-center gap-2">
-            {/* Favorites Button - Hidden in admin dashboard */}
-            {user && !isAdminPage && (
+            {/* Favorites Button - Hidden for admin users */}
+            {user && !isAdmin && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -156,14 +156,16 @@ const Navbar = () => {
                 </Button>
                 {user ? (
                   <>
-                    <Button
-                      variant="ghost"
-                      className="justify-start text-base h-12"
-                      onClick={() => handleNavigation("/favorites")}
-                    >
-                      <Heart className="h-5 w-5 mr-3" />
-                      Favoritos
-                    </Button>
+                    {!isAdmin && (
+                      <Button
+                        variant="ghost"
+                        className="justify-start text-base h-12"
+                        onClick={() => handleNavigation("/favorites")}
+                      >
+                        <Heart className="h-5 w-5 mr-3" />
+                        Favoritos
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       className="justify-start text-base h-12"
