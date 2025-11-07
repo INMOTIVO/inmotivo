@@ -192,26 +192,26 @@ const AdminDashboard = () => {
       <Navbar />
       
       <main className="container mx-auto px-4 pt-24 pb-12">
-        <Button
-          variant="default"
-          size="icon"
-          onClick={() => navigate('/')}
-          className="mb-4 rounded-full w-12 h-12 shadow-xl bg-primary hover:bg-primary/90"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-8">
-          <div>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">Dashboard de Administrador</h1>
-            <p className="text-sm sm:text-base text-muted-foreground mt-2">
-              Panel de control y métricas de la plataforma
-            </p>
-          </div>
-          <Button onClick={() => navigate('/create-property')} size="lg" className="w-full sm:w-auto">
+        <div className="flex items-center gap-4 mb-6">
+          <Button
+            variant="default"
+            size="icon"
+            onClick={() => navigate('/')}
+            className="rounded-full w-12 h-12 shadow-xl bg-primary hover:bg-primary/90"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <Button onClick={() => navigate('/create-property')} size="lg">
             <Plus className="mr-2 h-5 w-5" />
             Nueva Propiedad
           </Button>
+        </div>
+        
+        <div className="mb-8">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">Dashboard de Administrador</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-2">
+            Panel de control y métricas de la plataforma
+          </p>
         </div>
 
         {/* Stats Grid */}
