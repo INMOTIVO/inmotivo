@@ -161,15 +161,6 @@ const TenantProfile = () => {
       <Navbar />
       
       <main className="flex-1 container mx-auto px-4 py-8 mt-20">
-        <Button
-          variant="ghost"
-          onClick={() => navigate(-1)}
-          className="mb-6"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Volver
-        </Button>
-
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
