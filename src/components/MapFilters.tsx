@@ -8,7 +8,6 @@ import { FunctionsHttpError } from '@supabase/supabase-js';
 import { Loader2, Send } from 'lucide-react';
 import { useVoiceRecording } from '@/hooks/useVoiceRecording';
 import VoiceButton from './VoiceButton';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 interface MapFiltersProps {
   onFiltersChange: (filters: {
@@ -24,7 +23,7 @@ interface MapFiltersProps {
 const MapFilters = ({ onFiltersChange, initialQuery = '' }: MapFiltersProps) => {
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [isProcessing, setIsProcessing] = useState(false);
-  const { isRecording, isProcessing: isTranscribing, audioLevel, startRecording, stopRecording, devices, selectedMicId, setSelectedMicId } = useVoiceRecording();
+  const { isRecording, isProcessing: isTranscribing, audioLevel, startRecording, stopRecording } = useVoiceRecording();
 
   useEffect(() => {
     if (initialQuery) {
@@ -139,18 +138,6 @@ const MapFilters = ({ onFiltersChange, initialQuery = '' }: MapFiltersProps) => 
           )}
         </Button>
 
-        {devices && devices.length > 1 && (
-          <Select value={selectedMicId} onValueChange={(v) => setSelectedMicId(v)}>
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Micrófono" />
-            </SelectTrigger>
-            <SelectContent>
-              {devices.map((d) => (
-                <SelectItem key={d.deviceId} value={d.deviceId}>{d.label || 'Micrófono'}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
 
         <VoiceButton
           isRecording={isRecording}
