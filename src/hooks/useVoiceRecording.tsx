@@ -23,6 +23,7 @@ export const useVoiceRecording = () => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const srTimeoutRef = useRef<number | null>(null);
+  const srFallbackRef = useRef<boolean>(false);
 
   const startRecording = useCallback(async () => {
     try {
@@ -172,6 +173,65 @@ export const useVoiceRecording = () => {
 
           let finalText: string | null = null;
 
+          const fallbackToBackend = () => {
+            if (srFallbackRef.current) return;
+            srFallbackRef.current = true;
+            console.warn('[Voz] Fallback a backend (SR sin resultado)');
+            // Iniciar grabación corta y enviar a backend
+            navigator.mediaDevices.getUserMedia({
+              audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+            }).then(stream => {
+              try {
+                const mr = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+                mediaRecorderRef.current = mr;
+                audioChunksRef.current = [];
+                setIsRecording(true);
+                mr.ondataavailable = (e) => { if (e.data.size > 0) audioChunksRef.current.push(e.data); };
+                mr.onstop = async () => {
+                  setIsRecording(false);
+                  try {
+                    const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+                    const reader = new FileReader();
+                    reader.readAsDataURL(blob);
+                    reader.onloadend = async () => {
+                      const base64 = reader.result?.toString().split(',')[1];
+                      if (!base64) { setIsProcessing(false); return reject(new Error('Error processing audio')); }
+                      try {
+                        const { data, error } = await supabase.functions.invoke('transcribe-audio', { body: { audio: base64 } });
+                        if (error) throw error;
+                        if (data?.text) {
+                          toast.success('Audio transcrito');
+                          resolve(data.text as string);
+                        } else {
+                          throw new Error('No se recibió transcripción');
+                        }
+                      } catch (e) {
+                        reject(e);
+                      } finally {
+                        setIsProcessing(false);
+                        stream.getTracks().forEach(t => t.stop());
+                      }
+                    };
+                  } catch (e) {
+                    setIsProcessing(false);
+                    reject(e);
+                  }
+                };
+                mr.start();
+                toast.success('Grabando... (fallback)', { duration: 800 });
+                setTimeout(() => { try { mr.stop(); } catch {} }, 4000);
+              } catch (e) {
+                setIsRecording(false);
+                setIsProcessing(false);
+                reject(e);
+              }
+            }).catch(err => {
+              setIsRecording(false);
+              setIsProcessing(false);
+              reject(err);
+            });
+          };
+
           recognition.onresult = (event: any) => {
             for (let i = event.resultIndex; i < event.results.length; i++) {
               const res = event.results[i];
@@ -183,29 +243,29 @@ export const useVoiceRecording = () => {
             }
           };
 
-          // Timeout de seguridad
+          // Timeout de seguridad (8s)
           srTimeoutRef.current = window.setTimeout(() => {
             console.warn('[Voz] Timeout SR, deteniendo');
             try { recognition.stop(); } catch {}
-          }, 10000);
+          }, 8000);
 
           recognition.onerror = (e: any) => {
-            console.warn('[Voz] SR error en recordOnce, abortando', e);
+            console.warn('[Voz] SR error en recordOnce, usando fallback', e);
             if (srTimeoutRef.current) { clearTimeout(srTimeoutRef.current); srTimeoutRef.current = null; }
             setIsRecording(false);
-            setIsProcessing(false);
-            reject(e);
+            // No rechazamos: vamos a fallback
+            fallbackToBackend();
           };
 
           recognition.onend = () => {
             if (srTimeoutRef.current) { clearTimeout(srTimeoutRef.current); srTimeoutRef.current = null; }
             setIsRecording(false);
-            setIsProcessing(false);
             if (finalText && finalText.length > 0) {
-              resolve(finalText);
-            } else {
-              reject(new Error('Sin resultado final'));
+              setIsProcessing(false);
+              return resolve(finalText);
             }
+            // Si no hubo texto final, usar fallback automáticamente
+            fallbackToBackend();
           };
 
           recognition.start();
