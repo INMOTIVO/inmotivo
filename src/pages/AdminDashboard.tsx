@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import Navbar from '@/components/Navbar';
 import PropertiesManagementTable from '@/components/PropertiesManagementTable';
 import { 
@@ -55,6 +56,7 @@ const AdminDashboard = () => {
   const [recentProperties, setRecentProperties] = useState<RecentProperty[]>([]);
   const [loading, setLoading] = useState(true);
   const [showPropertiesView, setShowPropertiesView] = useState<'all' | 'available' | 'draft' | 'suspended' | null>(null);
+  const [openDialog, setOpenDialog] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !roleLoading) {
@@ -216,7 +218,7 @@ const AdminDashboard = () => {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setShowPropertiesView('all')}>
+          <Card className="cursor-pointer hover:shadow-lg transition-all hover:scale-105 duration-200" onClick={() => setOpenDialog('totalProperties')}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">
                 Total Propiedades
@@ -231,7 +233,7 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setShowPropertiesView('available')}>
+          <Card className="cursor-pointer hover:shadow-lg transition-all hover:scale-105 duration-200" onClick={() => setOpenDialog('activeProperties')}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">
                 Propiedades Activas
@@ -246,7 +248,7 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="cursor-pointer hover:shadow-lg transition-all hover:scale-105 duration-200" onClick={() => setOpenDialog('messages')}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">
                 Total Mensajes
@@ -261,7 +263,7 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="cursor-pointer hover:shadow-lg transition-all hover:scale-105 duration-200" onClick={() => setOpenDialog('todayVisits')}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">
                 Visitas Hoy
@@ -276,7 +278,7 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="cursor-pointer hover:shadow-lg transition-all hover:scale-105 duration-200" onClick={() => setOpenDialog('weeklyVisits')}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">
                 Visitas Esta Semana
@@ -291,7 +293,7 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="cursor-pointer hover:shadow-lg transition-all hover:scale-105 duration-200" onClick={() => setOpenDialog('users')}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">
                 Usuarios Registrados
@@ -306,6 +308,190 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Dialogs */}
+        <Dialog open={openDialog === 'totalProperties'} onOpenChange={() => setOpenDialog(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Building className="h-5 w-5" />
+                Total de Propiedades
+              </DialogTitle>
+              <DialogDescription>
+                Información detallada sobre todas las propiedades en la plataforma
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 pt-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800">
+                  <p className="text-sm text-muted-foreground mb-1">Activas</p>
+                  <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.activeProperties}</p>
+                </div>
+                <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <p className="text-sm text-muted-foreground mb-1">Totales</p>
+                  <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{stats.totalProperties}</p>
+                </div>
+              </div>
+              <Button onClick={() => setShowPropertiesView('all')} className="w-full">
+                Ver todas las propiedades
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={openDialog === 'activeProperties'} onOpenChange={() => setOpenDialog(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Home className="h-5 w-5" />
+                Propiedades Activas
+              </DialogTitle>
+              <DialogDescription>
+                Propiedades disponibles y publicadas en el portal
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 pt-4">
+              <div className="p-4 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800">
+                <p className="text-sm text-muted-foreground mb-1">Total Activas</p>
+                <p className="text-3xl font-bold text-green-600 dark:text-green-400">{stats.activeProperties}</p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  {stats.totalProperties > 0 ? ((stats.activeProperties / stats.totalProperties) * 100).toFixed(1) : 0}% del total
+                </p>
+              </div>
+              <Button onClick={() => setShowPropertiesView('available')} className="w-full">
+                Ver propiedades activas
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={openDialog === 'messages'} onOpenChange={() => setOpenDialog(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <MessageCircle className="h-5 w-5" />
+                Total de Mensajes
+              </DialogTitle>
+              <DialogDescription>
+                Mensajes de contacto recibidos en la plataforma
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 pt-4">
+              <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
+                <p className="text-sm text-muted-foreground mb-1">Total de Mensajes</p>
+                <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">{stats.totalMessages}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-3 border rounded-lg">
+                  <p className="text-xs text-muted-foreground">Por Propiedad</p>
+                  <p className="text-lg font-semibold">
+                    {stats.totalProperties > 0 ? (stats.totalMessages / stats.totalProperties).toFixed(1) : 0}
+                  </p>
+                </div>
+                <div className="p-3 border rounded-lg">
+                  <p className="text-xs text-muted-foreground">Engagement</p>
+                  <p className="text-lg font-semibold">
+                    {stats.totalProperties > 0 ? ((stats.totalMessages / stats.totalProperties) * 100).toFixed(0) : 0}%
+                  </p>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={openDialog === 'todayVisits'} onOpenChange={() => setOpenDialog(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Eye className="h-5 w-5" />
+                Visitas de Hoy
+              </DialogTitle>
+              <DialogDescription>
+                Actividad del portal durante el día de hoy
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 pt-4">
+              <div className="p-4 bg-purple-50 dark:bg-purple-950 rounded-lg border border-purple-200 dark:border-purple-800">
+                <p className="text-sm text-muted-foreground mb-1">Visitas Hoy</p>
+                <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">{stats.todayVisits}</p>
+                <p className="text-xs text-muted-foreground mt-2">Visitas al portal</p>
+              </div>
+              <div className="p-3 border rounded-lg bg-muted/30">
+                <p className="text-sm text-muted-foreground">
+                  Promedio diario semanal: {stats.weeklyVisits > 0 ? (stats.weeklyVisits / 7).toFixed(0) : 0} visitas
+                </p>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={openDialog === 'weeklyVisits'} onOpenChange={() => setOpenDialog(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                Visitas Esta Semana
+              </DialogTitle>
+              <DialogDescription>
+                Tendencia de visitas en los últimos 7 días
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 pt-4">
+              <div className="p-4 bg-orange-50 dark:bg-orange-950 rounded-lg border border-orange-200 dark:border-orange-800">
+                <p className="text-sm text-muted-foreground mb-1">Total Semanal</p>
+                <p className="text-3xl font-bold text-orange-600 dark:text-orange-400">{stats.weeklyVisits}</p>
+                <p className="text-xs text-muted-foreground mt-2">Últimos 7 días</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-3 border rounded-lg">
+                  <p className="text-xs text-muted-foreground">Promedio Diario</p>
+                  <p className="text-lg font-semibold">{(stats.weeklyVisits / 7).toFixed(0)}</p>
+                </div>
+                <div className="p-3 border rounded-lg">
+                  <p className="text-xs text-muted-foreground">Hoy vs Promedio</p>
+                  <p className="text-lg font-semibold">
+                    {stats.weeklyVisits > 0 ? ((stats.todayVisits / (stats.weeklyVisits / 7)) * 100).toFixed(0) : 0}%
+                  </p>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={openDialog === 'users'} onOpenChange={() => setOpenDialog(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Usuarios Registrados
+              </DialogTitle>
+              <DialogDescription>
+                Total de usuarios en la plataforma
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 pt-4">
+              <div className="p-4 bg-indigo-50 dark:bg-indigo-950 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                <p className="text-sm text-muted-foreground mb-1">Total de Usuarios</p>
+                <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{stats.totalUsers}</p>
+                <p className="text-xs text-muted-foreground mt-2">Registrados en la plataforma</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-3 border rounded-lg">
+                  <p className="text-xs text-muted-foreground">Propiedades/Usuario</p>
+                  <p className="text-lg font-semibold">
+                    {stats.totalUsers > 0 ? (stats.totalProperties / stats.totalUsers).toFixed(1) : 0}
+                  </p>
+                </div>
+                <div className="p-3 border rounded-lg">
+                  <p className="text-xs text-muted-foreground">Mensajes/Usuario</p>
+                  <p className="text-lg font-semibold">
+                    {stats.totalUsers > 0 ? (stats.totalMessages / stats.totalUsers).toFixed(1) : 0}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Tabs */}
         <Tabs defaultValue="recent" className="space-y-6">
