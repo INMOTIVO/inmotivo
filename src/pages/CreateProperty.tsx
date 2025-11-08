@@ -505,19 +505,29 @@ const CreateProperty = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="price">Precio mensual (COP) *</Label>
-                  <Input
-                    id="price"
-                    type="number"
-                    value={formData.price || ''}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        price: parseFloat(e.target.value) || 0,
-                      })
-                    }
-                    placeholder="2500000"
-                  />
+                  <Label htmlFor="price">Precio mensual *</Label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">
+                      $
+                    </span>
+                    <Input
+                      id="price"
+                      type="text"
+                      value={formData.price ? formData.price.toLocaleString('es-CO') : ''}
+                      onChange={(e) => {
+                        const numericValue = e.target.value.replace(/\D/g, '');
+                        setFormData({
+                          ...formData,
+                          price: parseInt(numericValue) || 0,
+                        });
+                      }}
+                      placeholder="2.500.000"
+                      className="pl-7"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                      COP
+                    </span>
+                  </div>
                   {errors.price && (
                     <p className="text-sm text-destructive mt-1">{errors.price}</p>
                   )}
