@@ -88,20 +88,17 @@ const MapFilters = ({ onFiltersChange, initialQuery = '' }: MapFiltersProps) => 
     }
   };
 
-  const handleStartRecording = () => {
-    startRecording();
-  };
-
-  const handleStopRecording = async () => {
-    try {
-      const transcript = await stopRecording();
-      if (transcript && transcript.trim()) {
+  const handleVoiceRecording = async () => {
+    if (isRecording) {
+      try {
+        const transcript = await stopRecording();
         setSearchQuery(transcript);
-        toast.success('Transcripción completada. Presiona Buscar para continuar.');
+        await handleInterpretSearch(transcript);
+      } catch (error) {
+        console.error('Error with voice recording:', error);
       }
-    } catch (error) {
-      console.error('Error with voice recording:', error);
-      toast.error('Error al transcribir el audio');
+    } else {
+      startRecording();
     }
   };
 
@@ -145,8 +142,8 @@ const MapFilters = ({ onFiltersChange, initialQuery = '' }: MapFiltersProps) => 
           isRecording={isRecording}
           isProcessing={isTranscribing}
           audioLevel={audioLevel}
-          onStart={handleStartRecording}
-          onStop={handleStopRecording}
+          onStart={handleVoiceRecording}
+          onStop={handleVoiceRecording}
           disabled={isProcessing}
           variant="outline"
           size="icon"

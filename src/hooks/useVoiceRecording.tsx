@@ -14,21 +14,13 @@ export const useVoiceRecording = () => {
 
   const startRecording = useCallback(async () => {
     try {
-      // Request specific audio constraints for better voice capture
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          autoGainControl: true,
-          sampleRate: 16000, // Optimal for Whisper API
-          channelCount: 1
+          sampleRate: 44100
         } 
       });
-
-      console.log('Audio stream started with tracks:', stream.getAudioTracks().map(t => ({
-        label: t.label,
-        settings: t.getSettings()
-      })));
 
       // Setup audio analyzer for visual feedback
       audioContextRef.current = new AudioContext();
@@ -58,7 +50,6 @@ export const useVoiceRecording = () => {
 
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
-          console.log('Audio chunk received, size:', event.data.size);
           audioChunksRef.current.push(event.data);
         }
       };
@@ -73,7 +64,6 @@ export const useVoiceRecording = () => {
         }
 
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        console.log('Audio blob created, size:', audioBlob.size, 'bytes');
         
         // Convert to base64
         const reader = new FileReader();
@@ -89,7 +79,6 @@ export const useVoiceRecording = () => {
           }
 
           try {
-            console.log('Sending audio to transcribe, base64 length:', base64Audio.length);
             // Use Whisper API through edge function
             const { data, error } = await supabase.functions.invoke('transcribe-audio', {
               body: { audio: base64Audio }
@@ -98,7 +87,6 @@ export const useVoiceRecording = () => {
             if (error) throw error;
 
             if (data?.text) {
-              console.log('Transcription received:', data.text);
               return data.text;
             } else {
               throw new Error('No se recibió transcripción');
@@ -120,14 +108,10 @@ export const useVoiceRecording = () => {
       mediaRecorderRef.current = mediaRecorder;
       mediaRecorder.start();
       setIsRecording(true);
-      toast.success('🎤 Grabando... Habla claramente hacia el micrófono', { duration: 3000 });
+      toast.success('Grabando... Habla ahora', { duration: 2000 });
     } catch (error) {
       console.error('Error accessing microphone:', error);
-      if (error instanceof Error && error.name === 'NotAllowedError') {
-        toast.error('Permiso de micrófono denegado. Por favor permite el acceso al micrófono.');
-      } else {
-        toast.error('No se pudo acceder al micrófono');
-      }
+      toast.error('No se pudo acceder al micrófono');
       setIsRecording(false);
     }
   }, []);
@@ -147,7 +131,6 @@ export const useVoiceRecording = () => {
           }
 
           const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-          console.log('Stopping recording, audio blob size:', audioBlob.size, 'bytes');
           
           const reader = new FileReader();
           reader.readAsDataURL(audioBlob);
@@ -163,7 +146,6 @@ export const useVoiceRecording = () => {
             }
 
             try {
-              console.log('Sending audio to transcribe, base64 length:', base64Audio.length);
               const { data, error } = await supabase.functions.invoke('transcribe-audio', {
                 body: { audio: base64Audio }
               });
@@ -171,7 +153,6 @@ export const useVoiceRecording = () => {
               if (error) throw error;
 
               if (data?.text) {
-                console.log('Transcription received:', data.text);
                 toast.success('Audio transcrito correctamente');
                 resolve(data.text);
               } else {

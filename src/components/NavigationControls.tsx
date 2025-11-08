@@ -22,20 +22,16 @@ const NavigationControls = ({ onStartNavigation, initialCriteria = '' }: Navigat
   const [isProcessing, setIsProcessing] = useState(false);
   const { isRecording, isProcessing: isTranscribing, audioLevel, startRecording, stopRecording } = useVoiceRecording();
 
-  const handleStartRecording = () => {
-    startRecording();
-  };
-
-  const handleStopRecording = async () => {
-    try {
-      const transcript = await stopRecording();
-      if (transcript && transcript.trim()) {
+  const handleVoiceRecording = async () => {
+    if (isRecording) {
+      try {
+        const transcript = await stopRecording();
         setCriteria(transcript);
-        toast.success('Transcripción completada.');
+      } catch (error) {
+        console.error('Error with voice recording:', error);
       }
-    } catch (error) {
-      console.error('Error with voice recording:', error);
-      toast.error('Error al transcribir el audio');
+    } else {
+      startRecording();
     }
   };
 
@@ -142,8 +138,8 @@ const NavigationControls = ({ onStartNavigation, initialCriteria = '' }: Navigat
                 isRecording={isRecording}
                 isProcessing={isTranscribing}
                 audioLevel={audioLevel}
-                onStart={handleStartRecording}
-                onStop={handleStopRecording}
+                onStart={handleVoiceRecording}
+                onStop={handleVoiceRecording}
                 disabled={isProcessing}
                 variant="outline"
                 size="icon"

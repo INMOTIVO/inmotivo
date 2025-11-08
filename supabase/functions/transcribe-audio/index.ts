@@ -44,8 +44,6 @@ serve(async (req) => {
       throw new Error("No se proporcionó audio");
     }
 
-    console.log('Received audio, base64 length:', audio.length);
-
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) {
       throw new Error("OPENAI_API_KEY no configurada");
@@ -53,16 +51,17 @@ serve(async (req) => {
 
     // Convertir base64 a binary de forma eficiente
     const bytes = processBase64Chunks(audio);
-    console.log('Processed audio bytes:', bytes.length);
 
     // Crear FormData con el audio
     const formData = new FormData();
     const blob = new Blob([bytes], { type: "audio/webm" });
     formData.append("file", blob, "audio.webm");
     formData.append("model", "whisper-1");
+    // Forzar idioma español y sesgo al dominio inmobiliario
     formData.append("language", "es");
+    formData.append("temperature", "0.2");
+    formData.append("prompt", "Transcribe en español (Colombia). Dominio inmobiliario: apartamento, casa, habitaciones, baños, garaje, estrato, arriendo, venta, presupuesto en millones, cerca del metro, Envigado, Sabaneta, Medellín, Itagüí, Laureles, Poblado.");
 
-    console.log('Sending request to OpenAI Whisper API...');
     const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
       method: "POST",
       headers: {
@@ -72,13 +71,10 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('OpenAI API error:', errorText);
-      throw new Error(`Error en transcripción: ${errorText}`);
+      throw new Error(`Error en transcripción: ${await response.text()}`);
     }
 
     const result = await response.json();
-    console.log('Transcription result:', result.text);
 
     return new Response(
       JSON.stringify({ text: result.text }),
