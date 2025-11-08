@@ -30,6 +30,7 @@ const AppRoutes = () => {
       <Route path="/property/:id" element={<PropertyDetail />} />
       <Route path="/mapa" element={<MapSearch />} />
       <Route path="/navegacion" element={<Navigate />} />
+      <Route path="/navigate" element={<Navigate />} />
       <Route path="/catalogo" element={<PropertiesCatalog />} />
       <Route path="/publicar" element={<PublishProperty />} />
       <Route path="/dashboard" element={<ProviderDashboard />} />
