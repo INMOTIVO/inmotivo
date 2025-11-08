@@ -264,7 +264,7 @@ const PropertyDetail = () => {
 
               {amenities.length > 0 && (
                 <div>
-                  <h2 className="text-2xl font-semibold mb-4">Amenidades</h2>
+                  <h2 className="text-2xl font-semibold mb-4">Facilidades</h2>
                   <div className="flex flex-wrap gap-2">
                     {amenities.map((amenity, index) => (
                       <Badge key={index} variant="outline">
