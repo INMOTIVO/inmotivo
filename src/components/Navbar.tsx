@@ -97,11 +97,6 @@ const Navbar = () => {
             </a>
             {user ? (
               <>
-                {profile?.full_name && (
-                  <span className="text-sm text-muted-foreground">
-                    Hola, <span className="font-semibold text-foreground">{profile.full_name}</span>
-                  </span>
-                )}
                 {!isAdmin && (
                   <Button 
                     variant="ghost" 
@@ -148,8 +143,14 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Right side - Favorites & Mobile Menu */}
-          <div className="flex items-center gap-2">
+          {/* Right side - User greeting, Favorites & Mobile Menu */}
+          <div className="flex items-center gap-3">
+            {/* User Greeting */}
+            {user && profile?.full_name && (
+              <span className="hidden md:block text-sm text-muted-foreground">
+                Hola, <span className="font-semibold text-foreground">{profile.full_name}</span>
+              </span>
+            )}
             {/* Favorites Button - Hidden for admin users */}
             {user && !isAdmin && (
               <Button
