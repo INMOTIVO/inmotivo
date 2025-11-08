@@ -154,11 +154,136 @@ export const useVoiceRecording = () => {
     });
   }, [isRecording]);
 
+  // Nuevo: grabar una sola vez y resolver automáticamente al terminar de hablar
+  const recordOnce = useCallback(async (): Promise<string> => {
+    const SR: any = (window.SpeechRecognition || window.webkitSpeechRecognition);
+    setIsProcessing(true);
+
+    if (SR) {
+      return await new Promise<string>((resolve, reject) => {
+        try {
+          const recognition = new SR();
+          recognition.lang = 'es-CO';
+          recognition.interimResults = false;
+          recognition.continuous = false;
+          try { recognition.maxAlternatives = 1; } catch {}
+          recognitionRef.current = recognition;
+          setIsRecording(true);
+
+          let finalText: string | null = null;
+
+          recognition.onresult = (event: any) => {
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+              const res = event.results[i];
+              if (res.isFinal) {
+                finalText = (res[0]?.transcript || '').trim();
+                const confidence = res[0]?.confidence;
+                console.log('[Voz] Final SR (auto)', { lang: recognition.lang, confidence, text: finalText });
+              }
+            }
+          };
+
+          // Timeout de seguridad
+          srTimeoutRef.current = window.setTimeout(() => {
+            console.warn('[Voz] Timeout SR, deteniendo');
+            try { recognition.stop(); } catch {}
+          }, 10000);
+
+          recognition.onerror = (e: any) => {
+            console.warn('[Voz] SR error en recordOnce, abortando', e);
+            if (srTimeoutRef.current) { clearTimeout(srTimeoutRef.current); srTimeoutRef.current = null; }
+            setIsRecording(false);
+            setIsProcessing(false);
+            reject(e);
+          };
+
+          recognition.onend = () => {
+            if (srTimeoutRef.current) { clearTimeout(srTimeoutRef.current); srTimeoutRef.current = null; }
+            setIsRecording(false);
+            setIsProcessing(false);
+            if (finalText && finalText.length > 0) {
+              resolve(finalText);
+            } else {
+              reject(new Error('Sin resultado final'));
+            }
+          };
+
+          recognition.start();
+          toast.success('Escuchando... (es-CO)', { duration: 800 });
+        } catch (e) {
+          setIsRecording(false);
+          setIsProcessing(false);
+          reject(e);
+        }
+      });
+    }
+
+    // Fallback: MediaRecorder que se detiene solo tras unos segundos
+    return await new Promise<string>((resolve, reject) => {
+      navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+      }).then(stream => {
+        try {
+          const mr = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
+          mediaRecorderRef.current = mr;
+          audioChunksRef.current = [];
+          setIsRecording(true);
+
+          mr.ondataavailable = (e) => { if (e.data.size > 0) audioChunksRef.current.push(e.data); };
+          mr.onstop = async () => {
+            setIsRecording(false);
+            try {
+              const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+              const reader = new FileReader();
+              reader.readAsDataURL(blob);
+              reader.onloadend = async () => {
+                const base64 = reader.result?.toString().split(',')[1];
+                if (!base64) { setIsProcessing(false); return reject(new Error('Error processing audio')); }
+                try {
+                  const { data, error } = await supabase.functions.invoke('transcribe-audio', { body: { audio: base64 } });
+                  if (error) throw error;
+                  if (data?.text) {
+                    toast.success('Audio transcrito');
+                    resolve(data.text as string);
+                  } else {
+                    throw new Error('No se recibió transcripción');
+                  }
+                } catch (e) {
+                  reject(e);
+                } finally {
+                  setIsProcessing(false);
+                  stream.getTracks().forEach(t => t.stop());
+                }
+              };
+            } catch (e) {
+              setIsProcessing(false);
+              reject(e);
+            }
+          };
+
+          // Detener automáticamente después de 5s
+          mr.start();
+          toast.success('Grabando... Habla ahora', { duration: 800 });
+          setTimeout(() => { try { mr.stop(); } catch {} }, 5000);
+        } catch (e) {
+          setIsRecording(false);
+          setIsProcessing(false);
+          reject(e);
+        }
+      }).catch(err => {
+        setIsRecording(false);
+        setIsProcessing(false);
+        reject(err);
+      });
+    });
+  }, []);
+
   return {
     isRecording,
     isProcessing,
     audioLevel,
     startRecording,
     stopRecording,
+    recordOnce,
   };
 };

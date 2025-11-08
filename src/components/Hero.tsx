@@ -48,7 +48,8 @@ const Hero = () => {
     isProcessing,
     audioLevel,
     startRecording,
-    stopRecording
+    stopRecording,
+    recordOnce,
   } = useVoiceRecording();
 
   // Check if we should show options from URL params
@@ -165,16 +166,16 @@ const Hero = () => {
   }, []);
   const handleVoiceRecording = async () => {
     if (isRecording) {
-      try {
-        const transcript = await stopRecording();
-        console.log('[Voz] Final transcript (hero):', transcript);
-        setSearchQuery(transcript);
-        await handleSearch(transcript);
-      } catch (error) {
-        console.error('Error with voice recording:', error);
-      }
-    } else {
-      startRecording();
+      try { await stopRecording(); } catch {}
+      return;
+    }
+    try {
+      const transcript = await recordOnce();
+      console.log('[Voz] Final transcript (hero):', transcript);
+      setSearchQuery(transcript);
+      await handleSearch(transcript);
+    } catch (error) {
+      console.error('Error with voice recording:', error);
     }
   };
   const handleSearch = async (queryText?: string) => {

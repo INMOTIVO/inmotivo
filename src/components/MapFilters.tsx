@@ -23,7 +23,7 @@ interface MapFiltersProps {
 const MapFilters = ({ onFiltersChange, initialQuery = '' }: MapFiltersProps) => {
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [isProcessing, setIsProcessing] = useState(false);
-  const { isRecording, isProcessing: isTranscribing, audioLevel, startRecording, stopRecording } = useVoiceRecording();
+  const { isRecording, isProcessing: isTranscribing, audioLevel, startRecording, stopRecording, recordOnce } = useVoiceRecording();
 
   useEffect(() => {
     if (initialQuery) {
@@ -90,18 +90,17 @@ const MapFilters = ({ onFiltersChange, initialQuery = '' }: MapFiltersProps) => 
 
   const handleVoiceRecording = async () => {
     if (isRecording) {
-      try {
-        const transcript = await stopRecording();
-        setSearchQuery(transcript);
-        await handleInterpretSearch(transcript);
-      } catch (error) {
-        console.error('Error with voice recording:', error);
-      }
-    } else {
-      startRecording();
+      try { await stopRecording(); } catch {}
+      return;
+    }
+    try {
+      const transcript = await recordOnce();
+      setSearchQuery(transcript);
+      await handleInterpretSearch(transcript);
+    } catch (error) {
+      console.error('Error with voice recording:', error);
     }
   };
-
   return (
     <Card className="p-6 space-y-4">
       <div className="space-y-2">
