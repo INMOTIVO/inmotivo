@@ -12,6 +12,7 @@ interface SearchOptionsProps {
   onSearchChange?: (newQuery: string) => void;
   disableGPSNavigation?: boolean;
   useGPSForFixedView?: boolean;
+  searchLocation?: string;
 }
 const SearchOptions = ({
   searchQuery,
@@ -19,7 +20,8 @@ const SearchOptions = ({
   sector,
   onSearchChange,
   disableGPSNavigation = false,
-  useGPSForFixedView = false
+  useGPSForFixedView = false,
+  searchLocation
 }: SearchOptionsProps) => {
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
@@ -129,7 +131,9 @@ const SearchOptions = ({
               <p className="text-xs md:text-base text-muted-foreground line-clamp-2">
                 {useGPSForFixedView 
                   ? "Explora propiedades a máximo 2km de tu ubicación actual."
-                  : "Busca según el departamento, municipio o sector que especificaste."
+                  : searchLocation
+                    ? `Busca en ${searchLocation}`
+                    : "Busca según la ubicación que especificaste."
                 }
               </p>
             </div>

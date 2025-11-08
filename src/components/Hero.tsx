@@ -40,6 +40,7 @@ const Hero = () => {
   const [showLocationConfirmDialog, setShowLocationConfirmDialog] = useState(false);
   const [pendingSearchQuery, setPendingSearchQuery] = useState("");
   const [useGPSForSearch, setUseGPSForSearch] = useState(false);
+  const [extractedFilters, setExtractedFilters] = useState<any>(null);
   const isMobile = useIsMobile();
   const { interpretSearch, isProcessing: isInterpretingSearch } = useInterpretSearch();
   const {
@@ -195,6 +196,9 @@ const Hero = () => {
     const result = await interpretSearch(pendingSearchQuery);
     if (!result) return; // El hook ya maneja los errores
 
+    // Guardar los filtros extraídos
+    setExtractedFilters(result);
+
     // Mostrar opciones de búsqueda
     setShowOptions(true);
   };
@@ -202,7 +206,16 @@ const Hero = () => {
   const handleChangeLocationForSearch = () => {
     setShowLocationConfirmDialog(false);
     setUseGPSForSearch(false); // Desactivar GPS, buscar por texto
-    setShowLocationDialog(true);
+    
+    // Interpretar la búsqueda para extraer ubicación
+    const interpretAndShow = async () => {
+      const result = await interpretSearch(pendingSearchQuery);
+      if (!result) return;
+      setExtractedFilters(result);
+      setShowLocationDialog(true);
+    };
+    
+    interpretAndShow();
   };
   const handleContinueCurrentLocation = () => {
     setUseCustomLocation(false);
@@ -273,6 +286,7 @@ const Hero = () => {
             onSearchChange={newQuery => setSearchQuery(newQuery)} 
             disableGPSNavigation={useCustomLocation}
             useGPSForFixedView={useGPSForSearch}
+            searchLocation={extractedFilters?.location}
           />
         </div>
       </section>;
