@@ -229,30 +229,6 @@ export const MessagesDialog = ({
                   ))}
                 </div>
 
-                {/* Acciones de contacto directo */}
-                <div className="flex gap-2 mt-auto">
-                  {selectedMessage.sender_phone && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="flex-1"
-                      onClick={handleWhatsApp}
-                    >
-                      <Phone className="mr-2 h-4 w-4" />
-                      WhatsApp
-                    </Button>
-                  )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex-1"
-                    onClick={handleEmail}
-                  >
-                    <Mail className="mr-2 h-4 w-4" />
-                    Email
-                  </Button>
-                </div>
-
                 {/* Formulario de respuesta */}
                 <div className="space-y-2 pt-4 border-t">
                   <label className="text-sm font-medium">Escribir respuesta:</label>
@@ -271,7 +247,7 @@ export const MessagesDialog = ({
                     {submitting ? 'Enviando...' : 'Guardar Respuesta'}
                   </Button>
                   <p className="text-xs text-muted-foreground">
-                    Nota: La respuesta se guardará aquí. Usa WhatsApp o Email para contactar directamente.
+                    Tu respuesta se guardará y podrás ver el historial de conversación con este cliente.
                   </p>
                 </div>
               </div>
