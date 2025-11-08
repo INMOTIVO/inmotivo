@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, LogOut, Home, Shield, Heart } from "lucide-react";
+import { Menu, LogOut, Home, Shield, Heart, User } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useRole } from "@/hooks/useRole";
@@ -80,6 +80,16 @@ const Navbar = () => {
             </a>
             {user ? (
               <>
+                {!isAdmin && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => navigate("/profile")}
+                  >
+                    <User className="h-4 w-4 mr-2" />
+                    Mi Perfil
+                  </Button>
+                )}
                 <Button 
                   variant="outline" 
                   size="sm"
@@ -157,14 +167,24 @@ const Navbar = () => {
                 {user ? (
                   <>
                     {!isAdmin && (
-                      <Button
-                        variant="ghost"
-                        className="justify-start text-base h-12"
-                        onClick={() => handleNavigation("/favorites")}
-                      >
-                        <Heart className="h-5 w-5 mr-3" />
-                        Favoritos
-                      </Button>
+                      <>
+                        <Button
+                          variant="ghost"
+                          className="justify-start text-base h-12"
+                          onClick={() => handleNavigation("/profile")}
+                        >
+                          <User className="h-5 w-5 mr-3" />
+                          Mi Perfil
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          className="justify-start text-base h-12"
+                          onClick={() => handleNavigation("/favorites")}
+                        >
+                          <Heart className="h-5 w-5 mr-3" />
+                          Favoritos
+                        </Button>
+                      </>
                     )}
                     <Button
                       variant="ghost"

@@ -1,13 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Phone, Mail, Building2, User } from 'lucide-react';
+import { Phone, Mail, Building2, User, LogIn } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { useAuth } from '@/hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 interface ContactDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -37,6 +39,8 @@ const ContactDialog = ({
   onOpenChange,
   property
 }: ContactDialogProps) => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState<ContactFormData>({
     name: '',
     email: '',
@@ -45,6 +49,37 @@ const ContactDialog = ({
   });
   const [errors, setErrors] = useState<Partial<Record<keyof ContactFormData, string>>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Pre-fill form with user data if logged in
+  useEffect(() => {
+    const loadUserData = async () => {
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name, phone')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (profile) {
+          setFormData(prev => ({
+            ...prev,
+            name: profile.full_name || '',
+            email: user.email || '',
+            phone: profile.phone || ''
+          }));
+        } else {
+          setFormData(prev => ({
+            ...prev,
+            email: user.email || ''
+          }));
+        }
+      }
+    };
+
+    if (open && user) {
+      loadUserData();
+    }
+  }, [open, user]);
   const isAgency = !!property.agency;
   const contactName = isAgency ? property.agency?.name : property.owner?.full_name || 'Propietario';
   const contactPhone = isAgency ? property.agency?.phone : property.owner?.phone;
@@ -71,6 +106,7 @@ const ContactDialog = ({
         error
       } = await supabase.from('contact_messages').insert({
         property_id: property.id,
+        user_id: user!.id,
         sender_name: validation.data.name,
         sender_email: validation.data.email,
         sender_phone: validation.data.phone || null,
@@ -97,6 +133,47 @@ const ContactDialog = ({
     const message = encodeURIComponent(`Hola, estoy interesado en la propiedad: ${property.title}`);
     window.open(`https://wa.me/${contactPhone.replace(/\D/g, '')}?text=${message}`, '_blank');
   };
+  // If user is not logged in, show login prompt
+  if (!user) {
+    return <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>Inicia sesión para contactar</DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-6 text-center py-8">
+          <LogIn className="h-16 w-16 mx-auto text-primary" />
+          <div className="space-y-2">
+            <p className="text-lg font-medium">
+              Para contactar al propietario necesitas iniciar sesión
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Crea tu cuenta gratuita o inicia sesión para comenzar a interactuar con propietarios e inmobiliarias
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <Button 
+              variant="outline" 
+              onClick={() => onOpenChange(false)}
+              className="flex-1"
+            >
+              Cancelar
+            </Button>
+            <Button 
+              onClick={() => {
+                onOpenChange(false);
+                navigate('/auth');
+              }}
+              className="flex-1"
+            >
+              Iniciar sesión
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>;
+  }
+
   return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>

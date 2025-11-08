@@ -516,36 +516,7 @@ export type Database = {
       }
     }
     Views: {
-      user_message_replies: {
-        Row: {
-          contact_message_id: string | null
-          created_at: string | null
-          id: string | null
-          images: Json | null
-          original_message: string | null
-          property_id: string | null
-          property_title: string | null
-          replier_name: string | null
-          reply_text: string | null
-          sender_name: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "contact_messages_property_id_fkey"
-            columns: ["property_id"]
-            isOneToOne: false
-            referencedRelation: "properties"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "message_replies_contact_message_id_fkey"
-            columns: ["contact_message_id"]
-            isOneToOne: false
-            referencedRelation: "contact_messages"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Functions: {
       has_role: {

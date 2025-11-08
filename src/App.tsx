@@ -16,6 +16,7 @@ import ProviderDashboard from "./pages/ProviderDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import CreateProperty from "./pages/CreateProperty";
 import Favorites from "./pages/Favorites";
+import TenantProfile from "./pages/TenantProfile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +37,7 @@ const AppRoutes = () => {
       <Route path="/dashboard" element={<ProviderDashboard />} />
       <Route path="/admin" element={<AdminDashboard />} />
       <Route path="/favorites" element={<Favorites />} />
+      <Route path="/profile" element={<TenantProfile />} />
       <Route path="/create-property" element={<CreateProperty />} />
       <Route path="/edit-property/:id" element={<CreateProperty />} />
       <Route path="/marketing-preview" element={<AdCreativesPreview />} />
