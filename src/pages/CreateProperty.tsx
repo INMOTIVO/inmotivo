@@ -592,7 +592,7 @@ const CreateProperty = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, neighborhood: e.target.value })
                     }
-                    placeholder="El Poblado"
+                    placeholder=""
                   />
                   {errors.neighborhood && (
                     <p className="text-sm text-destructive mt-1">
