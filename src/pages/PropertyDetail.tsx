@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { MapPin, Bed, Bath, Maximize, ArrowLeft, X, Heart, Share2 } from "lucide-react";
+import { MapPin, Bed, Bath, Maximize, ArrowLeft, X, Heart, Upload } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ContactDialog from "@/components/ContactDialog";
@@ -197,7 +197,7 @@ const PropertyDetail = () => {
                 onClick={handleShare}
                 className="rounded-full w-12 h-12 shadow-xl bg-white hover:bg-gray-50"
               >
-                <Share2 className="h-5 w-5 text-gray-600" />
+                <Upload className="h-5 w-5 text-gray-600" />
               </Button>
 
               <Button
