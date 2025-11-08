@@ -14,13 +14,21 @@ export const useVoiceRecording = () => {
 
   const startRecording = useCallback(async () => {
     try {
+      console.info('🎤 Solicitando acceso al micrófono...');
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          sampleRate: 44100
+          autoGainControl: true,
+          sampleRate: 16000, // Optimal for Whisper
+          channelCount: 1 // Mono audio
         } 
       });
+      console.info('✅ Micrófono accedido correctamente');
+      console.info('Audio stream started with tracks:', stream.getAudioTracks().map(track => ({
+        label: track.label,
+        settings: track.getSettings()
+      })));
 
       // Setup audio analyzer for visual feedback
       audioContextRef.current = new AudioContext();
@@ -50,11 +58,13 @@ export const useVoiceRecording = () => {
 
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
+          console.info(`Audio chunk received, size: ${event.data.size}`);
           audioChunksRef.current.push(event.data);
         }
       };
 
       mediaRecorder.onstop = async () => {
+        console.info('Stopping recording, audio blob size:', audioChunksRef.current.reduce((sum, chunk) => sum + chunk.size, 0), 'bytes');
         setIsRecording(false);
         setIsProcessing(true);
         setAudioLevel(0);
@@ -64,6 +74,7 @@ export const useVoiceRecording = () => {
         }
 
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        console.info(`Audio blob created: ${audioBlob.size} bytes, type: ${audioBlob.type}`);
         
         // Convert to base64
         const reader = new FileReader();
@@ -78,6 +89,8 @@ export const useVoiceRecording = () => {
             return;
           }
 
+          console.info(`Sending audio to transcribe, base64 length: ${base64Audio.length}`);
+
           try {
             // Use Whisper API through edge function
             const { data, error } = await supabase.functions.invoke('transcribe-audio', {
@@ -87,6 +100,7 @@ export const useVoiceRecording = () => {
             if (error) throw error;
 
             if (data?.text) {
+              console.info('Transcription received:', data.text);
               return data.text;
             } else {
               throw new Error('No se recibió transcripción');
@@ -106,9 +120,11 @@ export const useVoiceRecording = () => {
       };
 
       mediaRecorderRef.current = mediaRecorder;
-      mediaRecorder.start();
+      // Start with timeslice to capture chunks every second
+      mediaRecorder.start(1000); // Capture in 1-second chunks
       setIsRecording(true);
-      toast.success('Grabando... Habla ahora', { duration: 2000 });
+      console.info('🎤 Recording started with 1-second timeslice');
+      toast.success('🎤 Grabando... Habla ahora', { duration: 2000 });
     } catch (error) {
       console.error('Error accessing microphone:', error);
       toast.error('No se pudo acceder al micrófono');
@@ -131,6 +147,7 @@ export const useVoiceRecording = () => {
           }
 
           const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+          console.info(`Stop recording - Audio blob: ${audioBlob.size} bytes`);
           
           const reader = new FileReader();
           reader.readAsDataURL(audioBlob);
@@ -145,6 +162,8 @@ export const useVoiceRecording = () => {
               return;
             }
 
+            console.info(`Stop - Sending audio, base64 length: ${base64Audio.length}`);
+
             try {
               const { data, error } = await supabase.functions.invoke('transcribe-audio', {
                 body: { audio: base64Audio }
@@ -153,7 +172,8 @@ export const useVoiceRecording = () => {
               if (error) throw error;
 
               if (data?.text) {
-                toast.success('Audio transcrito correctamente');
+                console.info('Stop - Transcription received:', data.text);
+                toast.success('✅ Audio transcrito');
                 resolve(data.text);
               } else {
                 throw new Error('No se recibió transcripción');

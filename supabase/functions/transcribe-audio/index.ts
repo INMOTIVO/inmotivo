@@ -44,6 +44,8 @@ serve(async (req) => {
       throw new Error("No se proporcionó audio");
     }
 
+    console.info(`Received audio, base64 length: ${audio.length}`);
+
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) {
       throw new Error("OPENAI_API_KEY no configurada");
@@ -51,16 +53,31 @@ serve(async (req) => {
 
     // Convertir base64 a binary de forma eficiente
     const bytes = processBase64Chunks(audio);
+    console.info(`Processed audio bytes: ${bytes.length}`);
 
     // Crear FormData con el audio
     const formData = new FormData();
     const blob = new Blob([bytes], { type: "audio/webm" });
     formData.append("file", blob, "audio.webm");
     formData.append("model", "whisper-1");
-    // Forzar idioma español y sesgo al dominio inmobiliario
+    
+    // CRITICAL: Force Colombian Spanish (es-CO locale awareness)
     formData.append("language", "es");
-    formData.append("temperature", "0.2");
-    formData.append("prompt", "Transcribe en español (Colombia). Dominio inmobiliario: apartamento, casa, habitaciones, baños, garaje, estrato, arriendo, venta, presupuesto en millones, cerca del metro, Envigado, Sabaneta, Medellín, Itagüí, Laureles, Poblado.");
+    
+    // Temperature 0 = más determinista, menos variación
+    formData.append("temperature", "0");
+    
+    // Prompt optimizado para español colombiano y contexto inmobiliario
+    formData.append("prompt", 
+      "Transcripción literal en español colombiano. " +
+      "Contexto: búsqueda de inmuebles en Colombia. " +
+      "Vocabulario común: apartamento, casa, habitaciones, baños, parqueadero, estrato, " +
+      "arriendo, venta, millones de pesos, cerca del metro, Medellín, Envigado, Sabaneta, " +
+      "Itagüí, Laureles, Poblado, Belén. " +
+      "Transcribe exactamente lo que escuches sin cambiar palabras."
+    );
+
+    console.info("Sending request to OpenAI Whisper API...");
 
     const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
       method: "POST",
@@ -71,10 +88,18 @@ serve(async (req) => {
     });
 
     if (!response.ok) {
-      throw new Error(`Error en transcripción: ${await response.text()}`);
+      const errorText = await response.text();
+      console.error(`OpenAI API error (${response.status}):`, errorText);
+      throw new Error(`Error en transcripción: ${errorText}`);
     }
 
     const result = await response.json();
+    console.info(`Transcription result: ${result.text}`);
+    
+    // Check if language detection worked correctly
+    if (result.language && result.language !== "es" && result.language !== "spanish") {
+      console.warn(`⚠️ WARNING: Detected language is "${result.language}", expected "es" (Spanish). This may indicate poor audio quality or wrong language detection.`);
+    }
 
     return new Response(
       JSON.stringify({ text: result.text }),
