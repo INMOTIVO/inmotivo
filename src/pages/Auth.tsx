@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,6 +53,7 @@ const Auth = () => {
     email: "",
     password: "",
     confirmPassword: "",
+    userType: "tenant" as "owner" | "tenant" | "buyer",
   });
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -70,12 +72,30 @@ const Auth = () => {
 
     if (error) {
       toast.error(error.message);
+      setLoading(false);
     } else {
       toast.success("¡Sesión iniciada exitosamente!");
-      navigate("/dashboard");
+      
+      // Fetch user profile to check user type
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('user_type')
+          .eq('id', user.id)
+          .single();
+        
+        // Redirect based on user type
+        if (profile?.user_type === 'owner') {
+          navigate("/dashboard");
+        } else {
+          navigate("/profile");
+        }
+      } else {
+        navigate("/");
+      }
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -93,14 +113,20 @@ const Auth = () => {
     const { error } = await signUp(
       signUpData.email,
       signUpData.password,
-      signUpData.fullName
+      signUpData.fullName,
+      signUpData.userType
     );
 
     if (error) {
       toast.error(error.message);
     } else {
       toast.success("¡Cuenta creada exitosamente! Ya puedes iniciar sesión.");
-      navigate("/");
+      // Redirect based on user type
+      if (signUpData.userType === "owner") {
+        navigate("/dashboard");
+      } else {
+        navigate("/profile");
+      }
     }
 
     setLoading(false);
@@ -247,6 +273,22 @@ const Auth = () => {
                       }
                       required
                     />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-usertype">Tipo de usuario</Label>
+                    <select
+                      id="signup-usertype"
+                      value={signUpData.userType}
+                      onChange={(e) =>
+                        setSignUpData({ ...signUpData, userType: e.target.value as "owner" | "tenant" | "buyer" })
+                      }
+                      className="w-full px-3 py-2 border rounded-md bg-background text-foreground"
+                      required
+                    >
+                      <option value="tenant">Arrendatario</option>
+                      <option value="buyer">Comprador</option>
+                      <option value="owner">Propietario</option>
+                    </select>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">Email</Label>
