@@ -458,9 +458,9 @@ const Hero = () => {
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-full p-0 bg-popover" align="start">
-                      <Command>
-                        <CommandInput placeholder="Buscar departamento..." />
+                    <PopoverContent className="w-full p-0 bg-popover z-50" align="start">
+                      <Command className="bg-popover">
+                        <CommandInput placeholder="Buscar departamento..." className="bg-background" />
                         <CommandList>
                           <CommandEmpty>No se encontró departamento.</CommandEmpty>
                           <CommandGroup>
@@ -472,6 +472,7 @@ const Hero = () => {
                                   handleDepartmentChange(value);
                                   setOpenDept(false);
                                 }}
+                                className="hover:bg-accent cursor-pointer"
                               >
                                 <Check
                                   className={cn(
@@ -506,9 +507,9 @@ const Hero = () => {
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-full p-0 bg-popover" align="start">
-                      <Command>
-                        <CommandInput placeholder="Buscar municipio..." />
+                    <PopoverContent className="w-full p-0 bg-popover z-50" align="start">
+                      <Command className="bg-popover">
+                        <CommandInput placeholder="Buscar municipio..." className="bg-background" />
                         <CommandList>
                           <CommandEmpty>No se encontró municipio.</CommandEmpty>
                           <CommandGroup>
@@ -520,6 +521,7 @@ const Hero = () => {
                                   handleMunicipalityChange(value);
                                   setOpenMuni(false);
                                 }}
+                                className="hover:bg-accent cursor-pointer"
                               >
                                 <Check
                                   className={cn(
@@ -554,9 +556,9 @@ const Hero = () => {
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-full p-0 bg-popover" align="start">
-                      <Command>
-                        <CommandInput placeholder="Buscar barrio..." />
+                    <PopoverContent className="w-full p-0 bg-popover z-50" align="start">
+                      <Command className="bg-popover">
+                        <CommandInput placeholder="Buscar barrio..." className="bg-background" />
                         <CommandList>
                           <CommandEmpty>No se encontró barrio.</CommandEmpty>
                           <CommandGroup>
@@ -568,6 +570,7 @@ const Hero = () => {
                                   setCustomNeighborhood(value);
                                   setOpenNeigh(false);
                                 }}
+                                className="hover:bg-accent cursor-pointer"
                               >
                                 <Check
                                   className={cn(
