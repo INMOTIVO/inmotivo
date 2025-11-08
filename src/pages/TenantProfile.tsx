@@ -171,15 +171,19 @@ const TenantProfile = () => {
         </Button>
 
         <div className="mb-8">
-          {profile?.full_name && (
-            <p className="text-lg text-muted-foreground mb-4">
-              Hola, <span className="font-semibold text-foreground">{profile.full_name}</span>
-            </p>
-          )}
-          <h1 className="text-4xl font-bold mb-2">Mi Perfil</h1>
-          <p className="text-muted-foreground">
-            Gestiona tus propiedades favoritas y mensajes
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold mb-2">Mi Perfil</h1>
+              <p className="text-muted-foreground">
+                Gestiona tus propiedades favoritas y mensajes
+              </p>
+            </div>
+            {profile?.full_name && (
+              <p className="text-lg text-muted-foreground">
+                Hola, <span className="font-semibold text-foreground">{profile.full_name.split(' ')[0]}</span>
+              </p>
+            )}
+          </div>
         </div>
 
         <Tabs defaultValue="favorites" className="space-y-6">
