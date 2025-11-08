@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 import NavigationMap from '@/components/NavigationMap';
-import NavigationControls from '@/components/NavigationControls';
 
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2 } from 'lucide-react';
@@ -41,17 +39,14 @@ const Navigate = () => {
   
   // Get initial query from URL params
   const initialQuery = searchParams.get('query') || '';
-  const autoStart = searchParams.get('autostart') === 'true';
 
-  // No longer needed - direct navigation is initialized in useState
-
-  // Auto-start navigation if autostart param is present
+  // Auto-start navigation if there's a query (eliminar formulario de inicio)
   useEffect(() => {
-    if (autoStart && initialQuery && !isNavigating && !isInitializing && !destLat && !destLng) {
+    if (initialQuery && !isNavigating && !isInitializing && !destLat && !destLng) {
       setIsInitializing(true);
       startAutoNavigation();
     }
-  }, [autoStart, initialQuery, destLat, destLng]);
+  }, [initialQuery, destLat, destLng]);
 
   // Listen for query changes and re-interpret search while navigating
   useEffect(() => {
@@ -152,17 +147,9 @@ const Navigate = () => {
     }
   };
 
-  const handleStartNavigation = (dest: [number, number], criteria: string, appliedFilters: any) => {
-    setDestination(dest);
-    setSearchCriteria(criteria);
-    setFilters(appliedFilters);
-    setIsNavigating(true);
-  };
-
   const handleStopNavigation = () => {
     // If in direct navigation, switch to GPS mode instead of stopping
     if (isDirectNavigation) {
-      // Remove direct navigation params and stay in GPS mode
       navigate('/navegacion?query=Propiedades%20cerca');
       return;
     }
@@ -189,46 +176,30 @@ const Navigate = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className={`flex-1 ${!isNavigating ? 'pt-20' : ''}`}>
-        {!isNavigating ? (
-          <div className="container mx-auto px-4 py-8">
-            <Button
-              variant="default"
-              size="icon"
-              onClick={() => navigate('/mapa')}
-              className="mb-4 rounded-full w-12 h-12 shadow-xl bg-primary hover:bg-primary/90"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <NavigationControls 
-              onStartNavigation={handleStartNavigation}
-              initialCriteria={initialQuery}
-            />
-          </div>
-        ) : (
-          <div className="relative h-screen">
-            <Button
-              variant="default"
-              size="icon"
-              onClick={() => {
-                const query = searchParams.get('query');
-                navigate(`/?query=${encodeURIComponent(query || '')}&showOptions=true`);
-              }}
-              className="absolute top-24 left-6 z-[9999] shadow-xl bg-primary hover:bg-primary/90 rounded-full w-12 h-12"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
+      <main className="flex-1">
+        <div className="relative h-screen">
+          <Button
+            variant="default"
+            size="icon"
+            onClick={() => {
+              const query = searchParams.get('query');
+              navigate(`/?query=${encodeURIComponent(query || '')}&showOptions=true`);
+            }}
+            className="absolute top-24 left-6 z-[9999] shadow-xl bg-primary hover:bg-primary/90 rounded-full w-12 h-12"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          {isNavigating && destination && (
             <NavigationMap
-              destination={destination!}
+              destination={destination}
               filters={filters}
               onStopNavigation={handleStopNavigation}
               searchCriteria={searchCriteria}
               isDirectNavigation={isDirectNavigation}
             />
-          </div>
-        )}
+          )}
+        </div>
       </main>
-      {!isNavigating && <Footer />}
     </div>
   );
 };
