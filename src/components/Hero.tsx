@@ -356,7 +356,7 @@ const Hero = () => {
       {/* Location Confirmation Dialog */}
       <Dialog open={showLocationConfirmDialog} onOpenChange={setShowLocationConfirmDialog}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader>
+          <DialogHeader className="text-center">
             <DialogTitle>Confirmar ubicación de búsqueda</DialogTitle>
             <DialogDescription>
               Estás usando tu ubicación en tiempo real para buscar propiedades.
