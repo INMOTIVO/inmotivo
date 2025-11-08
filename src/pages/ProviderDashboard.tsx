@@ -139,6 +139,30 @@ const ProviderDashboard = () => {
     }
   }, [user]);
 
+  // Realtime listener para mensajes
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('contact-messages-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'contact_messages'
+        },
+        () => {
+          fetchMessages();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
   const fetchProperties = async () => {
     try {
       const { data, error } = await supabase
