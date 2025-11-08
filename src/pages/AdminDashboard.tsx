@@ -54,6 +54,8 @@ interface UserProfile {
   user_type: string | null;
   created_at: string;
   avatar_url: string | null;
+  total_properties: number;
+  active_properties: number;
 }
 
 const AdminDashboard = () => {
@@ -184,13 +186,36 @@ const AdminDashboard = () => {
   const fetchUsers = async () => {
     setLoadingUsers(true);
     try {
-      const { data, error } = await supabase
+      const { data: profiles, error } = await supabase
         .from('profiles')
         .select('id, full_name, phone, user_type, created_at, avatar_url')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setUsers(data || []);
+
+      // Obtener conteo de propiedades para cada usuario
+      const usersWithProperties = await Promise.all(
+        (profiles || []).map(async (profile) => {
+          const { count: totalCount } = await supabase
+            .from('properties')
+            .select('*', { count: 'exact', head: true })
+            .eq('owner_id', profile.id);
+
+          const { count: activeCount } = await supabase
+            .from('properties')
+            .select('*', { count: 'exact', head: true })
+            .eq('owner_id', profile.id)
+            .eq('status', 'available');
+
+          return {
+            ...profile,
+            total_properties: totalCount || 0,
+            active_properties: activeCount || 0,
+          };
+        })
+      );
+
+      setUsers(usersWithProperties);
     } catch (error) {
       console.error('Error fetching users:', error);
       toast.error('Error al cargar usuarios');
@@ -584,6 +609,8 @@ const AdminDashboard = () => {
                         <TableHead>Nombre</TableHead>
                         <TableHead>Tipo</TableHead>
                         <TableHead>Teléfono</TableHead>
+                        <TableHead className="text-center">Propiedades Publicadas</TableHead>
+                        <TableHead className="text-center">Propiedades Activas</TableHead>
                         <TableHead>Fecha Registro</TableHead>
                         <TableHead className="text-right">Acciones</TableHead>
                       </TableRow>
@@ -615,6 +642,16 @@ const AdminDashboard = () => {
                             </span>
                           </TableCell>
                           <TableCell>{user.phone || 'No proporcionado'}</TableCell>
+                          <TableCell className="text-center">
+                            <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-semibold bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200">
+                              {user.total_properties}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <span className="inline-flex items-center justify-center px-3 py-1 rounded-full text-sm font-semibold bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                              {user.active_properties}
+                            </span>
+                          </TableCell>
                           <TableCell>{new Date(user.created_at).toLocaleDateString('es-CO')}</TableCell>
                           <TableCell className="text-right">
                             <div className="flex items-center justify-end gap-2">
