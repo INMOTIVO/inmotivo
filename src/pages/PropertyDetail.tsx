@@ -217,31 +217,30 @@ const PropertyDetail = () => {
 
             <div className="flex items-center gap-2">
               <Button
-                variant="outline"
-                size="icon"
                 onClick={handleNavigate}
-                className="rounded-full w-12 h-12 shadow-xl bg-white hover:bg-gray-50"
+                className="rounded-full h-12 px-6 shadow-xl bg-green-600 hover:bg-green-700 text-white border-0 transition-all duration-200 hover:scale-105"
               >
-                <Navigation className="h-5 w-5 text-gray-600" />
+                <Navigation className="h-5 w-5 mr-2" />
+                Ir
               </Button>
 
               <Button
                 variant="outline"
                 size="icon"
                 onClick={handleShare}
-                className="rounded-full w-12 h-12 shadow-xl bg-white hover:bg-gray-50"
+                className="rounded-full w-12 h-12 shadow-xl bg-white hover:bg-primary/10 hover:border-primary/30 transition-all duration-200 hover:scale-105"
               >
-                <Upload className="h-5 w-5 text-gray-600" />
+                <Upload className="h-5 w-5 text-gray-600 group-hover:text-primary" />
               </Button>
 
               <Button
                 variant="outline"
                 size="icon"
                 onClick={handleToggleFavorite}
-                className={`rounded-full w-12 h-12 shadow-xl ${
+                className={`rounded-full w-12 h-12 shadow-xl transition-all duration-200 hover:scale-105 ${
                   isFavorite 
                     ? 'bg-red-50 hover:bg-red-100 border-red-200' 
-                    : 'bg-white hover:bg-gray-50'
+                    : 'bg-white hover:bg-primary/10 hover:border-primary/30'
                 }`}
               >
                 <Heart 
