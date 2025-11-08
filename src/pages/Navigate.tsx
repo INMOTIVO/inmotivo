@@ -160,6 +160,13 @@ const Navigate = () => {
   };
 
   const handleStopNavigation = () => {
+    // If in direct navigation, switch to GPS mode instead of stopping
+    if (isDirectNavigation) {
+      // Remove direct navigation params and stay in GPS mode
+      navigate('/navegacion?query=Propiedades%20cerca');
+      return;
+    }
+    
     setIsNavigating(false);
     setDestination(null);
   };
