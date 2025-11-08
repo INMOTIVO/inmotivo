@@ -244,7 +244,7 @@ export const MessagesDialog = ({
                     className="w-full"
                   >
                     <Send className="mr-2 h-4 w-4" />
-                    {submitting ? 'Enviando...' : 'Guardar Respuesta'}
+                    {submitting ? 'Enviando...' : 'Enviar Respuesta'}
                   </Button>
                   <p className="text-xs text-muted-foreground">
                     Tu respuesta se guardará y podrás ver el historial de conversación con este cliente.
