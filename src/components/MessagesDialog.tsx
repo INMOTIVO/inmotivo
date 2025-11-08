@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -53,11 +53,15 @@ export const MessagesDialog = ({
     
     // Marcar como leído
     if (!message.is_read) {
-      await supabase
+      const { error } = await supabase
         .from('contact_messages')
         .update({ is_read: true })
         .eq('id', message.id);
-      onMessagesUpdate();
+      
+      if (!error) {
+        // Actualizar el estado inmediatamente
+        onMessagesUpdate();
+      }
     }
 
     // Cargar respuestas previas
@@ -77,6 +81,7 @@ export const MessagesDialog = ({
 
     setSubmitting(true);
     try {
+      // Insertar la respuesta
       const { error } = await supabase
         .from('message_replies')
         .insert({
@@ -87,7 +92,13 @@ export const MessagesDialog = ({
 
       if (error) throw error;
 
-      toast.success('Respuesta guardada');
+      // Marcar el mensaje como leído al responder
+      await supabase
+        .from('contact_messages')
+        .update({ is_read: true })
+        .eq('id', selectedMessage.id);
+
+      toast.success('Respuesta enviada');
       setReplyText('');
       
       // Recargar respuestas
@@ -100,6 +111,9 @@ export const MessagesDialog = ({
       if (data) {
         setReplies(prev => ({ ...prev, [selectedMessage.id]: data }));
       }
+
+      // Actualizar la lista de mensajes en el padre
+      onMessagesUpdate();
     } catch (error) {
       console.error('Error sending reply:', error);
       toast.error('Error al enviar respuesta');
@@ -137,6 +151,9 @@ export const MessagesDialog = ({
               <Badge variant="destructive">{unreadCount} nuevos</Badge>
             )}
           </DialogTitle>
+          <DialogDescription>
+            Gestiona las conversaciones con tus clientes interesados
+          </DialogDescription>
         </DialogHeader>
 
         <div className="flex-1 grid md:grid-cols-2 gap-4 overflow-hidden">
