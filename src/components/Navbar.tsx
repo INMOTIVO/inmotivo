@@ -74,7 +74,7 @@ const Navbar = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-4 ml-auto">
             <a href="/" className="text-foreground hover:text-primary transition-colors font-medium">
               Inicio
             </a>
