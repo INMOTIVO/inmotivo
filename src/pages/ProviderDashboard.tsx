@@ -643,6 +643,7 @@ const ProviderDashboard = () => {
           messages={messages}
           userId={user?.id || ''}
           onMessagesUpdate={fetchMessages}
+          onMessageRead={(id) => setMessages((prev) => prev.map(m => m.id === id ? { ...m, is_read: true } : m))}
         />
       </main>
     </div>

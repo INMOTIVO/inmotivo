@@ -34,6 +34,7 @@ interface MessagesDialogProps {
   messages: ContactMessage[];
   userId: string;
   onMessagesUpdate: () => void;
+  onMessageRead: (id: string) => void;
 }
 
 export const MessagesDialog = ({ 
@@ -41,7 +42,8 @@ export const MessagesDialog = ({
   onOpenChange, 
   messages,
   userId,
-  onMessagesUpdate
+  onMessagesUpdate,
+  onMessageRead
 }: MessagesDialogProps) => {
   const [selectedMessage, setSelectedMessage] = useState<ContactMessage | null>(null);
   const [replyText, setReplyText] = useState('');
@@ -61,6 +63,7 @@ export const MessagesDialog = ({
       if (!error) {
         // Actualizar el estado inmediatamente
         onMessagesUpdate();
+        onMessageRead(message.id);
       }
     }
 
@@ -114,6 +117,7 @@ export const MessagesDialog = ({
 
       // Actualizar la lista de mensajes en el padre
       onMessagesUpdate();
+      onMessageRead(selectedMessage.id);
     } catch (error) {
       console.error('Error sending reply:', error);
       toast.error('Error al enviar respuesta');
