@@ -27,6 +27,7 @@ import { toast } from 'sonner';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface DashboardStats {
   totalProperties: number;
@@ -77,6 +78,7 @@ const AdminDashboard = () => {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
   const [userToDelete, setUserToDelete] = useState<string | null>(null);
+  const [weeklyVisitsData, setWeeklyVisitsData] = useState<Array<{ day: string; visits: number }>>([]);
 
   useEffect(() => {
     if (!authLoading && !roleLoading) {
@@ -264,8 +266,41 @@ const AdminDashboard = () => {
   useEffect(() => {
     if (openDialog === 'users') {
       fetchUsers();
+    } else if (openDialog === 'weeklyVisits') {
+      fetchWeeklyVisitsData();
     }
   }, [openDialog]);
+
+  const fetchWeeklyVisitsData = async () => {
+    try {
+      const days = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+      const visitsData = [];
+
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        date.setHours(0, 0, 0, 0);
+        
+        const nextDate = new Date(date);
+        nextDate.setDate(nextDate.getDate() + 1);
+
+        const { count } = await (supabase as any)
+          .from('page_views')
+          .select('*', { count: 'exact', head: true })
+          .gte('created_at', date.toISOString())
+          .lt('created_at', nextDate.toISOString());
+
+        visitsData.push({
+          day: days[date.getDay() === 0 ? 6 : date.getDay() - 1],
+          visits: count || 0
+        });
+      }
+
+      setWeeklyVisitsData(visitsData);
+    } catch (error) {
+      console.error('Error fetching weekly visits data:', error);
+    }
+  };
 
   if (authLoading || roleLoading || loading) {
     return (
@@ -530,7 +565,7 @@ const AdminDashboard = () => {
         </Dialog>
 
         <Dialog open={openDialog === 'weeklyVisits'} onOpenChange={() => setOpenDialog(null)}>
-          <DialogContent>
+          <DialogContent className="max-w-3xl">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5" />
@@ -540,20 +575,53 @@ const AdminDashboard = () => {
                 Tendencia de visitas en los últimos 7 días
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 pt-4">
+            <div className="space-y-6 pt-4">
               <div className="p-4 bg-orange-50 dark:bg-orange-950 rounded-lg border border-orange-200 dark:border-orange-800">
                 <p className="text-sm text-muted-foreground mb-1">Total Semanal</p>
                 <p className="text-3xl font-bold text-orange-600 dark:text-orange-400">{stats.weeklyVisits}</p>
                 <p className="text-xs text-muted-foreground mt-2">Últimos 7 días</p>
               </div>
+
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium">Visitas por Día</h4>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={weeklyVisitsData}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis 
+                      dataKey="day" 
+                      className="text-xs"
+                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                    />
+                    <YAxis 
+                      className="text-xs"
+                      tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                    />
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: 'hsl(var(--background))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '6px',
+                      }}
+                      labelStyle={{ color: 'hsl(var(--foreground))' }}
+                    />
+                    <Bar 
+                      dataKey="visits" 
+                      fill="hsl(var(--orange-600))" 
+                      radius={[8, 8, 0, 0]}
+                      className="fill-orange-600 dark:fill-orange-400"
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
-                <div className="p-3 border rounded-lg">
+                <div className="p-3 border rounded-lg bg-muted/30">
                   <p className="text-xs text-muted-foreground">Promedio Diario</p>
-                  <p className="text-lg font-semibold">{(stats.weeklyVisits / 7).toFixed(0)}</p>
+                  <p className="text-xl font-semibold">{(stats.weeklyVisits / 7).toFixed(0)}</p>
                 </div>
-                <div className="p-3 border rounded-lg">
+                <div className="p-3 border rounded-lg bg-muted/30">
                   <p className="text-xs text-muted-foreground">Hoy vs Promedio</p>
-                  <p className="text-lg font-semibold">
+                  <p className="text-xl font-semibold">
                     {stats.weeklyVisits > 0 ? ((stats.todayVisits / (stats.weeklyVisits / 7)) * 100).toFixed(0) : 0}%
                   </p>
                 </div>
