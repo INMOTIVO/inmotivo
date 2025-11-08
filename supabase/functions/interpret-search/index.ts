@@ -106,10 +106,23 @@ serve(async (req) => {
     const toolCall = data.choices[0]?.message?.tool_calls?.[0];
     
     if (!toolCall) {
+      console.error("No tool call found in response:", JSON.stringify(data));
       throw new Error("No se pudieron extraer filtros");
     }
 
-    const result = JSON.parse(toolCall.function.arguments);
+    console.log("Tool call arguments:", toolCall.function.arguments);
+    
+    // El arguments puede venir como string o como objeto
+    let result;
+    try {
+      result = typeof toolCall.function.arguments === 'string' 
+        ? JSON.parse(toolCall.function.arguments)
+        : toolCall.function.arguments;
+    } catch (parseError) {
+      console.error("Error parsing arguments:", parseError);
+      console.error("Raw arguments:", toolCall.function.arguments);
+      throw new Error("Error al procesar la respuesta de IA");
+    }
     
     // Validar si es búsqueda válida
     if (result.is_valid === false) {
