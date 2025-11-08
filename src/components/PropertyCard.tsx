@@ -18,31 +18,13 @@ interface PropertyCardProps {
   area: string;
   imageUrl: string;
   type: string;
+  isFavorite: boolean;
 }
 
-const PropertyCard = ({ id, title, price, location, beds, baths, area, imageUrl, type }: PropertyCardProps) => {
+const PropertyCard = ({ id, title, price, location, beds, baths, area, imageUrl, type, isFavorite }: PropertyCardProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-
-  // Verificar si la propiedad está en favoritos
-  const { data: isFavorite, refetch: refetchFavorite } = useQuery({
-    queryKey: ["favorite", id, user?.id],
-    queryFn: async () => {
-      if (!user) return false;
-      
-      const { data, error } = await supabase
-        .from("property_favorites")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("property_id", id)
-        .maybeSingle();
-
-      if (error) throw error;
-      return !!data;
-    },
-    enabled: !!user && !!id,
-  });
 
   const handleToggleFavorite = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -75,8 +57,8 @@ const PropertyCard = ({ id, title, price, location, beds, baths, area, imageUrl,
         toast.success("Agregado a favoritos");
       }
       
-      // Invalidar las queries de favoritos para actualizar el contador
-      await refetchFavorite();
+      // Invalidar las queries de favoritos para actualizar
+      await queryClient.invalidateQueries({ queryKey: ["user-favorites", user.id] });
       await queryClient.invalidateQueries({ queryKey: ["favorites-count", user.id] });
       await queryClient.invalidateQueries({ queryKey: ["favorites", user.id] });
     } catch (error) {

@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
 
 // Haversine formula to calculate distance between two points
 const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
@@ -27,6 +28,7 @@ const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: numbe
 };
 
 const PropertiesCatalog = () => {
+  const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const queryParam = searchParams.get('query');
@@ -74,6 +76,23 @@ const PropertiesCatalog = () => {
 
     interpretSearch();
   }, [queryParam]);
+
+  // Obtener todos los favoritos del usuario en una sola consulta
+  const { data: favorites } = useQuery({
+    queryKey: ["user-favorites", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      
+      const { data, error } = await supabase
+        .from("property_favorites")
+        .select("property_id")
+        .eq("user_id", user.id);
+      
+      if (error) throw error;
+      return data.map(f => f.property_id);
+    },
+    enabled: !!user,
+  });
 
   // Fetch properties based on filters
   const { data: properties, isLoading: isLoadingProperties } = useQuery({
@@ -232,6 +251,7 @@ const PropertiesCatalog = () => {
               {properties.map((property, index) => {
                 const images = property.images as string[] || [];
                 const defaultImage = getPropertyImage(property.property_type, index);
+                const isFavorite = favorites?.includes(property.id) || false;
                 return (
                   <PropertyCard
                     key={property.id}
@@ -244,6 +264,7 @@ const PropertiesCatalog = () => {
                     area={`${property.area_m2} m²`}
                     imageUrl={images[0] || defaultImage}
                     type={propertyTypes[property.property_type] || property.property_type}
+                    isFavorite={isFavorite}
                   />
                 );
               })}

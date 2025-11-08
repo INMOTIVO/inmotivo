@@ -3,7 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import PropertyCard from "./PropertyCard";
 import { useState, useEffect } from "react";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from "@/components/ui/carousel";
+import { useAuth } from "@/hooks/useAuth";
 const PropertiesGrid = () => {
+  const { user } = useAuth();
   const [userLocation, setUserLocation] = useState<{
     lat: number;
     lng: number;
@@ -53,6 +55,23 @@ const PropertiesGrid = () => {
     },
     enabled: true
   });
+
+  // Obtener todos los favoritos del usuario en una sola consulta
+  const { data: favorites } = useQuery({
+    queryKey: ["user-favorites", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      
+      const { data, error } = await supabase
+        .from("property_favorites")
+        .select("property_id")
+        .eq("user_id", user.id);
+      
+      if (error) throw error;
+      return data.map(f => f.property_id);
+    },
+    enabled: !!user,
+  });
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
     const R = 6371; // Radio de la Tierra en km
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -94,8 +113,9 @@ const PropertiesGrid = () => {
               {properties.map(property => {
             const images = property.images as string[] || [];
             const defaultImage = defaultImages[property.property_type] || defaultImages.apartment;
+            const isFavorite = favorites?.includes(property.id) || false;
             return <CarouselItem key={property.id} className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3">
-                    <PropertyCard id={property.id} title={property.title} price={`$${property.price.toLocaleString()}`} location={`${property.neighborhood}, ${property.city}`} beds={property.bedrooms} baths={property.bathrooms} area={`${property.area_m2} m²`} imageUrl={images[0] || defaultImage} type={propertyTypes[property.property_type] || property.property_type} />
+                    <PropertyCard id={property.id} title={property.title} price={`$${property.price.toLocaleString()}`} location={`${property.neighborhood}, ${property.city}`} beds={property.bedrooms} baths={property.bathrooms} area={`${property.area_m2} m²`} imageUrl={images[0] || defaultImage} type={propertyTypes[property.property_type] || property.property_type} isFavorite={isFavorite} />
                   </CarouselItem>;
           })}
             </CarouselContent>

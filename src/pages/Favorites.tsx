@@ -129,6 +129,7 @@ const Favorites = () => {
                     area={`${property.area_m2}m²`}
                     imageUrl={images[0] || "/placeholder.svg"}
                     type={propertyTypes[property.property_type] || property.property_type}
+                    isFavorite={true}
                   />
                 );
               })}
