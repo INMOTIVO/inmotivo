@@ -14,7 +14,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useVoiceRecording } from "@/hooks/useVoiceRecording";
 import { useInterpretSearch } from "@/hooks/useInterpretSearch";
 import VoiceButton from './VoiceButton';
-import { getDepartments, getMunicipalitiesByDepartment, getNeighborhoodsByMunicipality } from '@/data/colombiaLocations';
+import { useLocations } from '@/hooks/useLocations';
 import { cn } from "@/lib/utils";
 
 const Hero = () => {
@@ -43,6 +43,7 @@ const Hero = () => {
   const [extractedFilters, setExtractedFilters] = useState<any>(null);
   const isMobile = useIsMobile();
   const { interpretSearch, isProcessing: isInterpretingSearch } = useInterpretSearch();
+  const { departments, getMunicipalitiesByDepartment, getNeighborhoodsByMunicipality } = useLocations();
   const {
     isRecording,
     isProcessing,
@@ -222,19 +223,19 @@ const Hero = () => {
     setShowLocationDialog(false);
     toast.success("Usando tu ubicación actual");
   };
-  const handleDepartmentChange = (value: string) => {
+  const handleDepartmentChange = async (value: string) => {
     setCustomDepartment(value);
     setCustomMunicipality("");
     setCustomNeighborhood("");
-    const municipalities = getMunicipalitiesByDepartment(value);
+    const municipalities = await getMunicipalitiesByDepartment(value);
     setAvailableMunicipalities(municipalities);
     setAvailableNeighborhoods([]);
   };
 
-  const handleMunicipalityChange = (value: string) => {
+  const handleMunicipalityChange = async (value: string) => {
     setCustomMunicipality(value);
     setCustomNeighborhood("");
-    const neighborhoods = getNeighborhoodsByMunicipality(customDepartment, value);
+    const neighborhoods = await getNeighborhoodsByMunicipality(customDepartment, value);
     setAvailableNeighborhoods(neighborhoods);
   };
 
@@ -463,7 +464,7 @@ const Hero = () => {
                         <CommandList>
                           <CommandEmpty>No se encontró departamento.</CommandEmpty>
                           <CommandGroup>
-                            {getDepartments().map((dept) => (
+                            {departments.map((dept) => (
                               <CommandItem
                                 key={dept}
                                 value={dept}
