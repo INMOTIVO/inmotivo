@@ -11,26 +11,16 @@ export const useVoiceRecording = () => {
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
-  const recordingStartRef = useRef<number | null>(null);
-  const silenceStartRef = useRef<number | null>(null);
 
   const startRecording = useCallback(async () => {
     try {
-      console.info('🎤 Solicitando acceso al micrófono...');
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
-          autoGainControl: true,
-          sampleRate: 16000, // Optimal for Whisper
-          channelCount: 1 // Mono audio
+          sampleRate: 44100
         } 
       });
-      console.info('✅ Micrófono accedido correctamente');
-      console.info('Audio stream started with tracks:', stream.getAudioTracks().map(track => ({
-        label: track.label,
-        settings: track.getSettings()
-      })));
 
       // Setup audio analyzer for visual feedback
       audioContextRef.current = new AudioContext();
@@ -42,37 +32,11 @@ export const useVoiceRecording = () => {
       const bufferLength = analyserRef.current.frequencyBinCount;
       const dataArray = new Uint8Array(bufferLength);
 
-      const SILENCE_THRESHOLD = 0.02; // 0-1 normalized
-      const MAX_SILENCE_MS = 1400;
-      const MIN_RECORDING_MS = 1200;
-
       const updateAudioLevel = () => {
         if (analyserRef.current) {
           analyserRef.current.getByteFrequencyData(dataArray);
-          const average = dataArray.reduce((a, b) => a + b, 0) / bufferLength;
-          const level = average / 255;
-          setAudioLevel(level);
-
-          const now = performance.now();
-          if (!recordingStartRef.current) recordingStartRef.current = now;
-
-          if (level > SILENCE_THRESHOLD) {
-            silenceStartRef.current = null;
-          } else {
-            if (!silenceStartRef.current) silenceStartRef.current = now;
-          }
-
-          if (
-            mediaRecorderRef.current?.state === 'recording' &&
-            recordingStartRef.current &&
-            now - recordingStartRef.current > MIN_RECORDING_MS &&
-            silenceStartRef.current &&
-            now - silenceStartRef.current > MAX_SILENCE_MS
-          ) {
-            console.info('🛑 Auto-stop by silence detection');
-            try { mediaRecorderRef.current.stop(); } catch {}
-          }
-
+          const average = dataArray.reduce((a, b) => a + b) / bufferLength;
+          setAudioLevel(average / 255);
           animationFrameRef.current = requestAnimationFrame(updateAudioLevel);
         }
       };
@@ -86,13 +50,11 @@ export const useVoiceRecording = () => {
 
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
-          console.info(`Audio chunk received, size: ${event.data.size}`);
           audioChunksRef.current.push(event.data);
         }
       };
 
       mediaRecorder.onstop = async () => {
-        console.info('Stopping recording, audio blob size:', audioChunksRef.current.reduce((sum, chunk) => sum + chunk.size, 0), 'bytes');
         setIsRecording(false);
         setIsProcessing(true);
         setAudioLevel(0);
@@ -102,7 +64,6 @@ export const useVoiceRecording = () => {
         }
 
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        console.info(`Audio blob created: ${audioBlob.size} bytes, type: ${audioBlob.type}`);
         
         // Convert to base64
         const reader = new FileReader();
@@ -117,8 +78,6 @@ export const useVoiceRecording = () => {
             return;
           }
 
-          console.info(`Sending audio to transcribe, base64 length: ${base64Audio.length}`);
-
           try {
             // Use Whisper API through edge function
             const { data, error } = await supabase.functions.invoke('transcribe-audio', {
@@ -128,11 +87,6 @@ export const useVoiceRecording = () => {
             if (error) throw error;
 
             if (data?.text) {
-              console.info('Transcription received:', data.text);
-              if (data?.language) console.info('STT detected language:', data.language);
-              if (data?.language && data.language !== 'es' && data.language !== 'spanish') {
-                console.warn('⚠️ STT language fallback detected:', data.language);
-              }
               return data.text;
             } else {
               throw new Error('No se recibió transcripción');
@@ -152,11 +106,9 @@ export const useVoiceRecording = () => {
       };
 
       mediaRecorderRef.current = mediaRecorder;
-      // Start with timeslice to capture chunks every second
-      mediaRecorder.start(1000); // Capture in 1-second chunks
+      mediaRecorder.start();
       setIsRecording(true);
-      console.info('🎤 Recording started with 1-second timeslice');
-      toast.success('🎤 Grabando... Habla ahora', { duration: 2000 });
+      toast.success('Grabando... Habla ahora', { duration: 2000 });
     } catch (error) {
       console.error('Error accessing microphone:', error);
       toast.error('No se pudo acceder al micrófono');
@@ -179,7 +131,6 @@ export const useVoiceRecording = () => {
           }
 
           const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-          console.info(`Stop recording - Audio blob: ${audioBlob.size} bytes`);
           
           const reader = new FileReader();
           reader.readAsDataURL(audioBlob);
@@ -194,8 +145,6 @@ export const useVoiceRecording = () => {
               return;
             }
 
-            console.info(`Stop - Sending audio, base64 length: ${base64Audio.length}`);
-
             try {
               const { data, error } = await supabase.functions.invoke('transcribe-audio', {
                 body: { audio: base64Audio }
@@ -204,12 +153,7 @@ export const useVoiceRecording = () => {
               if (error) throw error;
 
               if (data?.text) {
-                console.info('Stop - Transcription received:', data.text);
-                if (data?.language) console.info('STT detected language:', data.language);
-                if (data?.language && data.language !== 'es' && data.language !== 'spanish') {
-                  console.warn('⚠️ STT language fallback detected:', data.language);
-                }
-                toast.success('✅ Audio transcrito');
+                toast.success('Audio transcrito correctamente');
                 resolve(data.text);
               } else {
                 throw new Error('No se recibió transcripción');

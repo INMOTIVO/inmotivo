@@ -168,7 +168,6 @@ const Hero = () => {
       try {
         const transcript = await stopRecording();
         setSearchQuery(transcript);
-        await handleSearch(transcript);
       } catch (error) {
         console.error('Error with voice recording:', error);
       }
