@@ -22,6 +22,7 @@ export const useVoiceRecording = () => {
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const srTimeoutRef = useRef<number | null>(null);
 
   const startRecording = useCallback(async () => {
     try {
@@ -44,12 +45,14 @@ export const useVoiceRecording = () => {
               resultResolverRef.current?.(finalTranscript);
               resultResolverRef.current = null;
               resultRejectRef.current = null;
+              if (srTimeoutRef.current) { clearTimeout(srTimeoutRef.current); srTimeoutRef.current = null; }
             }
           }
         };
 
         recognition.onerror = (e: any) => {
           console.warn('[Voz] SR error, fallback a servidor', e);
+          if (srTimeoutRef.current) { clearTimeout(srTimeoutRef.current); srTimeoutRef.current = null; }
           resultRejectRef.current?.(e);
           resultResolverRef.current = null;
           resultRejectRef.current = null;
@@ -57,6 +60,13 @@ export const useVoiceRecording = () => {
 
         recognition.onend = () => {
           setIsRecording(false);
+          if (srTimeoutRef.current) { clearTimeout(srTimeoutRef.current); srTimeoutRef.current = null; }
+          // Si no llegó resultado final, rechazar para liberar estados
+          if (resultResolverRef.current) {
+            resultRejectRef.current?.(new Error('Sin resultado final'));
+            resultResolverRef.current = null;
+            resultRejectRef.current = null;
+          }
         };
 
         recognition.start();
