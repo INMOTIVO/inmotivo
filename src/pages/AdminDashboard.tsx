@@ -18,9 +18,15 @@ import {
   Plus,
   ArrowLeft,
   BarChart3,
-  Building
+  Building,
+  Pencil,
+  Trash2,
+  Ban
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 interface DashboardStats {
   totalProperties: number;
@@ -41,6 +47,15 @@ interface RecentProperty {
   };
 }
 
+interface UserProfile {
+  id: string;
+  full_name: string | null;
+  phone: string | null;
+  user_type: string | null;
+  created_at: string;
+  avatar_url: string | null;
+}
+
 const AdminDashboard = () => {
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, loading: roleLoading } = useRole();
@@ -57,6 +72,9 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [showPropertiesView, setShowPropertiesView] = useState<'all' | 'available' | 'draft' | 'suspended' | null>(null);
   const [openDialog, setOpenDialog] = useState<string | null>(null);
+  const [users, setUsers] = useState<UserProfile[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !roleLoading) {
@@ -162,6 +180,67 @@ const AdminDashboard = () => {
       setLoading(false);
     }
   };
+
+  const fetchUsers = async () => {
+    setLoadingUsers(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, phone, user_type, created_at, avatar_url')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setUsers(data || []);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      toast.error('Error al cargar usuarios');
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    try {
+      // Delete user's properties first
+      const { error: propsError } = await supabase
+        .from('properties')
+        .delete()
+        .eq('owner_id', userId);
+
+      if (propsError) throw propsError;
+
+      // Delete user's favorites
+      const { error: favsError } = await supabase
+        .from('property_favorites')
+        .delete()
+        .eq('user_id', userId);
+
+      if (favsError) throw favsError;
+
+      // Delete user profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
+
+      if (profileError) throw profileError;
+
+      toast.success('Usuario eliminado exitosamente');
+      fetchUsers();
+      fetchDashboardData();
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast.error('Error al eliminar usuario');
+    } finally {
+      setUserToDelete(null);
+    }
+  };
+
+  useEffect(() => {
+    if (openDialog === 'users') {
+      fetchUsers();
+    }
+  }, [openDialog]);
 
   if (authLoading || roleLoading || loading) {
     return (
@@ -459,39 +538,145 @@ const AdminDashboard = () => {
         </Dialog>
 
         <Dialog open={openDialog === 'users'} onOpenChange={() => setOpenDialog(null)}>
-          <DialogContent>
+          <DialogContent className="max-w-5xl max-h-[80vh]">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5" />
-                Usuarios Registrados
+                Usuarios Registrados ({stats.totalUsers})
               </DialogTitle>
               <DialogDescription>
-                Total de usuarios en la plataforma
+                Gestión completa de usuarios en la plataforma
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 pt-4">
-              <div className="p-4 bg-indigo-50 dark:bg-indigo-950 rounded-lg border border-indigo-200 dark:border-indigo-800">
-                <p className="text-sm text-muted-foreground mb-1">Total de Usuarios</p>
-                <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">{stats.totalUsers}</p>
-                <p className="text-xs text-muted-foreground mt-2">Registrados en la plataforma</p>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
+                <div className="p-3 bg-indigo-50 dark:bg-indigo-950 rounded-lg border border-indigo-200 dark:border-indigo-800">
+                  <p className="text-xs text-muted-foreground">Total Usuarios</p>
+                  <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{stats.totalUsers}</p>
+                </div>
                 <div className="p-3 border rounded-lg">
                   <p className="text-xs text-muted-foreground">Propiedades/Usuario</p>
-                  <p className="text-lg font-semibold">
+                  <p className="text-2xl font-bold">
                     {stats.totalUsers > 0 ? (stats.totalProperties / stats.totalUsers).toFixed(1) : 0}
                   </p>
                 </div>
                 <div className="p-3 border rounded-lg">
                   <p className="text-xs text-muted-foreground">Mensajes/Usuario</p>
-                  <p className="text-lg font-semibold">
+                  <p className="text-2xl font-bold">
                     {stats.totalUsers > 0 ? (stats.totalMessages / stats.totalUsers).toFixed(1) : 0}
                   </p>
                 </div>
               </div>
+
+              <ScrollArea className="h-[400px] rounded-md border">
+                {loadingUsers ? (
+                  <div className="p-8 text-center text-muted-foreground">
+                    Cargando usuarios...
+                  </div>
+                ) : users.length === 0 ? (
+                  <div className="p-8 text-center text-muted-foreground">
+                    No hay usuarios registrados
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Nombre</TableHead>
+                        <TableHead>Tipo</TableHead>
+                        <TableHead>Teléfono</TableHead>
+                        <TableHead>Fecha Registro</TableHead>
+                        <TableHead className="text-right">Acciones</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {users.map((user) => (
+                        <TableRow key={user.id}>
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-2">
+                              {user.avatar_url ? (
+                                <img 
+                                  src={user.avatar_url} 
+                                  alt={user.full_name || 'Usuario'} 
+                                  className="w-8 h-8 rounded-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                                  <Users className="h-4 w-4 text-primary" />
+                                </div>
+                              )}
+                              <span>{user.full_name || 'Sin nombre'}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+                              {user.user_type === 'tenant' ? 'Arrendatario' : 
+                               user.user_type === 'owner' ? 'Propietario' : 
+                               user.user_type === 'agency' ? 'Inmobiliaria' : 'No especificado'}
+                            </span>
+                          </TableCell>
+                          <TableCell>{user.phone || 'No proporcionado'}</TableCell>
+                          <TableCell>{new Date(user.created_at).toLocaleDateString('es-CO')}</TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 hover:bg-blue-100 dark:hover:bg-blue-900"
+                                onClick={() => {
+                                  toast.info('Función de edición en desarrollo');
+                                }}
+                              >
+                                <Pencil className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 hover:bg-orange-100 dark:hover:bg-orange-900"
+                                onClick={() => {
+                                  toast.info('Función de suspensión en desarrollo');
+                                }}
+                              >
+                                <Ban className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 hover:bg-red-100 dark:hover:bg-red-900"
+                                onClick={() => setUserToDelete(user.id)}
+                              >
+                                <Trash2 className="h-4 w-4 text-red-600 dark:text-red-400" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </ScrollArea>
             </div>
           </DialogContent>
         </Dialog>
+
+        <AlertDialog open={!!userToDelete} onOpenChange={() => setUserToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta acción no se puede deshacer. Se eliminará permanentemente el usuario, todas sus propiedades y favoritos.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => userToDelete && handleDeleteUser(userToDelete)}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                Eliminar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* Tabs */}
         <Tabs defaultValue="recent" className="space-y-6">
