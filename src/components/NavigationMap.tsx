@@ -201,13 +201,13 @@ const NavigationMap = ({
     },
     enabled: !!userLocation && !isPaused && !isDirectNavigation,
     refetchInterval: false,
-    staleTime: isVehicleMode ? 15000 : 45000, // Caché más largo fuera de modo vehículo
-    gcTime: 300000 // Mantener en caché 5 minutos
+    staleTime: isVehicleMode ? 20000 : 60000, // Caché mucho más largo para móvil
+    gcTime: 600000 // Mantener en caché 10 minutos
   });
 
-  // Convert GeoJSON to properties array - Limitado para mejor rendimiento
+  // Convert GeoJSON to properties array - Limitado para mejor rendimiento en móvil
   const properties = propertiesGeoJSON?.features
-    ?.slice(0, isVehicleMode ? 10 : 20) // Menos marcadores en modo vehículo
+    ?.slice(0, isVehicleMode ? 5 : 10) // Reducir marcadores significativamente en móvil
     ?.map((feature: any) => ({
       id: feature.properties.id,
       title: feature.properties.title,
@@ -226,19 +226,14 @@ const NavigationMap = ({
   useEffect(() => {
     let watchId: number;
     let lastUpdate = 0;
-    let animationFrameId: number;
-    const UPDATE_INTERVAL = isVehicleMode ? 2000 : 5000; // Más lento cuando no está en vehículo
+    const UPDATE_INTERVAL = isVehicleMode ? 3000 : 8000; // Reducir frecuencia significativamente
     
     watchId = navigator.geolocation.watchPosition(position => {
       if (isPaused) return;
       const now = Date.now();
       if (now - lastUpdate < UPDATE_INTERVAL) return;
       
-      // Usar requestAnimationFrame para suavizar actualizaciones
-      if (animationFrameId) cancelAnimationFrame(animationFrameId);
-      
-      animationFrameId = requestAnimationFrame(() => {
-        lastUpdate = now;
+      lastUpdate = now;
       
       const newLocation = {
         lat: position.coords.latitude,
@@ -343,26 +338,25 @@ const NavigationMap = ({
       }
       
         if (mapRef.current) {
-          // Pan suave - Solo actualizar si hay cambio significativo (>5 metros)
+          // Pan suave - Solo actualizar si hay cambio significativo (>10 metros en móvil)
           const lastPos = mapRef.current.getCenter();
           if (lastPos) {
             const dist = calculateDistance(lastPos.lat(), lastPos.lng(), newLocation.lat, newLocation.lng);
-            if (dist > 0.005) { // ~5 metros
+            if (dist > 0.01) { // ~10 metros
               mapRef.current.panTo(newLocation);
             }
           }
           
-          // Rotar mapa solo en modo vehículo para mejor rendimiento
-          if (!isPaused && isVehicleMode && speed > 5) {
+          // Simplificar rotación - solo en modo vehículo y velocidad alta
+          if (!isPaused && isVehicleMode && speed > 15) {
             mapRef.current.setHeading(smoothHeading.current);
             mapRef.current.setTilt(45);
-          } else if (!isVehicleMode) {
-            // Vista normal fuera de modo vehículo
+          } else if (!isVehicleMode && mapRef.current.getHeading() !== 0) {
+            // Vista normal fuera de modo vehículo (solo si cambió)
             mapRef.current.setHeading(0);
             mapRef.current.setTilt(0);
           }
         }
-      });
     }, error => {
       console.error('Geolocation error:', error);
       if (error.code === 1) {
@@ -371,14 +365,13 @@ const NavigationMap = ({
         });
       }
     }, {
-      enableHighAccuracy: true,
-      maximumAge: 1000, // Permitir caché de 1 segundo
-      timeout: 10000 // Aumentar timeout
+      enableHighAccuracy: false, // Usar GPS menos preciso pero más rápido en móvil
+      maximumAge: 5000, // Permitir caché de 5 segundos
+      timeout: 15000 // Timeout más largo
     });
     
     return () => {
       if (watchId) navigator.geolocation.clearWatch(watchId);
-      if (animationFrameId) cancelAnimationFrame(animationFrameId);
     };
   }, [isPaused, isVehicleMode, collectedProperties.length, heading]);
   

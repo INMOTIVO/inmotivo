@@ -23,7 +23,7 @@ const NearbyProperties = ({ filters, searchCriteria }: NearbyPropertiesProps) =>
 
   useEffect(() => {
     let lastUpdate = 0;
-    const UPDATE_INTERVAL = 10000; // Actualizar solo cada 10 segundos
+    const UPDATE_INTERVAL = 20000; // Actualizar solo cada 20 segundos para móvil
     
     const watchId = navigator.geolocation.watchPosition(
       (position) => {
@@ -36,8 +36,8 @@ const NearbyProperties = ({ filters, searchCriteria }: NearbyPropertiesProps) =>
       (error) => console.error('Geolocation error:', error),
       { 
         enableHighAccuracy: false, // Menos preciso pero más estable
-        maximumAge: 10000,
-        timeout: 5000
+        maximumAge: 15000, // Caché más largo
+        timeout: 10000 // Timeout más largo
       }
     );
 
@@ -144,9 +144,9 @@ const NearbyProperties = ({ filters, searchCriteria }: NearbyPropertiesProps) =>
       return uniqueProperties.slice(0, 5); // Always return exactly 5 unique properties
     },
     enabled: !!userLocation,
-    staleTime: 30000,
+    staleTime: 60000, // 1 minuto de caché
     refetchInterval: false, // Deshabilitar refetch automático
-    gcTime: 5 * 60 * 1000, // Mantener en caché 5 minutos
+    gcTime: 10 * 60 * 1000, // Mantener en caché 10 minutos
   });
 
   console.log('NearbyProperties: Final properties:', properties?.length || 0);
