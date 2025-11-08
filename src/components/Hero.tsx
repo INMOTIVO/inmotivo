@@ -308,7 +308,7 @@ const Hero = () => {
                         <span className="text-xs text-muted-foreground">Detectando ubicación...</span>
                       </div> : <>
                         <div className="flex items-center gap-1.5 flex-1 min-w-0 w-full sm:w-auto justify-center sm:justify-start">
-                          <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
+                          <MapPin className="h-4 w-4 text-primary animate-bounce flex-shrink-0" />
                           <span className="text-sm font-medium">Tu ubicación:</span>
                           {municipality && sector ? <span className="text-sm font-medium truncate">{municipality}, {sector}</span> : municipality ? <span className="text-sm font-medium truncate">{municipality}</span> : <span className="text-sm font-medium truncate">Medellín</span>}
                         </div>
