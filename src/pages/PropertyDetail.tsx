@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { MapPin, Bed, Bath, Maximize, ArrowLeft, X, Heart, Upload } from "lucide-react";
+import { MapPin, Bed, Bath, Maximize, ArrowLeft, X, Heart, Upload, Navigation } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ContactDialog from "@/components/ContactDialog";
@@ -47,6 +47,8 @@ const PropertyDetail = () => {
           amenities,
           verified,
           status,
+          latitude,
+          longitude,
           owner:profiles(full_name, phone),
           agency:agencies(name, phone, email)
         `)
@@ -142,6 +144,29 @@ const PropertyDetail = () => {
     }
   };
 
+  const handleNavigate = () => {
+    if (!property?.latitude || !property?.longitude) {
+      toast.error("Esta propiedad no tiene ubicación disponible");
+      return;
+    }
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          // Navegar a la página de navegación con origen y destino
+          navigate(`/navigate?originLat=${latitude}&originLng=${longitude}&destLat=${property.latitude}&destLng=${property.longitude}&destName=${encodeURIComponent(property.title)}`);
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          toast.error("No se pudo obtener tu ubicación");
+        }
+      );
+    } else {
+      toast.error("Tu navegador no soporta geolocalización");
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen">
@@ -191,6 +216,15 @@ const PropertyDetail = () => {
             </Button>
 
             <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleNavigate}
+                className="rounded-full w-12 h-12 shadow-xl bg-white hover:bg-gray-50"
+              >
+                <Navigation className="h-5 w-5 text-gray-600" />
+              </Button>
+
               <Button
                 variant="outline"
                 size="icon"
