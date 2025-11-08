@@ -37,6 +37,8 @@ const Hero = () => {
   const [openDept, setOpenDept] = useState(false);
   const [openMuni, setOpenMuni] = useState(false);
   const [openNeigh, setOpenNeigh] = useState(false);
+  const [showLocationConfirmDialog, setShowLocationConfirmDialog] = useState(false);
+  const [pendingSearchQuery, setPendingSearchQuery] = useState("");
   const isMobile = useIsMobile();
   const { interpretSearch, isProcessing: isInterpretingSearch } = useInterpretSearch();
   const {
@@ -179,12 +181,25 @@ const Hero = () => {
       return;
     }
 
+    // Guardar la consulta y mostrar diálogo de confirmación
+    setPendingSearchQuery(textToSearch);
+    setShowLocationConfirmDialog(true);
+  };
+
+  const handleContinueWithCurrentLocation = async () => {
+    setShowLocationConfirmDialog(false);
+    
     // Usar el hook optimizado con caché
-    const result = await interpretSearch(textToSearch);
+    const result = await interpretSearch(pendingSearchQuery);
     if (!result) return; // El hook ya maneja los errores
 
     // Mostrar opciones de búsqueda
     setShowOptions(true);
+  };
+
+  const handleChangeLocationForSearch = () => {
+    setShowLocationConfirmDialog(false);
+    setShowLocationDialog(true);
   };
   const handleContinueCurrentLocation = () => {
     setUseCustomLocation(false);
@@ -207,7 +222,7 @@ const Hero = () => {
     setAvailableNeighborhoods(neighborhoods);
   };
 
-  const handleUseCustomLocation = () => {
+  const handleUseCustomLocation = async () => {
     if (!customDepartment.trim()) {
       toast.error("El departamento es obligatorio");
       return;
@@ -222,6 +237,14 @@ const Hero = () => {
     setSector(customNeighborhood);
     setShowLocationDialog(false);
     toast.success(`Buscando en: ${customDepartment}, ${fullLocation}`);
+
+    // Si hay una búsqueda pendiente, ejecutarla con la nueva ubicación
+    if (pendingSearchQuery.trim()) {
+      const result = await interpretSearch(pendingSearchQuery);
+      if (result) {
+        setShowOptions(true);
+      }
+    }
   };
   if (showOptions) {
     return <section className="fixed inset-0 top-14 md:top-16 flex flex-col overflow-hidden z-50">
@@ -329,6 +352,40 @@ const Hero = () => {
             </div>
           </div>
         </div>}
+
+      {/* Location Confirmation Dialog */}
+      <Dialog open={showLocationConfirmDialog} onOpenChange={setShowLocationConfirmDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirmar ubicación de búsqueda</DialogTitle>
+            <DialogDescription>
+              Estás usando tu ubicación en tiempo real para buscar propiedades.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2 p-4 bg-primary/5 rounded-lg border border-primary/20">
+              <div className="flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-primary" />
+                <p className="text-sm font-medium">
+                  Ubicación actual: <span className="text-primary">{municipality}{sector && `, ${sector}`}</span>
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex flex-col gap-3">
+              <Button onClick={handleContinueWithCurrentLocation} variant="default" className="w-full">
+                <MapPin className="mr-2 h-4 w-4" />
+                Continuar con mi ubicación actual
+              </Button>
+              
+              <Button onClick={handleChangeLocationForSearch} variant="outline" className="w-full">
+                <Search className="mr-2 h-4 w-4" />
+                Buscar en otra ubicación
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Location Selection Dialog */}
       <Dialog open={showLocationDialog} onOpenChange={setShowLocationDialog}>
