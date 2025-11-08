@@ -10,10 +10,29 @@ import { ArrowLeft, Loader2 } from 'lucide-react';
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 
+// Haversine formula to calculate distance between two points
+const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+  const R = 6371e3; // Earth's radius in meters
+  const φ1 = lat1 * Math.PI / 180;
+  const φ2 = lat2 * Math.PI / 180;
+  const Δφ = (lat2 - lat1) * Math.PI / 180;
+  const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+  const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+            Math.cos(φ1) * Math.cos(φ2) *
+            Math.sin(Δλ/2) * Math.sin(Δλ/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+  return R * c; // Distance in meters
+};
+
 const PropertiesCatalog = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const queryParam = searchParams.get('query');
+  const userLat = searchParams.get('lat');
+  const userLng = searchParams.get('lng');
+  const radius = searchParams.get('radius');
   const [filters, setFilters] = useState<any>({});
   const [isLoadingFilters, setIsLoadingFilters] = useState(true);
 
@@ -58,7 +77,7 @@ const PropertiesCatalog = () => {
 
   // Fetch properties based on filters
   const { data: properties, isLoading: isLoadingProperties } = useQuery({
-    queryKey: ['catalog-properties', filters],
+    queryKey: ['catalog-properties', filters, userLat, userLng, radius],
     queryFn: async () => {
       let query = supabase
         .from('properties')
@@ -73,6 +92,34 @@ const PropertiesCatalog = () => {
 
       const { data, error } = await query.order('created_at', { ascending: false });
       if (error) throw error;
+      
+      // Filter by distance if location parameters are provided
+      if (userLat && userLng && radius && data) {
+        const lat = parseFloat(userLat);
+        const lng = parseFloat(userLng);
+        const maxRadius = parseFloat(radius);
+        
+        const filtered = data.filter(property => {
+          if (!property.latitude || !property.longitude) return false;
+          const distance = calculateDistance(
+            lat, 
+            lng, 
+            Number(property.latitude), 
+            Number(property.longitude)
+          );
+          return distance <= maxRadius;
+        });
+        
+        // Sort by distance (closest first)
+        filtered.sort((a, b) => {
+          const distA = calculateDistance(lat, lng, Number(a.latitude), Number(a.longitude));
+          const distB = calculateDistance(lat, lng, Number(b.latitude), Number(b.longitude));
+          return distA - distB;
+        });
+        
+        return filtered;
+      }
+      
       return data;
     },
     enabled: !isLoadingFilters,
@@ -154,6 +201,11 @@ const PropertiesCatalog = () => {
               Propiedades que <span className="text-primary">coinciden</span>
               <br className="hidden sm:block" />
               <span className="sm:inline"> </span>con tu búsqueda
+              {userLat && userLng && radius && (
+                <span className="block text-lg md:text-xl text-muted-foreground mt-2">
+                  a máximo {parseFloat(radius) / 1000} km de tu ubicación
+                </span>
+              )}
             </h1>
             {queryParam && (
             <div className="inline-flex items-center gap-2 px-3 md:px-4 py-2 bg-primary/10 rounded-full max-w-[90%]">

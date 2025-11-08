@@ -35,7 +35,22 @@ const SearchOptions = ({
     }
   };
   const handleFixedView = () => {
-    navigate(`/catalogo?query=${encodeURIComponent(editedQuery)}`);
+    // Obtener ubicación actual del usuario
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          navigate(`/catalogo?query=${encodeURIComponent(editedQuery)}&lat=${latitude}&lng=${longitude}&radius=2000`);
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          // Si falla, navegar sin ubicación
+          navigate(`/catalogo?query=${encodeURIComponent(editedQuery)}`);
+        }
+      );
+    } else {
+      navigate(`/catalogo?query=${encodeURIComponent(editedQuery)}`);
+    }
   };
   const handleGPSNavigation = () => {
     setIsStartingNav(true);
