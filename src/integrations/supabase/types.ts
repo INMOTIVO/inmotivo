@@ -71,6 +71,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_read: boolean | null
           message: string
           property_id: string
           sender_email: string
@@ -80,6 +81,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          is_read?: boolean | null
           message: string
           property_id: string
           sender_email: string
@@ -89,6 +91,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          is_read?: boolean | null
           message?: string
           property_id?: string
           sender_email?: string
@@ -104,6 +107,153 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      departments: {
+        Row: {
+          code: string | null
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          code?: string | null
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          code?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      message_replies: {
+        Row: {
+          contact_message_id: string
+          created_at: string
+          id: string
+          replied_by: string
+          reply_text: string
+        }
+        Insert: {
+          contact_message_id: string
+          created_at?: string
+          id?: string
+          replied_by: string
+          reply_text: string
+        }
+        Update: {
+          contact_message_id?: string
+          created_at?: string
+          id?: string
+          replied_by?: string
+          reply_text?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_replies_contact_message_id_fkey"
+            columns: ["contact_message_id"]
+            isOneToOne: false
+            referencedRelation: "contact_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      municipalities: {
+        Row: {
+          code: string | null
+          created_at: string | null
+          department_id: string
+          id: string
+          name: string
+        }
+        Insert: {
+          code?: string | null
+          created_at?: string | null
+          department_id: string
+          id?: string
+          name: string
+        }
+        Update: {
+          code?: string | null
+          created_at?: string | null
+          department_id?: string
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "municipalities_department_id_fkey"
+            columns: ["department_id"]
+            isOneToOne: false
+            referencedRelation: "departments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      neighborhoods: {
+        Row: {
+          created_at: string | null
+          id: string
+          municipality_id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          municipality_id: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          municipality_id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "neighborhoods_municipality_id_fkey"
+            columns: ["municipality_id"]
+            isOneToOne: false
+            referencedRelation: "municipalities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      page_views: {
+        Row: {
+          created_at: string
+          id: string
+          ip_address: string | null
+          page_path: string
+          referrer: string | null
+          session_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          page_path: string
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          page_path?: string
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
       }
       profiles: {
         Row: {

@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Navbar from '@/components/Navbar';
 import PropertiesManagementTable from '@/components/PropertiesManagementTable';
+import { MessagesDialog } from '@/components/MessagesDialog';
 import { Plus, Home, MessageCircle, Edit, Trash2, Eye, User, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
@@ -39,6 +40,7 @@ interface ContactMessage {
   message: string;
   created_at: string;
   property_id: string;
+  is_read: boolean;
   properties: {
     title: string;
   };
@@ -109,6 +111,7 @@ const ProviderDashboard = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [savingProfile, setSavingProfile] = useState(false);
   const [showPropertiesView, setShowPropertiesView] = useState<'all' | 'available' | 'draft' | 'suspended' | null>(null);
+  const [messagesDialogOpen, setMessagesDialogOpen] = useState(false);
 
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
@@ -329,7 +332,10 @@ const ProviderDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card 
+            className="cursor-pointer hover:shadow-lg transition-shadow" 
+            onClick={() => setMessagesDialogOpen(true)}
+          >
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">
                 Mensajes Recibidos
@@ -337,7 +343,14 @@ const ProviderDashboard = () => {
               <MessageCircle className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{messages.length}</div>
+              <div className="text-2xl font-bold">
+                {messages.length}
+                {messages.filter(m => !m.is_read).length > 0 && (
+                  <Badge variant="destructive" className="ml-2 text-sm">
+                    {messages.filter(m => !m.is_read).length} nuevos
+                  </Badge>
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -599,6 +612,14 @@ const ProviderDashboard = () => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        <MessagesDialog
+          open={messagesDialogOpen}
+          onOpenChange={setMessagesDialogOpen}
+          messages={messages}
+          userId={user?.id || ''}
+          onMessagesUpdate={fetchMessages}
+        />
       </main>
     </div>
   );
