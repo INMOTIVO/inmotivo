@@ -35,22 +35,9 @@ const SearchOptions = ({
     }
   };
   const handleFixedView = () => {
-    // Obtener ubicación actual del usuario
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          navigate(`/catalogo?query=${encodeURIComponent(editedQuery)}&lat=${latitude}&lng=${longitude}&radius=2000`);
-        },
-        (error) => {
-          console.error('Error getting location:', error);
-          // Si falla, navegar sin ubicación
-          navigate(`/catalogo?query=${encodeURIComponent(editedQuery)}`);
-        }
-      );
-    } else {
-      navigate(`/catalogo?query=${encodeURIComponent(editedQuery)}`);
-    }
+    // Navegar sin ubicación GPS, solo con el query de búsqueda
+    // La ubicación se extraerá del texto mediante el edge function
+    navigate(`/catalogo?query=${encodeURIComponent(editedQuery)}`);
   };
   const handleGPSNavigation = () => {
     setIsStartingNav(true);
@@ -117,14 +104,14 @@ const SearchOptions = ({
             <div className="space-y-1.5 md:space-y-2">
               <h3 className="text-lg md:text-2xl font-bold">Ver propiedades cerca</h3>
               <p className="text-xs md:text-base text-muted-foreground line-clamp-2">
-                Explora propiedades disponibles en tu zona.
+                Busca según el departamento, municipio o sector que especificaste.
               </p>
             </div>
 
             <ul className="space-y-1.5 md:space-y-2 text-xs md:text-sm text-muted-foreground hidden md:block flex-grow">
               <li className="flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-primary" />
-                Vista de mapa interactivo
+                Búsqueda por ubicación de texto
               </li>
               <li className="flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-primary" />
