@@ -115,9 +115,34 @@ serve(async (req) => {
     // El arguments puede venir como string o como objeto
     let result;
     try {
-      result = typeof toolCall.function.arguments === 'string' 
-        ? JSON.parse(toolCall.function.arguments)
-        : toolCall.function.arguments;
+      if (typeof toolCall.function.arguments === 'string') {
+        // Limpiar JSONs duplicados - el modelo a veces devuelve múltiples objetos
+        let cleanedArgs = toolCall.function.arguments.trim();
+        
+        // Si contiene múltiples objetos JSON, extraer solo el primero
+        const firstBraceIndex = cleanedArgs.indexOf('{');
+        if (firstBraceIndex !== -1) {
+          let braceCount = 0;
+          let endIndex = firstBraceIndex;
+          
+          for (let i = firstBraceIndex; i < cleanedArgs.length; i++) {
+            if (cleanedArgs[i] === '{') braceCount++;
+            if (cleanedArgs[i] === '}') braceCount--;
+            
+            if (braceCount === 0) {
+              endIndex = i + 1;
+              break;
+            }
+          }
+          
+          cleanedArgs = cleanedArgs.substring(firstBraceIndex, endIndex);
+          console.log("Cleaned arguments:", cleanedArgs);
+        }
+        
+        result = JSON.parse(cleanedArgs);
+      } else {
+        result = toolCall.function.arguments;
+      }
     } catch (parseError) {
       console.error("Error parsing arguments:", parseError);
       console.error("Raw arguments:", toolCall.function.arguments);
