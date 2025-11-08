@@ -212,17 +212,16 @@ const PropertiesCatalog = () => {
                   a máximo {parseFloat(radius) / 1000} km de tu ubicación
                 </span>
               )}
+              {!userLat && !userLng && filters.location && (
+                <span className="block text-lg md:text-xl text-muted-foreground mt-2">
+                  en {filters.location}
+                </span>
+              )}
             </h1>
             {queryParam && (
             <div className="inline-flex items-center gap-2 px-3 md:px-4 py-2 bg-primary/10 rounded-full max-w-[90%]">
               <span className="text-xs md:text-sm text-muted-foreground whitespace-nowrap">Buscaste:</span>
               <span className="text-xs md:text-sm font-semibold text-primary truncate">"{queryParam}"</span>
-              {filters.location && (
-                <>
-                  <span className="text-sm text-muted-foreground">en:</span>
-                  <span className="text-sm font-semibold text-primary">{filters.location}</span>
-                </>
-              )}
             </div>
             )}
           </div>
