@@ -97,9 +97,7 @@ const MapFilters = ({ onFiltersChange, initialQuery = '' }: MapFiltersProps) => 
       const transcript = await stopRecording();
       if (transcript && transcript.trim()) {
         setSearchQuery(transcript);
-        setTimeout(() => {
-          handleInterpretSearch(transcript);
-        }, 100);
+        toast.success('Transcripción completada. Presiona Buscar para continuar.');
       }
     } catch (error) {
       console.error('Error with voice recording:', error);

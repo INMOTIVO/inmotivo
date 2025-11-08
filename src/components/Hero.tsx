@@ -172,10 +172,7 @@ const Hero = () => {
       const transcript = await stopRecording();
       if (transcript && transcript.trim()) {
         setSearchQuery(transcript);
-        // Esperar un momento para que el searchQuery se actualice
-        setTimeout(() => {
-          handleSearch(transcript);
-        }, 100);
+        toast.success('Transcripción completada. Presiona Buscar para continuar.');
       }
     } catch (error) {
       console.error('Error with voice recording:', error);

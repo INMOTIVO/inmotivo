@@ -31,6 +31,7 @@ const NavigationControls = ({ onStartNavigation, initialCriteria = '' }: Navigat
       const transcript = await stopRecording();
       if (transcript && transcript.trim()) {
         setCriteria(transcript);
+        toast.success('Transcripción completada.');
       }
     } catch (error) {
       console.error('Error with voice recording:', error);
