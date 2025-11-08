@@ -23,6 +23,22 @@ const TenantProfile = () => {
     }
   }, [user, loading, navigate]);
 
+  // Fetch user profile
+  const { data: profile } = useQuery({
+    queryKey: ['user-profile', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user!.id)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
   // Fetch favorites
   const { data: favorites, isLoading: loadingFavorites } = useQuery({
     queryKey: ['tenant-favorites', user?.id],
@@ -155,6 +171,11 @@ const TenantProfile = () => {
         </Button>
 
         <div className="mb-8">
+          {profile?.full_name && (
+            <p className="text-lg text-muted-foreground mb-4">
+              Hola, <span className="font-semibold text-foreground">{profile.full_name}</span>
+            </p>
+          )}
           <h1 className="text-4xl font-bold mb-2">Mi Perfil</h1>
           <p className="text-muted-foreground">
             Gestiona tus propiedades favoritas y mensajes
