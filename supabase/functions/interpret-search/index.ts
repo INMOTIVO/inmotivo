@@ -50,6 +50,10 @@ serve(async (req) => {
                     type: "boolean",
                     description: "true si es búsqueda de inmuebles, false si no"
                   },
+                  location: {
+                    type: "string",
+                    description: "Ubicación mencionada (departamento, municipio, sector, barrio)"
+                  },
                   radius: {
                     type: "number",
                     description: "Radio en km (1-20). Default 5."
