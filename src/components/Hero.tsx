@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Search, MapPin, Loader2, ArrowLeft, Check, ChevronsUpDown, Database } from "lucide-react";
+import { Search, MapPin, Loader2, ArrowLeft, Check, ChevronsUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,8 +14,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useVoiceRecording } from "@/hooks/useVoiceRecording";
 import { useInterpretSearch } from "@/hooks/useInterpretSearch";
 import VoiceButton from './VoiceButton';
-import { useLocations } from '@/hooks/useLocations';
-import { seedLocationsToDatabase } from '@/utils/seedLocations';
+import { getDepartments, getMunicipalitiesByDepartment, getNeighborhoodsByMunicipality } from '@/data/colombiaLocations';
 import { cn } from "@/lib/utils";
 
 const Hero = () => {
@@ -42,10 +41,8 @@ const Hero = () => {
   const [pendingSearchQuery, setPendingSearchQuery] = useState("");
   const [useGPSForSearch, setUseGPSForSearch] = useState(false);
   const [extractedFilters, setExtractedFilters] = useState<any>(null);
-  const [isSeeding, setIsSeeding] = useState(false);
   const isMobile = useIsMobile();
   const { interpretSearch, isProcessing: isInterpretingSearch } = useInterpretSearch();
-  const { departments, getMunicipalitiesByDepartment, getNeighborhoodsByMunicipality, loading: loadingLocations } = useLocations();
   const {
     isRecording,
     isProcessing,
@@ -225,42 +222,20 @@ const Hero = () => {
     setShowLocationDialog(false);
     toast.success("Usando tu ubicación actual");
   };
-  const handleDepartmentChange = async (value: string) => {
+  const handleDepartmentChange = (value: string) => {
     setCustomDepartment(value);
     setCustomMunicipality("");
     setCustomNeighborhood("");
-    const municipalities = await getMunicipalitiesByDepartment(value);
+    const municipalities = getMunicipalitiesByDepartment(value);
     setAvailableMunicipalities(municipalities);
     setAvailableNeighborhoods([]);
   };
 
-  const handleMunicipalityChange = async (value: string) => {
+  const handleMunicipalityChange = (value: string) => {
     setCustomMunicipality(value);
     setCustomNeighborhood("");
-    const neighborhoods = await getNeighborhoodsByMunicipality(customDepartment, value);
+    const neighborhoods = getNeighborhoodsByMunicipality(customDepartment, value);
     setAvailableNeighborhoods(neighborhoods);
-  };
-
-  const handleSeedLocations = async () => {
-    setIsSeeding(true);
-    try {
-      toast.info("Cargando ubicaciones...", {
-        description: "Esto puede tomar unos segundos"
-      });
-      await seedLocationsToDatabase();
-      toast.success("Ubicaciones cargadas correctamente", {
-        description: "Ahora puedes seleccionar departamentos y municipios"
-      });
-      // Recargar la página para refrescar los datos
-      window.location.reload();
-    } catch (error) {
-      console.error('Error seeding locations:', error);
-      toast.error("Error al cargar ubicaciones", {
-        description: "Por favor intenta de nuevo"
-      });
-    } finally {
-      setIsSeeding(false);
-    }
   };
 
   const handleUseCustomLocation = async () => {
@@ -470,61 +445,25 @@ const Hero = () => {
                   <label className="text-sm font-medium">
                     Departamento <span className="text-destructive">*</span>
                   </label>
-                  
-                  {!loadingLocations && departments.length === 0 && (
-                    <div className="space-y-2 p-4 bg-muted/50 rounded-lg border border-border">
-                      <p className="text-sm text-muted-foreground">
-                        No hay departamentos cargados en la base de datos.
-                      </p>
-                      <Button 
-                        onClick={handleSeedLocations} 
-                        disabled={isSeeding}
+                  <Popover open={openDept} onOpenChange={setOpenDept}>
+                    <PopoverTrigger asChild>
+                      <Button
                         variant="outline"
-                        className="w-full"
+                        role="combobox"
+                        aria-expanded={openDept}
+                        className="w-full justify-between bg-background"
                       >
-                        {isSeeding ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Cargando ubicaciones...
-                          </>
-                        ) : (
-                          <>
-                            <Database className="mr-2 h-4 w-4" />
-                            Cargar Departamentos y Municipios
-                          </>
-                        )}
+                        {customDepartment || "Selecciona un departamento"}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
-                    </div>
-                  )}
-                  
-                  {(loadingLocations || departments.length > 0) && (
-                    <Popover open={openDept} onOpenChange={setOpenDept}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          aria-expanded={openDept}
-                          disabled={loadingLocations}
-                          className="w-full justify-between bg-background"
-                        >
-                          {loadingLocations ? (
-                            <>
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                              Cargando...
-                            </>
-                          ) : (
-                            customDepartment || "Selecciona un departamento"
-                          )}
-                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
-                    <PopoverContent className="w-full p-0 bg-popover z-50" align="start">
-                      <Command className="bg-popover">
-                        <CommandInput placeholder="Buscar departamento..." className="bg-background" />
+                    </PopoverTrigger>
+                    <PopoverContent className="w-full p-0 bg-popover" align="start">
+                      <Command>
+                        <CommandInput placeholder="Buscar departamento..." />
                         <CommandList>
                           <CommandEmpty>No se encontró departamento.</CommandEmpty>
                           <CommandGroup>
-                            {departments.map((dept) => (
+                            {getDepartments().map((dept) => (
                               <CommandItem
                                 key={dept}
                                 value={dept}
@@ -532,7 +471,6 @@ const Hero = () => {
                                   handleDepartmentChange(value);
                                   setOpenDept(false);
                                 }}
-                                className="hover:bg-accent cursor-pointer"
                               >
                                 <Check
                                   className={cn(
@@ -548,7 +486,6 @@ const Hero = () => {
                       </Command>
                     </PopoverContent>
                   </Popover>
-                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -568,9 +505,9 @@ const Hero = () => {
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-full p-0 bg-popover z-50" align="start">
-                      <Command className="bg-popover">
-                        <CommandInput placeholder="Buscar municipio..." className="bg-background" />
+                    <PopoverContent className="w-full p-0 bg-popover" align="start">
+                      <Command>
+                        <CommandInput placeholder="Buscar municipio..." />
                         <CommandList>
                           <CommandEmpty>No se encontró municipio.</CommandEmpty>
                           <CommandGroup>
@@ -582,7 +519,6 @@ const Hero = () => {
                                   handleMunicipalityChange(value);
                                   setOpenMuni(false);
                                 }}
-                                className="hover:bg-accent cursor-pointer"
                               >
                                 <Check
                                   className={cn(
@@ -617,9 +553,9 @@ const Hero = () => {
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-full p-0 bg-popover z-50" align="start">
-                      <Command className="bg-popover">
-                        <CommandInput placeholder="Buscar barrio..." className="bg-background" />
+                    <PopoverContent className="w-full p-0 bg-popover" align="start">
+                      <Command>
+                        <CommandInput placeholder="Buscar barrio..." />
                         <CommandList>
                           <CommandEmpty>No se encontró barrio.</CommandEmpty>
                           <CommandGroup>
@@ -631,7 +567,6 @@ const Hero = () => {
                                   setCustomNeighborhood(value);
                                   setOpenNeigh(false);
                                 }}
-                                className="hover:bg-accent cursor-pointer"
                               >
                                 <Check
                                   className={cn(

@@ -17,7 +17,6 @@ import AdminDashboard from "./pages/AdminDashboard";
 import CreateProperty from "./pages/CreateProperty";
 import Favorites from "./pages/Favorites";
 import NotFound from "./pages/NotFound";
-import SeedLocations from "./pages/SeedLocations";
 
 const queryClient = new QueryClient();
 
@@ -40,7 +39,6 @@ const AppRoutes = () => {
       <Route path="/create-property" element={<CreateProperty />} />
       <Route path="/edit-property/:id" element={<CreateProperty />} />
       <Route path="/marketing-preview" element={<AdCreativesPreview />} />
-      <Route path="/seed-locations" element={<SeedLocations />} />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
     </Routes>
