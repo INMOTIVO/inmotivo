@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { MapPin, Bed, Bath, Maximize, ArrowLeft, X, Heart } from "lucide-react";
+import { MapPin, Bed, Bath, Maximize, ArrowLeft, X, Heart, Share2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ContactDialog from "@/components/ContactDialog";
@@ -118,6 +118,30 @@ const PropertyDetail = () => {
     }
   };
 
+  const handleShare = async () => {
+    const shareData = {
+      title: property?.title || 'Propiedad en Inmotivo',
+      text: `${property?.title} - ${property?.neighborhood}, ${property?.city}`,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        toast.success("Compartido exitosamente");
+      } else {
+        // Fallback: copiar al portapapeles
+        await navigator.clipboard.writeText(window.location.href);
+        toast.success("Enlace copiado al portapapeles");
+      }
+    } catch (error) {
+      if (error instanceof Error && error.name !== 'AbortError') {
+        console.error("Error sharing:", error);
+        toast.error("Error al compartir");
+      }
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen">
@@ -166,24 +190,35 @@ const PropertyDetail = () => {
               <ArrowLeft className="h-5 w-5" />
             </Button>
 
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleToggleFavorite}
-              className={`rounded-full w-12 h-12 shadow-xl ${
-                isFavorite 
-                  ? 'bg-red-50 hover:bg-red-100 border-red-200' 
-                  : 'bg-white hover:bg-gray-50'
-              }`}
-            >
-              <Heart 
-                className={`h-5 w-5 ${
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleShare}
+                className="rounded-full w-12 h-12 shadow-xl bg-white hover:bg-gray-50"
+              >
+                <Share2 className="h-5 w-5 text-gray-600" />
+              </Button>
+
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleToggleFavorite}
+                className={`rounded-full w-12 h-12 shadow-xl ${
                   isFavorite 
-                    ? 'fill-red-500 text-red-500' 
-                    : 'text-gray-600'
-                }`} 
-              />
-            </Button>
+                    ? 'bg-red-50 hover:bg-red-100 border-red-200' 
+                    : 'bg-white hover:bg-gray-50'
+                }`}
+              >
+                <Heart 
+                  className={`h-5 w-5 ${
+                    isFavorite 
+                      ? 'fill-red-500 text-red-500' 
+                      : 'text-gray-600'
+                  }`} 
+                />
+              </Button>
+            </div>
           </div>
 
           <div className="grid lg:grid-cols-3 gap-4 md:gap-8">
