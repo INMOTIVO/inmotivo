@@ -90,10 +90,16 @@ const PropertiesCatalog = () => {
       if (filters.bedrooms) query = query.gte('bedrooms', filters.bedrooms);
       if (filters.propertyType) query = query.eq('property_type', filters.propertyType);
 
+      // Filter by location name if provided (and no GPS coordinates)
+      if (filters.location && !userLat && !userLng) {
+        const locationLower = filters.location.toLowerCase();
+        query = query.or(`city.ilike.%${locationLower}%,neighborhood.ilike.%${locationLower}%`);
+      }
+
       const { data, error } = await query.order('created_at', { ascending: false });
       if (error) throw error;
       
-      // Filter by distance if location parameters are provided
+      // Filter by distance if GPS location parameters are provided
       if (userLat && userLng && radius && data) {
         const lat = parseFloat(userLat);
         const lng = parseFloat(userLng);
