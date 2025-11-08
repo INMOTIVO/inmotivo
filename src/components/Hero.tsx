@@ -165,17 +165,24 @@ const Hero = () => {
     getCurrentLocation();
   }, []);
   const handleVoiceRecording = async () => {
-    if (isRecording) {
-      try { await stopRecording(); } catch {}
+    if (isRecording || isProcessing) {
+      toast.info('Esperando resultado...');
       return;
     }
     try {
       const transcript = await recordOnce();
       console.log('[Voz] Final transcript (hero):', transcript);
-      setSearchQuery(transcript);
-      await handleSearch(transcript);
-    } catch (error) {
+      if (transcript && transcript.length > 0) {
+        setSearchQuery(transcript);
+        await handleSearch(transcript);
+      } else {
+        toast.error('No se capturó audio, intenta de nuevo');
+      }
+    } catch (error: any) {
       console.error('Error with voice recording:', error);
+      if (error.message !== 'SR_ERROR' && error.message !== 'NO_RESULT') {
+        toast.error('Error al grabar, intenta de nuevo');
+      }
     }
   };
   const handleSearch = async (queryText?: string) => {
