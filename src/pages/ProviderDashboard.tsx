@@ -130,11 +130,60 @@ const ProviderDashboard = () => {
 
   useEffect(() => {
     if (user) {
-      fetchProperties();
-      fetchMessages();
-      fetchProfile();
+      fetchAllData();
     }
   }, [user]);
+
+  const fetchAllData = async () => {
+    try {
+      // Ejecutar todas las peticiones en paralelo
+      const [propertiesResult, messagesResult, profileResult] = await Promise.all([
+        supabase
+          .from('properties')
+          .select('*')
+          .eq('owner_id', user?.id)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('contact_messages')
+          .select(`
+            *,
+            properties!inner(title, owner_id)
+          `)
+          .eq('properties.owner_id', user?.id)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('profiles')
+          .select('id, full_name, phone')
+          .eq('id', user?.id)
+          .single()
+      ]);
+
+      // Procesar propiedades
+      if (propertiesResult.error) throw propertiesResult.error;
+      setProperties(propertiesResult.data || []);
+
+      // Procesar mensajes
+      if (messagesResult.error) throw messagesResult.error;
+      setMessages(messagesResult.data || []);
+
+      // Procesar perfil
+      if (profileResult.error && profileResult.error.code !== 'PGRST116') {
+        throw profileResult.error;
+      }
+      if (profileResult.data) {
+        setProfile(profileResult.data);
+        form.reset({
+          full_name: profileResult.data.full_name || '',
+          phone: profileResult.data.phone || '',
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      toast.error('Error al cargar datos');
+    } finally {
+      setLoadingData(false);
+    }
+  };
 
   const fetchProperties = async () => {
     try {
@@ -149,48 +198,6 @@ const ProviderDashboard = () => {
     } catch (error) {
       console.error('Error fetching properties:', error);
       toast.error('Error al cargar propiedades');
-    } finally {
-      setLoadingData(false);
-    }
-  };
-
-  const fetchMessages = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('contact_messages')
-        .select(`
-          *,
-          properties!inner(title, owner_id)
-        `)
-        .eq('properties.owner_id', user?.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setMessages(data || []);
-    } catch (error) {
-      console.error('Error fetching messages:', error);
-    }
-  };
-
-  const fetchProfile = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, phone')
-        .eq('id', user?.id)
-        .single();
-
-      if (error && error.code !== 'PGRST116') throw error;
-      
-      if (data) {
-        setProfile(data);
-        form.reset({
-          full_name: data.full_name || '',
-          phone: data.phone || '',
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching profile:', error);
     }
   };
 
@@ -209,7 +216,7 @@ const ProviderDashboard = () => {
       if (error) throw error;
       
       toast.success('Perfil actualizado correctamente');
-      fetchProfile();
+      fetchAllData();
     } catch (error) {
       console.error('Error updating profile:', error);
       toast.error('Error al actualizar el perfil');
@@ -229,7 +236,7 @@ const ProviderDashboard = () => {
 
       if (error) throw error;
       toast.success('Propiedad eliminada');
-      fetchProperties();
+      fetchAllData();
     } catch (error) {
       console.error('Error deleting property:', error);
       toast.error('Error al eliminar propiedad');
@@ -238,10 +245,28 @@ const ProviderDashboard = () => {
 
   if (loading || roleLoading || loadingData) {
     return (
-      <div className="min-h-screen">
+      <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="container mx-auto px-4 pt-24">
-          <p>Cargando...</p>
+        <div className="container mx-auto px-4 pt-24 pb-12">
+          <div className="space-y-8 animate-pulse">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+              <div className="space-y-3">
+                <div className="h-4 bg-muted rounded w-48"></div>
+                <div className="h-8 bg-muted rounded w-64"></div>
+                <div className="h-4 bg-muted rounded w-56"></div>
+              </div>
+              <div className="h-10 bg-muted rounded w-40"></div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="bg-card border rounded-lg p-6 space-y-3">
+                  <div className="h-4 bg-muted rounded w-32"></div>
+                  <div className="h-8 bg-muted rounded w-16"></div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );
