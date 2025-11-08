@@ -249,13 +249,37 @@ const PropertiesCatalog = () => {
               })}
             </div>
           ) : (
-            <div className="text-center py-20">
-              <p className="text-xl text-muted-foreground mb-4">
-                No encontramos propiedades que coincidan con tu búsqueda
-              </p>
-              <Button onClick={() => navigate('/')} variant="outline">
-                Volver al inicio
-              </Button>
+            <div className="flex flex-col items-center justify-center py-16 px-4">
+              <div className="max-w-md w-full bg-card border border-border rounded-2xl p-8 text-center shadow-lg">
+                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                  <svg className="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <h2 className="text-2xl font-bold mb-3">
+                  No encontramos propiedades disponibles
+                </h2>
+                <p className="text-muted-foreground mb-6 leading-relaxed">
+                  No hay inmuebles en nuestro catálogo que coincidan con los criterios de búsqueda que especificaste.
+                </p>
+                <div className="bg-muted/50 rounded-lg p-4 mb-6 text-left">
+                  <p className="text-sm font-semibold mb-2">💡 Te sugerimos:</p>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• Ampliar el radio de búsqueda</li>
+                    <li>• Ajustar el rango de precios</li>
+                    <li>• Reducir el número de habitaciones requeridas</li>
+                    <li>• Probar con otra ubicación cercana</li>
+                  </ul>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Button onClick={() => navigate('/')} className="w-full sm:w-auto">
+                    Nueva búsqueda
+                  </Button>
+                  <Button onClick={() => navigate('/')} variant="outline" className="w-full sm:w-auto">
+                    Volver al inicio
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
         </div>
