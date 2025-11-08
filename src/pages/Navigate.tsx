@@ -35,57 +35,12 @@ const Navigate = () => {
   const [isNavigating, setIsNavigating] = useState(isDirectNavigation);
   const [searchCriteria, setSearchCriteria] = useState(destName || '');
   const [filters, setFilters] = useState<any>({});
-  const [isInitializing, setIsInitializing] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(!isDirectNavigation); // Start initializing for GPS mode
   
   // Get initial query from URL params
   const initialQuery = searchParams.get('query') || '';
 
-  // Auto-start navigation if there's a query (eliminar formulario de inicio)
-  useEffect(() => {
-    if (initialQuery && !isNavigating && !isInitializing && !destLat && !destLng) {
-      setIsInitializing(true);
-      startAutoNavigation();
-    }
-  }, [initialQuery, destLat, destLng]);
-
-  // Listen for query changes and re-interpret search while navigating
-  useEffect(() => {
-    const currentQuery = searchParams.get('query') || '';
-    
-    // Only re-interpret if navigating and query changed
-    if (isNavigating && currentQuery && currentQuery !== searchCriteria) {
-      const reinterpretSearch = async () => {
-        try {
-          const { data, error } = await supabase.functions.invoke('interpret-search', {
-            body: { query: currentQuery }
-          });
-
-          if (error) {
-            console.error('Error re-interpreting search:', error);
-            return;
-          }
-
-          if (data?.error === 'invalid_query') {
-            toast.error(data.message || 'Por favor describe mejor qué buscas');
-            return;
-          }
-
-          const interpretedFilters = data?.filters || {};
-          
-          // Update filters and search criteria
-          setSearchCriteria(currentQuery);
-          setFilters(interpretedFilters);
-          toast.success('Búsqueda actualizada');
-        } catch (error) {
-          console.error('Error:', error);
-          toast.error('Error al actualizar la búsqueda');
-        }
-      };
-
-      reinterpretSearch();
-    }
-  }, [searchParams, isNavigating]);
-
+  // Función para iniciar navegación automática
   const startAutoNavigation = async () => {
     try {
       // Get user's current location
@@ -138,6 +93,11 @@ const Navigate = () => {
           console.error('Error getting location:', error);
           toast.error('No se pudo obtener tu ubicación');
           setIsInitializing(false);
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 10000,
+          maximumAge: 5000
         }
       );
     } catch (error) {
@@ -146,6 +106,52 @@ const Navigate = () => {
       setIsInitializing(false);
     }
   };
+
+  // Auto-start navigation on mount if there's a query (eliminar formulario de inicio)
+  useEffect(() => {
+    if (initialQuery && !isDirectNavigation) {
+      startAutoNavigation();
+    }
+  }, []); // Solo ejecutar una vez al montar
+
+  // Listen for query changes and re-interpret search while navigating
+  useEffect(() => {
+    const currentQuery = searchParams.get('query') || '';
+    
+    // Only re-interpret if navigating and query changed
+    if (isNavigating && currentQuery && currentQuery !== searchCriteria) {
+      const reinterpretSearch = async () => {
+        try {
+          const { data, error } = await supabase.functions.invoke('interpret-search', {
+            body: { query: currentQuery }
+          });
+
+          if (error) {
+            console.error('Error re-interpreting search:', error);
+            return;
+          }
+
+          if (data?.error === 'invalid_query') {
+            toast.error(data.message || 'Por favor describe mejor qué buscas');
+            return;
+          }
+
+          const interpretedFilters = data?.filters || {};
+          
+          // Update filters and search criteria
+          setSearchCriteria(currentQuery);
+          setFilters(interpretedFilters);
+          toast.success('Búsqueda actualizada');
+        } catch (error) {
+          console.error('Error:', error);
+          toast.error('Error al actualizar la búsqueda');
+        }
+      };
+
+      reinterpretSearch();
+    }
+  }, [searchParams, isNavigating]);
+
 
   const handleStopNavigation = () => {
     // If in direct navigation, switch to GPS mode instead of stopping
