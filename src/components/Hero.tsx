@@ -163,17 +163,23 @@ const Hero = () => {
     };
     getCurrentLocation();
   }, []);
-  const handleVoiceRecording = async () => {
-    if (isRecording) {
-      try {
-        const transcript = await stopRecording();
+  const handleStartRecording = () => {
+    startRecording();
+  };
+
+  const handleStopRecording = async () => {
+    try {
+      const transcript = await stopRecording();
+      if (transcript && transcript.trim()) {
         setSearchQuery(transcript);
-        await handleSearch(transcript);
-      } catch (error) {
-        console.error('Error with voice recording:', error);
+        // Esperar un momento para que el searchQuery se actualice
+        setTimeout(() => {
+          handleSearch(transcript);
+        }, 100);
       }
-    } else {
-      startRecording();
+    } catch (error) {
+      console.error('Error with voice recording:', error);
+      toast.error('Error al transcribir el audio');
     }
   };
   const handleSearch = async (queryText?: string) => {
@@ -343,7 +349,7 @@ const Hero = () => {
                                 Procesando...
                               </> : 'Buscar'}
                           </Button>
-                          <VoiceButton isRecording={isRecording} isProcessing={isProcessing} audioLevel={audioLevel} onStart={handleVoiceRecording} onStop={handleVoiceRecording} disabled={loadingLocation || isInterpretingSearch} />
+                          <VoiceButton isRecording={isRecording} isProcessing={isProcessing} audioLevel={audioLevel} onStart={handleStartRecording} onStop={handleStopRecording} disabled={loadingLocation || isInterpretingSearch} />
                         </div>
                       </>}
                   </div>
@@ -369,7 +375,7 @@ const Hero = () => {
               handleSearch();
             }
               }} disabled={isRecording || isProcessing || isInterpretingSearch} />
-              <VoiceButton isRecording={isRecording} isProcessing={isProcessing} audioLevel={audioLevel} onStart={handleVoiceRecording} onStop={handleVoiceRecording} size="icon" variant="outline" disabled={isInterpretingSearch} />
+              <VoiceButton isRecording={isRecording} isProcessing={isProcessing} audioLevel={audioLevel} onStart={handleStartRecording} onStop={handleStopRecording} size="icon" variant="outline" disabled={isInterpretingSearch} />
               <Button variant="hero" size="sm" onClick={() => handleSearch()} disabled={!searchQuery.trim() || isRecording || isProcessing || isInterpretingSearch} className="flex-shrink-0">
                 {isInterpretingSearch ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Buscar'}
               </Button>
