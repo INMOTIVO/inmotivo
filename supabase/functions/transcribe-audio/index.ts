@@ -57,11 +57,10 @@ serve(async (req) => {
     const blob = new Blob([bytes], { type: "audio/webm" });
     formData.append("file", blob, "audio.webm");
     formData.append("model", "whisper-1");
-    formData.append("language", "es-CO");
-    // Hint prompt to avoid aggressive normalization and keep literal Spanish (Colombia)
-    formData.append("prompt", "Transcribe literalmente en español colombiano (es-CO). No normalices números ni cambies nombres propios o lugares. Contexto inmobiliario: apartamento, casa, habitaciones, baños, parqueadero, arriendo, venta, millones, Medellín, Envigado, Sabaneta, Itagüí, Laureles, Poblado, Belén.");
-    // Lower randomness
-    formData.append("temperature", "0");
+    // OpenAI exige ISO-639-1, por eso usamos "es" (no regional)
+    formData.append("language", "es");
+    // Hint para mantener nombres/lugares colombianos sin normalizar
+    formData.append("prompt", "Transcribe literalmente en español colombiano. No normalices números ni cambies nombres propios o lugares. Contexto inmobiliario: apartamento, casa, habitaciones, baños, parqueadero, arriendo, venta, millones, Medellín, Envigado, Sabaneta, Itagüí, Laureles, Poblado, Belén.");
 
     const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
       method: "POST",
