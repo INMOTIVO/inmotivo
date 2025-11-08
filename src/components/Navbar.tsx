@@ -23,6 +23,21 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const isAdminPage = location.pathname === '/admin';
 
+  // Query to get user profile
+  const { data: profile } = useQuery({
+    queryKey: ["user-profile", user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name, user_type")
+        .eq("id", user.id)
+        .single();
+      return data;
+    },
+    enabled: !!user,
+  });
+
   // Query to count favorites
   const { data: favoritesCount = 0 } = useQuery({
     queryKey: ["favorites-count", user?.id],
@@ -36,6 +51,8 @@ const Navbar = () => {
     },
     enabled: !!user,
   });
+
+  const isOwner = profile?.user_type === 'owner';
 
   const handleSignOut = async () => {
     const { error } = await signOut();
@@ -80,6 +97,11 @@ const Navbar = () => {
             </a>
             {user ? (
               <>
+                {profile?.full_name && (
+                  <span className="text-sm text-muted-foreground">
+                    Hola, <span className="font-semibold text-foreground">{profile.full_name}</span>
+                  </span>
+                )}
                 {!isAdmin && (
                   <Button 
                     variant="ghost" 
@@ -90,20 +112,22 @@ const Navbar = () => {
                     Mi Perfil
                   </Button>
                 )}
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => navigate(isAdmin ? "/admin" : "/dashboard")}
-                >
-                  {isAdmin ? (
-                    <>
-                      <Shield className="h-4 w-4 mr-2" />
-                      Panel Administrador
-                    </>
-                  ) : (
-                    'Mi Panel'
-                  )}
-                </Button>
+                {(isAdmin || isOwner) && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => navigate(isAdmin ? "/admin" : "/dashboard")}
+                  >
+                    {isAdmin ? (
+                      <>
+                        <Shield className="h-4 w-4 mr-2" />
+                        Panel Administrador
+                      </>
+                    ) : (
+                      'Mi Panel'
+                    )}
+                  </Button>
+                )}
                 <Button 
                   variant="outline" 
                   size="sm"
@@ -153,7 +177,13 @@ const Navbar = () => {
               </SheetTrigger>
             <SheetContent side="right" className="w-[300px] z-[100]">
               <SheetHeader>
-                <SheetTitle className="text-left">Menú</SheetTitle>
+                <SheetTitle className="text-left">
+                  {user && profile?.full_name ? (
+                    <span>Hola, {profile.full_name}</span>
+                  ) : (
+                    'Menú'
+                  )}
+                </SheetTitle>
               </SheetHeader>
               <div className="flex flex-col gap-4 mt-6">
                 <Button
@@ -186,20 +216,22 @@ const Navbar = () => {
                         </Button>
                       </>
                     )}
-                    <Button
-                      variant="ghost"
-                      className="justify-start text-base h-12"
-                      onClick={() => handleNavigation(isAdmin ? "/admin" : "/dashboard")}
-                    >
-                      {isAdmin ? (
-                        <>
-                          <Shield className="h-5 w-5 mr-3" />
-                          Panel Administrador
-                        </>
-                      ) : (
-                        'Mi Panel'
-                      )}
-                    </Button>
+                    {(isAdmin || isOwner) && (
+                      <Button
+                        variant="ghost"
+                        className="justify-start text-base h-12"
+                        onClick={() => handleNavigation(isAdmin ? "/admin" : "/dashboard")}
+                      >
+                        {isAdmin ? (
+                          <>
+                            <Shield className="h-5 w-5 mr-3" />
+                            Panel Administrador
+                          </>
+                        ) : (
+                          'Mi Panel'
+                        )}
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       className="justify-start text-base h-12 text-destructive hover:text-destructive hover:bg-destructive/10"
