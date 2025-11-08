@@ -60,21 +60,21 @@ serve(async (req) => {
     const blob = new Blob([bytes], { type: "audio/webm" });
     formData.append("file", blob, "audio.webm");
     formData.append("model", "whisper-1");
+    // Pedimos formato detallado para obtener idioma detectado
+    formData.append("response_format", "verbose_json");
     
-    // CRITICAL: Force Colombian Spanish (es-CO locale awareness)
+    // CRITICAL: Forzar español (sesgo es-CO por prompt)
     formData.append("language", "es");
     
     // Temperature 0 = más determinista, menos variación
     formData.append("temperature", "0");
     
-    // Prompt optimizado para español colombiano y contexto inmobiliario
+    // Prompt optimizado para español colombiano y contexto inmobiliario, sin normalizaciones
     formData.append("prompt", 
-      "Transcripción literal en español colombiano. " +
-      "Contexto: búsqueda de inmuebles en Colombia. " +
-      "Vocabulario común: apartamento, casa, habitaciones, baños, parqueadero, estrato, " +
-      "arriendo, venta, millones de pesos, cerca del metro, Medellín, Envigado, Sabaneta, " +
-      "Itagüí, Laureles, Poblado, Belén. " +
-      "Transcribe exactamente lo que escuches sin cambiar palabras."
+      "Transcribe literalmente en español colombiano (es-CO) sin normalizar ni corregir. " +
+      "No conviertas palabras a números, no cambies nombres propios ni topónimos. " +
+      "Contexto inmobiliario en Colombia: apartamento, casa, habitaciones, baños, parqueadero, estrato, " +
+      "arriendo, venta, millones de pesos, cerca del metro, Medellín, Envigado, Sabaneta, Itagüí, Laureles, Poblado, Belén."
     );
 
     console.info("Sending request to OpenAI Whisper API...");
@@ -95,6 +95,7 @@ serve(async (req) => {
 
     const result = await response.json();
     console.info(`Transcription result: ${result.text}`);
+    if (result.language) console.info(`Detected language: ${result.language}`);
     
     // Check if language detection worked correctly
     if (result.language && result.language !== "es" && result.language !== "spanish") {
@@ -102,7 +103,7 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ text: result.text }),
+      JSON.stringify({ text: result.text, language: result.language ?? null }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {

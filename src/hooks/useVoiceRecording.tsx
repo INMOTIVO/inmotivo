@@ -11,6 +11,8 @@ export const useVoiceRecording = () => {
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
+  const recordingStartRef = useRef<number | null>(null);
+  const silenceStartRef = useRef<number | null>(null);
 
   const startRecording = useCallback(async () => {
     try {
@@ -40,11 +42,37 @@ export const useVoiceRecording = () => {
       const bufferLength = analyserRef.current.frequencyBinCount;
       const dataArray = new Uint8Array(bufferLength);
 
+      const SILENCE_THRESHOLD = 0.02; // 0-1 normalized
+      const MAX_SILENCE_MS = 1400;
+      const MIN_RECORDING_MS = 1200;
+
       const updateAudioLevel = () => {
         if (analyserRef.current) {
           analyserRef.current.getByteFrequencyData(dataArray);
-          const average = dataArray.reduce((a, b) => a + b) / bufferLength;
-          setAudioLevel(average / 255);
+          const average = dataArray.reduce((a, b) => a + b, 0) / bufferLength;
+          const level = average / 255;
+          setAudioLevel(level);
+
+          const now = performance.now();
+          if (!recordingStartRef.current) recordingStartRef.current = now;
+
+          if (level > SILENCE_THRESHOLD) {
+            silenceStartRef.current = null;
+          } else {
+            if (!silenceStartRef.current) silenceStartRef.current = now;
+          }
+
+          if (
+            mediaRecorderRef.current?.state === 'recording' &&
+            recordingStartRef.current &&
+            now - recordingStartRef.current > MIN_RECORDING_MS &&
+            silenceStartRef.current &&
+            now - silenceStartRef.current > MAX_SILENCE_MS
+          ) {
+            console.info('🛑 Auto-stop by silence detection');
+            try { mediaRecorderRef.current.stop(); } catch {}
+          }
+
           animationFrameRef.current = requestAnimationFrame(updateAudioLevel);
         }
       };
@@ -101,6 +129,10 @@ export const useVoiceRecording = () => {
 
             if (data?.text) {
               console.info('Transcription received:', data.text);
+              if (data?.language) console.info('STT detected language:', data.language);
+              if (data?.language && data.language !== 'es' && data.language !== 'spanish') {
+                console.warn('⚠️ STT language fallback detected:', data.language);
+              }
               return data.text;
             } else {
               throw new Error('No se recibió transcripción');
@@ -173,6 +205,10 @@ export const useVoiceRecording = () => {
 
               if (data?.text) {
                 console.info('Stop - Transcription received:', data.text);
+                if (data?.language) console.info('STT detected language:', data.language);
+                if (data?.language && data.language !== 'es' && data.language !== 'spanish') {
+                  console.warn('⚠️ STT language fallback detected:', data.language);
+                }
                 toast.success('✅ Audio transcrito');
                 resolve(data.text);
               } else {
