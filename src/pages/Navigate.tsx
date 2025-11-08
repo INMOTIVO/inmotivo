@@ -15,35 +15,35 @@ import { toast } from 'sonner';
 const Navigate = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [destination, setDestination] = useState<[number, number] | null>(null);
-  const [isNavigating, setIsNavigating] = useState(false);
-  const [searchCriteria, setSearchCriteria] = useState('');
+  
+  // Get direct navigation params first
+  const destLat = searchParams.get('destLat');
+  const destLng = searchParams.get('destLng');
+  const destName = searchParams.get('destName');
+  const isDirectNavigation = !!(destLat && destLng); // Flag for direct property navigation
+  
+  // Initialize destination and isNavigating immediately if direct navigation
+  const [destination, setDestination] = useState<[number, number] | null>(() => {
+    if (destLat && destLng) {
+      const lat = parseFloat(destLat);
+      const lng = parseFloat(destLng);
+      if (!isNaN(lat) && !isNaN(lng)) {
+        return [lat, lng];
+      }
+    }
+    return null;
+  });
+  
+  const [isNavigating, setIsNavigating] = useState(isDirectNavigation);
+  const [searchCriteria, setSearchCriteria] = useState(destName || '');
   const [filters, setFilters] = useState<any>({});
   const [isInitializing, setIsInitializing] = useState(false);
   
   // Get initial query from URL params
   const initialQuery = searchParams.get('query') || '';
   const autoStart = searchParams.get('autostart') === 'true';
-  
-  // Get direct navigation params
-  const destLat = searchParams.get('destLat');
-  const destLng = searchParams.get('destLng');
-  const destName = searchParams.get('destName');
-  const isDirectNavigation = !!(destLat && destLng); // Flag for direct property navigation
 
-  // Auto-start direct navigation if coordinates are provided
-  useEffect(() => {
-    if (destLat && destLng && !isNavigating && !isInitializing) {
-      const lat = parseFloat(destLat);
-      const lng = parseFloat(destLng);
-      
-      if (!isNaN(lat) && !isNaN(lng)) {
-        setDestination([lat, lng]);
-        setSearchCriteria(destName || 'Navegación directa');
-        setIsNavigating(true);
-      }
-    }
-  }, [destLat, destLng, destName]);
+  // No longer needed - direct navigation is initialized in useState
 
   // Auto-start navigation if autostart param is present
   useEffect(() => {
