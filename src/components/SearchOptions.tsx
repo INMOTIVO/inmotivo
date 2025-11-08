@@ -11,13 +11,15 @@ interface SearchOptionsProps {
   sector: string;
   onSearchChange?: (newQuery: string) => void;
   disableGPSNavigation?: boolean;
+  useGPSForFixedView?: boolean;
 }
 const SearchOptions = ({
   searchQuery,
   municipality,
   sector,
   onSearchChange,
-  disableGPSNavigation = false
+  disableGPSNavigation = false,
+  useGPSForFixedView = false
 }: SearchOptionsProps) => {
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
@@ -35,9 +37,30 @@ const SearchOptions = ({
     }
   };
   const handleFixedView = () => {
-    // Navegar sin ubicación GPS, solo con el query de búsqueda
-    // La ubicación se extraerá del texto mediante el edge function
-    navigate(`/catalogo?query=${encodeURIComponent(editedQuery)}`);
+    if (useGPSForFixedView) {
+      // Usar GPS con radio de 2km
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            navigate(`/catalogo?query=${encodeURIComponent(editedQuery)}&lat=${latitude}&lng=${longitude}&radius=2000`);
+          },
+          (error) => {
+            console.error('Error getting location:', error);
+            toast.error("No se pudo obtener tu ubicación");
+            // Fallback: navegar sin ubicación
+            navigate(`/catalogo?query=${encodeURIComponent(editedQuery)}`);
+          }
+        );
+      } else {
+        toast.error("Tu navegador no soporta geolocalización");
+        navigate(`/catalogo?query=${encodeURIComponent(editedQuery)}`);
+      }
+    } else {
+      // Navegar sin ubicación GPS, solo con el query de búsqueda
+      // La ubicación se extraerá del texto mediante el edge function
+      navigate(`/catalogo?query=${encodeURIComponent(editedQuery)}`);
+    }
   };
   const handleGPSNavigation = () => {
     setIsStartingNav(true);
@@ -104,14 +127,17 @@ const SearchOptions = ({
             <div className="space-y-1.5 md:space-y-2">
               <h3 className="text-lg md:text-2xl font-bold">Ver propiedades cerca</h3>
               <p className="text-xs md:text-base text-muted-foreground line-clamp-2">
-                Busca según el departamento, municipio o sector que especificaste.
+                {useGPSForFixedView 
+                  ? "Explora propiedades a máximo 2km de tu ubicación actual."
+                  : "Busca según el departamento, municipio o sector que especificaste."
+                }
               </p>
             </div>
 
             <ul className="space-y-1.5 md:space-y-2 text-xs md:text-sm text-muted-foreground hidden md:block flex-grow">
               <li className="flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-primary" />
-                Búsqueda por ubicación de texto
+                {useGPSForFixedView ? "Búsqueda a 2km a la redonda" : "Búsqueda por ubicación de texto"}
               </li>
               <li className="flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-primary" />

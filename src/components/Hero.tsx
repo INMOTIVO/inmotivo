@@ -39,6 +39,7 @@ const Hero = () => {
   const [openNeigh, setOpenNeigh] = useState(false);
   const [showLocationConfirmDialog, setShowLocationConfirmDialog] = useState(false);
   const [pendingSearchQuery, setPendingSearchQuery] = useState("");
+  const [useGPSForSearch, setUseGPSForSearch] = useState(false);
   const isMobile = useIsMobile();
   const { interpretSearch, isProcessing: isInterpretingSearch } = useInterpretSearch();
   const {
@@ -188,6 +189,7 @@ const Hero = () => {
 
   const handleContinueWithCurrentLocation = async () => {
     setShowLocationConfirmDialog(false);
+    setUseGPSForSearch(true); // Activar GPS para esta búsqueda
     
     // Usar el hook optimizado con caché
     const result = await interpretSearch(pendingSearchQuery);
@@ -199,6 +201,7 @@ const Hero = () => {
 
   const handleChangeLocationForSearch = () => {
     setShowLocationConfirmDialog(false);
+    setUseGPSForSearch(false); // Desactivar GPS, buscar por texto
     setShowLocationDialog(true);
   };
   const handleContinueCurrentLocation = () => {
@@ -263,7 +266,14 @@ const Hero = () => {
         </div>
 
         <div className="relative z-10 container mx-auto px-4 py-4 flex-1 flex items-center justify-center overflow-hidden">
-          <SearchOptions searchQuery={searchQuery} municipality={municipality || "Medellín"} sector={sector} onSearchChange={newQuery => setSearchQuery(newQuery)} disableGPSNavigation={useCustomLocation} />
+          <SearchOptions 
+            searchQuery={searchQuery} 
+            municipality={municipality || "Medellín"} 
+            sector={sector} 
+            onSearchChange={newQuery => setSearchQuery(newQuery)} 
+            disableGPSNavigation={useCustomLocation}
+            useGPSForFixedView={useGPSForSearch}
+          />
         </div>
       </section>;
   }
