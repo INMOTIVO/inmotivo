@@ -672,7 +672,7 @@ const CreateProperty = () => {
                   <Input
                     id="bedrooms"
                     type="number"
-                    value={formData.bedrooms}
+                    value={formData.bedrooms || ''}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
@@ -687,7 +687,7 @@ const CreateProperty = () => {
                   <Input
                     id="bathrooms"
                     type="number"
-                    value={formData.bathrooms}
+                    value={formData.bathrooms || ''}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
