@@ -363,13 +363,11 @@ const Hero = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <div className="space-y-2 p-4 bg-primary/5 rounded-lg border border-primary/20">
-              <div className="flex items-center gap-2">
-                <MapPin className="h-5 w-5 text-primary" />
-                <p className="text-sm font-medium">
-                  Ubicación actual: <span className="text-primary">{municipality}{sector && `, ${sector}`}</span>
-                </p>
-              </div>
+            <div className="flex items-center gap-2 px-3 py-2 bg-primary/5 rounded-md border border-primary/20">
+              <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
+              <p className="text-xs text-muted-foreground">
+                <span className="text-foreground">{municipality}{sector && `, ${sector}`}</span>
+              </p>
             </div>
             
             <div className="flex flex-col gap-3">
