@@ -24,14 +24,33 @@ const Navigate = () => {
   // Get initial query from URL params
   const initialQuery = searchParams.get('query') || '';
   const autoStart = searchParams.get('autostart') === 'true';
+  
+  // Get direct navigation params
+  const destLat = searchParams.get('destLat');
+  const destLng = searchParams.get('destLng');
+  const destName = searchParams.get('destName');
+
+  // Auto-start direct navigation if coordinates are provided
+  useEffect(() => {
+    if (destLat && destLng && !isNavigating && !isInitializing) {
+      const lat = parseFloat(destLat);
+      const lng = parseFloat(destLng);
+      
+      if (!isNaN(lat) && !isNaN(lng)) {
+        setDestination([lat, lng]);
+        setSearchCriteria(destName || 'Navegación directa');
+        setIsNavigating(true);
+      }
+    }
+  }, [destLat, destLng, destName]);
 
   // Auto-start navigation if autostart param is present
   useEffect(() => {
-    if (autoStart && initialQuery && !isNavigating && !isInitializing) {
+    if (autoStart && initialQuery && !isNavigating && !isInitializing && !destLat && !destLng) {
       setIsInitializing(true);
       startAutoNavigation();
     }
-  }, [autoStart, initialQuery]);
+  }, [autoStart, initialQuery, destLat, destLng]);
 
   // Listen for query changes and re-interpret search while navigating
   useEffect(() => {
