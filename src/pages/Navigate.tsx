@@ -29,6 +29,7 @@ const Navigate = () => {
   const destLat = searchParams.get('destLat');
   const destLng = searchParams.get('destLng');
   const destName = searchParams.get('destName');
+  const isDirectNavigation = !!(destLat && destLng); // Flag for direct property navigation
 
   // Auto-start direct navigation if coordinates are provided
   useEffect(() => {
@@ -215,6 +216,7 @@ const Navigate = () => {
               filters={filters}
               onStopNavigation={handleStopNavigation}
               searchCriteria={searchCriteria}
+              isDirectNavigation={isDirectNavigation}
             />
           </div>
         )}

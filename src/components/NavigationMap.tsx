@@ -24,12 +24,14 @@ interface NavigationMapProps {
   filters: any;
   onStopNavigation: () => void;
   searchCriteria?: string;
+  isDirectNavigation?: boolean; // When true, shows only route to destination
 }
 const NavigationMap = ({
   destination,
   filters,
   onStopNavigation,
-  searchCriteria = ''
+  searchCriteria = '',
+  isDirectNavigation = false
 }: NavigationMapProps) => {
   const navigate = useNavigate();
   const mapRef = useRef<google.maps.Map | null>(null);
@@ -173,13 +175,14 @@ const NavigationMap = ({
   };
 
   // Fetch properties using new API - Optimizado con mejor caché
+  // Skip property fetching when in direct navigation mode
   const {
     data: propertiesGeoJSON,
     refetch: refetchProperties
   } = useQuery({
     queryKey: ['navigation-properties', userLocation, searchRadius, filters],
     queryFn: async () => {
-      if (!userLocation) return null;
+      if (!userLocation || isDirectNavigation) return null; // Don't fetch in direct nav
       
       try {
         const geojson = await getCachedNearbyProperties({
@@ -196,7 +199,7 @@ const NavigationMap = ({
         return null; // No mostrar toast en cada error
       }
     },
-    enabled: !!userLocation && !isPaused,
+    enabled: !!userLocation && !isPaused && !isDirectNavigation,
     refetchInterval: false,
     staleTime: isVehicleMode ? 15000 : 45000, // Caché más largo fuera de modo vehículo
     gcTime: 300000 // Mantener en caché 5 minutos
@@ -517,6 +520,14 @@ const NavigationMap = ({
       lng: -75.5658
     }} zoom={mapZoom} onLoad={map => {
       mapRef.current = map;
+      
+      // In direct navigation mode, fit bounds to show entire route
+      if (isDirectNavigation && directions && userLocation) {
+        const bounds = new google.maps.LatLngBounds();
+        bounds.extend(userLocation);
+        bounds.extend({ lat: destination[0], lng: destination[1] });
+        map.fitBounds(bounds, { top: 100, right: 50, bottom: 250, left: 50 });
+      }
     }} onZoomChanged={handleZoomChanged} options={{
       zoomControl: true,
       streetViewControl: false,
@@ -646,20 +657,59 @@ const NavigationMap = ({
               </div>
             </OverlayView>
 
-            {/* Search radius circle */}
-            <Circle center={userLocation} radius={searchRadius} options={{
-          strokeColor: '#8b5cf6',
-          strokeOpacity: 1,
-          strokeWeight: 3,
-          fillColor: '#a78bfa',
-          fillOpacity: 0.15
-        }} />
+            {/* Search radius circle - only in GPS mode */}
+            {!isDirectNavigation && (
+              <Circle center={userLocation} radius={searchRadius} options={{
+                strokeColor: '#8b5cf6',
+                strokeOpacity: 1,
+                strokeWeight: 3,
+                fillColor: '#a78bfa',
+                fillOpacity: 0.15
+              }} />
+            )}
           </>}
 
 
 
-        {/* Property markers - Optimizado con renderizado mínimo */}
-        {!isPaused && properties?.map(property => {
+        {/* Directions renderer for direct navigation */}
+        {isDirectNavigation && directions && (
+          <DirectionsRenderer
+            directions={directions}
+            options={{
+              suppressMarkers: true, // We'll use custom markers
+              polylineOptions: {
+                strokeColor: '#3b82f6',
+                strokeWeight: 6,
+                strokeOpacity: 0.8,
+              },
+            }}
+          />
+        )}
+        
+        {/* Destination marker in direct navigation mode */}
+        {isDirectNavigation && (
+          <Marker
+            position={{ lat: destination[0], lng: destination[1] }}
+            icon={{
+              path: google.maps.SymbolPath.CIRCLE,
+              fillColor: '#ef4444',
+              fillOpacity: 1,
+              strokeColor: '#ffffff',
+              strokeWeight: 3,
+              scale: 12,
+            }}
+            label={{
+              text: searchCriteria || 'Destino',
+              color: '#ffffff',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              className: 'bg-red-500 px-2 py-1 rounded shadow-lg'
+            }}
+          />
+        )}
+
+        {/* Property markers - Only in GPS navigation mode */}
+        {!isPaused && !isDirectNavigation && properties?.map(property => {
           if (!property.latitude || !property.longitude) return null;
           
           // Crear SVG con círculo verde titilante
@@ -737,53 +787,101 @@ const NavigationMap = ({
       
       {/* Barra de control inferior - ocupa todo el ancho */}
       {userLocation && <div className="absolute bottom-0 left-0 right-0 z-[1000]">
-          <Card className={`rounded-none border-x-0 border-b-0 border-t-4 border-t-yellow-500 backdrop-blur-md shadow-2xl ${!isPaused ? 'bg-background/30' : 'bg-background/95'}`}>
+          <Card className={`rounded-none border-x-0 border-b-0 border-t-4 ${isDirectNavigation ? 'border-t-blue-500' : 'border-t-yellow-500'} backdrop-blur-md shadow-2xl ${!isPaused ? 'bg-background/30' : 'bg-background/95'}`}>
             <div className="container mx-auto px-6 py-4">
-              <div className="flex items-center gap-3">
-                {/* Botón Ir/Detener */}
-                <Button onClick={handleToggleNavigation} variant={isPaused ? "default" : "destructive"} size="lg" className={`shrink-0 px-6 py-6 h-auto ${isPaused ? 'bg-green-600 hover:bg-green-700' : ''}`}>
-                  {isPaused ? <>
-                      <Navigation className="h-6 w-6" />
-                    </> : <>
-                      <X className="h-6 w-6" />
-                    </>}
-                </Button>
-
-                <div className="flex-1 min-w-0">
-                  {/* Radio y propiedades */}
-                  <div className="bg-background/50 rounded-lg p-3 mb-3 border border-border/50">
-                    <div className="flex-1 space-y-1">
-                      <div className="flex items-center justify-between text-xs mb-2">
-                        <span className="text-muted-foreground font-medium">Radio de Búsqueda</span>
-                        <span className="font-bold text-primary">
-                          {searchRadius >= 1000 ? `${(searchRadius / 1000).toFixed(1)} km` : `${searchRadius} m`}
-                        </span>
+              {isDirectNavigation ? (
+                // Direct navigation UI - shows route info
+                <div className="space-y-3">
+                  {/* Route Info Card */}
+                  {directions && (
+                    <div className="bg-background/80 rounded-xl p-4 border-2 border-blue-500/50 shadow-lg">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <Navigation className="h-5 w-5 text-blue-500" />
+                          <h3 className="font-bold text-lg">Navegando a tu destino</h3>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={onStopNavigation}
+                          className="text-destructive hover:bg-destructive/10"
+                        >
+                          <X className="h-5 w-5" />
+                        </Button>
                       </div>
-                      <Slider value={[searchRadius]} onValueChange={value => handleManualRadiusChange(value[0])} min={100} max={1000} step={50} className="w-full" />
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="bg-background/50 rounded-lg p-3 border border-border/50">
+                          <p className="text-xs text-muted-foreground mb-1">Distancia</p>
+                          <p className="text-xl font-bold text-primary">
+                            {directions.routes[0].legs[0].distance?.text || 'Calculando...'}
+                          </p>
+                        </div>
+                        <div className="bg-background/50 rounded-lg p-3 border border-border/50">
+                          <p className="text-xs text-muted-foreground mb-1">Tiempo estimado</p>
+                          <p className="text-xl font-bold text-primary">
+                            {directions.routes[0].legs[0].duration?.text || 'Calculando...'}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <div className="mt-3 flex items-start gap-2 text-sm">
+                        <MapPin className="h-4 w-4 text-blue-500 flex-shrink-0 mt-0.5" />
+                        <p className="text-foreground/80 line-clamp-2">
+                          {searchCriteria || 'Destino'}
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  )}
+                </div>
+              ) : (
+                // GPS navigation UI - original controls
+                <div className="flex items-center gap-3">
+                  {/* Botón Ir/Detener */}
+                  <Button onClick={handleToggleNavigation} variant={isPaused ? "default" : "destructive"} size="lg" className={`shrink-0 px-6 py-6 h-auto ${isPaused ? 'bg-green-600 hover:bg-green-700' : ''}`}>
+                    {isPaused ? <>
+                        <Navigation className="h-6 w-6" />
+                      </> : <>
+                        <X className="h-6 w-6" />
+                      </>}
+                  </Button>
 
-                  {/* Separador visual */}
-                  <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent mb-3" />
-
-                  {/* Información de búsqueda */}
-                  <div 
-                    className="flex items-center justify-between gap-2 border-2 border-green-500 rounded-lg p-2.5 cursor-pointer hover:bg-accent/10 transition-colors shadow-sm"
-                    onClick={() => {
-                      setEditSearchQuery(searchCriteria);
-                      setIsEditDialogOpen(true);
-                    }}
-                  >
-                    <div className="flex-1 min-w-0 flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
-                      <p className="text-sm font-medium leading-tight line-clamp-1">
-                        {searchCriteria || 'Propiedades cerca'}
-                      </p>
+                  <div className="flex-1 min-w-0">
+                    {/* Radio y propiedades */}
+                    <div className="bg-background/50 rounded-lg p-3 mb-3 border border-border/50">
+                      <div className="flex-1 space-y-1">
+                        <div className="flex items-center justify-between text-xs mb-2">
+                          <span className="text-muted-foreground font-medium">Radio de Búsqueda</span>
+                          <span className="font-bold text-primary">
+                            {searchRadius >= 1000 ? `${(searchRadius / 1000).toFixed(1)} km` : `${searchRadius} m`}
+                          </span>
+                        </div>
+                        <Slider value={[searchRadius]} onValueChange={value => handleManualRadiusChange(value[0])} min={100} max={1000} step={50} className="w-full" />
+                      </div>
                     </div>
-                    <Edit2 className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+
+                    {/* Separador visual */}
+                    <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent mb-3" />
+
+                    {/* Información de búsqueda */}
+                    <div 
+                      className="flex items-center justify-between gap-2 border-2 border-green-500 rounded-lg p-2.5 cursor-pointer hover:bg-accent/10 transition-colors shadow-sm"
+                      onClick={() => {
+                        setEditSearchQuery(searchCriteria);
+                        setIsEditDialogOpen(true);
+                      }}
+                    >
+                      <div className="flex-1 min-w-0 flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
+                        <p className="text-sm font-medium leading-tight line-clamp-1">
+                          {searchCriteria || 'Propiedades cerca'}
+                        </p>
+                      </div>
+                      <Edit2 className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </Card>
         </div>}
