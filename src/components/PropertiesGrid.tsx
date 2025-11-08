@@ -8,10 +8,12 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
+  type CarouselApi,
 } from "@/components/ui/carousel";
 
 const PropertiesGrid = () => {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [carouselApi, setCarouselApi] = useState<CarouselApi>();
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -28,6 +30,16 @@ const PropertiesGrid = () => {
       );
     }
   }, []);
+
+  useEffect(() => {
+    if (!carouselApi) return;
+
+    const interval = setInterval(() => {
+      carouselApi.scrollNext();
+    }, 4000);
+
+    return () => clearInterval(interval);
+  }, [carouselApi]);
 
   const { data: properties, isLoading } = useQuery({
     queryKey: ["properties", userLocation],
@@ -109,6 +121,7 @@ const PropertiesGrid = () => {
               align: "start",
               loop: true,
             }}
+            setApi={setCarouselApi}
             className="w-full"
           >
             <CarouselContent className="-ml-2 md:-ml-4">
