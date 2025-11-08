@@ -16,6 +16,7 @@ import { useInterpretSearch } from "@/hooks/useInterpretSearch";
 import VoiceButton from './VoiceButton';
 import { getDepartments, getMunicipalitiesByDepartment, getNeighborhoodsByMunicipality } from '@/data/colombiaLocations';
 import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const Hero = () => {
   const navigate = useNavigate();
@@ -48,7 +49,10 @@ const Hero = () => {
     isProcessing,
     audioLevel,
     startRecording,
-    stopRecording
+    stopRecording,
+    devices,
+    selectedMicId,
+    setSelectedMicId,
   } = useVoiceRecording();
 
   // Check if we should show options from URL params
@@ -167,7 +171,9 @@ const Hero = () => {
     if (isRecording) {
       try {
         const transcript = await stopRecording();
+        console.log('[Voz] Final transcript (hero):', transcript);
         setSearchQuery(transcript);
+        await handleSearch(transcript);
       } catch (error) {
         console.error('Error with voice recording:', error);
       }
@@ -342,6 +348,18 @@ const Hero = () => {
                                 Procesando...
                               </> : 'Buscar'}
                           </Button>
+                          {devices && devices.length > 1 && (
+                            <Select value={selectedMicId} onValueChange={(v) => setSelectedMicId(v)}>
+                              <SelectTrigger className="w-[180px]">
+                                <SelectValue placeholder="Micrófono" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {devices.map((d) => (
+                                  <SelectItem key={d.deviceId} value={d.deviceId}>{d.label || 'Micrófono'}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
                           <VoiceButton isRecording={isRecording} isProcessing={isProcessing} audioLevel={audioLevel} onStart={handleVoiceRecording} onStop={handleVoiceRecording} disabled={loadingLocation || isInterpretingSearch} />
                         </div>
                       </>}
