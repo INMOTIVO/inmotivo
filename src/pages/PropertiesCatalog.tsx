@@ -193,10 +193,7 @@ const PropertiesCatalog = () => {
           <Button
             variant="default"
             size="icon"
-            onClick={() => {
-              const query = searchParams.get('query');
-              navigate(`/?query=${encodeURIComponent(query || '')}&showOptions=true`);
-            }}
+            onClick={() => navigate('/')}
             className="mb-3 rounded-full w-12 h-12 shadow-xl bg-primary hover:bg-primary/90"
           >
             <ArrowLeft className="h-5 w-5" />
