@@ -93,8 +93,8 @@ const SearchOptions = ({
           </Card>}
 
         {/* Vista Fija */}
-        <Card className="p-4 md:p-8 hover:shadow-xl transition-all duration-300 hover:border-primary/50 cursor-pointer group">
-          <div className="flex flex-col h-full space-y-3 md:space-y-5">
+        <Card onClick={handleFixedView} className="p-4 md:p-8 hover:shadow-xl transition-all duration-300 hover:border-primary/50 cursor-pointer group border-primary/30">
+          <div className="flex flex-col h-full space-y-3 md:space-y-5 pointer-events-none">
             <div className="inline-flex p-3 md:p-4 rounded-2xl bg-primary/10 text-primary group-hover:scale-110 transition-transform duration-300">
               <Map className="h-8 w-8 md:h-10 md:w-10" />
             </div>
@@ -121,7 +121,7 @@ const SearchOptions = ({
               </li>
             </ul>
 
-            <Button onClick={handleFixedView} variant="default" size="lg" className="w-full mt-auto bg-gradient-to-br from-primary via-primary to-primary/70 shadow-lg hover:shadow-xl transition-all duration-200">
+            <Button variant="default" size="lg" className="w-full mt-auto bg-gradient-to-br from-primary via-primary to-primary/70 shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 pointer-events-auto">
               <Map className="mr-2 h-5 w-5 md:h-6 md:w-6" />
               Ver Propiedades
             </Button>
