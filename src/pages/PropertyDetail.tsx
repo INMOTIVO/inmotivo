@@ -196,17 +196,31 @@ const PropertyDetail = () => {
                     className="w-full h-64 md:h-96 object-cover rounded-lg md:rounded-2xl cursor-pointer hover:opacity-90 transition-opacity"
                     onClick={() => setSelectedImageIndex(0)}
                   />
-                  <div className="grid grid-cols-3 gap-2 md:gap-3">
-                    {images.slice(1, 7).map((image, index) => (
-                      <img
-                        key={index}
-                        src={image}
-                        alt={`${property.title} - ${index + 2}`}
-                        className="w-full h-20 md:h-32 object-cover rounded-md md:rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-                        onClick={() => setSelectedImageIndex(index + 1)}
-                      />
-                    ))}
-                  </div>
+                  
+                  {images.slice(1, 12).length > 0 && (
+                    <Carousel
+                      opts={{
+                        align: "start",
+                        loop: false,
+                      }}
+                      className="w-full"
+                    >
+                      <CarouselContent className="-ml-2 md:-ml-3">
+                        {images.slice(1, 12).map((image, index) => (
+                          <CarouselItem key={index} className="pl-2 md:pl-3 basis-1/3 md:basis-1/4 lg:basis-1/5">
+                            <img
+                              src={image}
+                              alt={`${property.title} - ${index + 2}`}
+                              className="w-full h-20 md:h-32 object-cover rounded-md md:rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                              onClick={() => setSelectedImageIndex(index + 1)}
+                            />
+                          </CarouselItem>
+                        ))}
+                      </CarouselContent>
+                      <CarouselPrevious className="left-0" />
+                      <CarouselNext className="right-0" />
+                    </Carousel>
+                  )}
                 </div>
               )}
 
