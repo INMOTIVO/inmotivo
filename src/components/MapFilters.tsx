@@ -117,13 +117,25 @@ const MapFilters = ({ onFiltersChange, initialQuery = '' }: MapFiltersProps) => 
         </p>
       </div>
 
-      <Textarea
-        placeholder="Ej: Busco un apartamento de 2 habitaciones cerca de mi ubicación, con precio máximo de 2 millones..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        className="min-h-[100px]"
-        disabled={isProcessing || isRecording}
-      />
+      <div className="relative">
+        <Textarea
+          placeholder="Ej: Busco un apartamento de 2 habitaciones cerca de mi ubicación, con precio máximo de 2 millones..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="min-h-[100px]"
+          disabled={isProcessing || isRecording || isTranscribing}
+        />
+        
+        {/* Transcribing overlay */}
+        {isTranscribing && (
+          <div className="absolute inset-0 bg-background/90 backdrop-blur-sm rounded-md flex items-center justify-center gap-3 animate-in fade-in duration-200">
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+            <span className="text-sm font-medium text-foreground">
+              Transcribiendo audio...
+            </span>
+          </div>
+        )}
+      </div>
 
       <div className="flex gap-2 items-center flex-wrap">
         <Button
