@@ -66,39 +66,31 @@ const VoiceButton = ({
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Generate animated wave bars
-  const waveBars = Array.from({ length: 20 });
+  // Generate animated wave bars - responsive quantity
+  const waveBars = Array.from({ length: 24 });
 
   // Show compact recording bar if recording, otherwise show mic button
   if (isRecording) {
     return (
-      <div className="flex items-center gap-2 bg-primary/10 rounded-full px-3 py-2 border border-primary/20 animate-in fade-in duration-200">
-        {/* Cancel Button */}
-        <button
-          onClick={handleCancel}
-          className="flex-shrink-0 w-8 h-8 rounded-full bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors"
-          aria-label="Cancelar grabación"
-        >
-          <X className="h-4 w-4 text-muted-foreground" />
-        </button>
-
-        {/* Animated Wave Bars */}
-        <div className="flex-1 flex items-center gap-0.5 justify-center h-8 px-2">
+      <div className="flex items-center gap-1.5 sm:gap-2 bg-primary/10 rounded-full px-2 sm:px-3 py-2 border border-primary/20 animate-in fade-in duration-200 w-full max-w-full min-w-0">
+        {/* Animated Wave Bars - Takes most space */}
+        <div className="flex-1 flex items-center gap-[2px] sm:gap-0.5 justify-center h-8 px-1 sm:px-2 min-w-0 overflow-hidden">
           {waveBars.map((_, i) => {
             // Create natural-looking wave with multiple frequencies and random variations
-            const time = recordingTime * 15; // Faster base speed
-            const baseWave = Math.sin((time + i * 0.8) * 1.5);
-            const secondWave = Math.sin((time + i * 0.3) * 2.5) * 0.5;
-            const randomVariation = Math.sin((time * 0.7 + i * 1.2) * 3) * 0.3;
-            const combined = (baseWave + secondWave + randomVariation) / 1.8;
-            const height = combined * 10 + 16;
+            const time = recordingTime * 18; // Faster speed: 1.8x original
+            const baseWave = Math.sin((time + i * 0.9) * 1.8);
+            const secondWave = Math.sin((time + i * 0.4) * 2.8) * 0.6;
+            const thirdWave = Math.sin((time * 0.8 + i * 1.3) * 3.2) * 0.35;
+            const randomNoise = Math.sin((time * 1.5 + i * 0.7) * 4) * 0.2;
+            const combined = (baseWave + secondWave + thirdWave + randomNoise) / 2.15;
+            const height = combined * 11 + 16;
             
             return (
               <div
                 key={i}
-                className="w-0.5 bg-primary rounded-full transition-all duration-100 ease-out"
+                className="w-[2px] sm:w-0.5 bg-primary rounded-full transition-all duration-75 ease-out flex-shrink-0"
                 style={{
-                  height: `${Math.max(8, Math.min(28, height))}px`,
+                  height: `${Math.max(6, Math.min(30, height))}px`,
                 }}
               />
             );
@@ -106,20 +98,16 @@ const VoiceButton = ({
         </div>
 
         {/* Timer */}
-        <div className="flex-shrink-0 min-w-[2.5rem] text-center">
-          <span className="text-sm font-mono font-semibold text-foreground">
+        <div className="flex-shrink-0 min-w-[2rem] sm:min-w-[2.5rem] text-center">
+          <span className="text-xs sm:text-sm font-mono font-semibold text-foreground">
             {formatTime(recordingTime)}
           </span>
         </div>
 
-        {/* Confirm Button */}
-        <button
-          onClick={handleConfirm}
-          className="flex-shrink-0 w-8 h-8 rounded-full bg-primary hover:bg-primary/90 flex items-center justify-center transition-colors"
-          aria-label="Enviar grabación"
-        >
-          <Check className="h-4 w-4 text-primary-foreground" />
-        </button>
+        {/* Pulsing Mic Indicator */}
+        <div className="flex-shrink-0 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-primary/20 flex items-center justify-center animate-pulse">
+          <Mic className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary" />
+        </div>
       </div>
     );
   }
