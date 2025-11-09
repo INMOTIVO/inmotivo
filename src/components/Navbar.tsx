@@ -182,7 +182,7 @@ const Navbar = () => {
                   <Menu className="h-6 w-6" />
                 </button>
               </SheetTrigger>
-            <SheetContent side="right" className="w-[300px] z-[100]">
+            <SheetContent side="right" className="w-[300px] z-[200]">
               <SheetHeader>
                 <SheetTitle className="text-left">
                   {user && profile?.full_name ? (
@@ -247,11 +247,12 @@ const Navbar = () => {
                     )}
                     <Button
                       variant="ghost"
-                      className="justify-center h-12 text-destructive hover:text-destructive hover:bg-destructive/10"
+                      className="justify-start text-base h-12 text-destructive hover:text-destructive hover:bg-destructive/10"
                       onClick={() => setShowLogoutDialog(true)}
                       aria-label="Cerrar sesión"
                     >
-                      <LogOut className="h-5 w-5" />
+                      <LogOut className="h-5 w-5 mr-3" />
+                      Cerrar Sesión
                     </Button>
                   </>
                 ) : (
