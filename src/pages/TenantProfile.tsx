@@ -437,128 +437,128 @@ const TenantProfile = () => {
           <h2 className="text-3xl font-bold mb-6">Recomendados útiles</h2>
           <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <Truck className="h-6 w-6 text-primary" />
+              <CardHeader className="p-3 md:p-6">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <div className="p-1.5 md:p-2 rounded-lg bg-primary/10 flex-shrink-0">
+                    <Truck className="h-4 w-4 md:h-6 md:w-6 text-primary" />
                   </div>
-                  <CardTitle className="text-lg">Mudanzas</CardTitle>
+                  <CardTitle className="text-sm md:text-lg">Mudanzas</CardTitle>
                 </div>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
+              <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+                <p className="text-xs md:text-sm text-muted-foreground">
                   Empresas de mudanzas confiables para tu traslado
                 </p>
               </CardContent>
             </Card>
 
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <Sofa className="h-6 w-6 text-primary" />
+              <CardHeader className="p-3 md:p-6">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <div className="p-1.5 md:p-2 rounded-lg bg-primary/10 flex-shrink-0">
+                    <Sofa className="h-4 w-4 md:h-6 md:w-6 text-primary" />
                   </div>
-                  <CardTitle className="text-lg">Muebles</CardTitle>
+                  <CardTitle className="text-sm md:text-lg">Muebles</CardTitle>
                 </div>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
+              <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+                <p className="text-xs md:text-sm text-muted-foreground">
                   Tiendas de muebles y decoración para tu hogar
                 </p>
               </CardContent>
             </Card>
 
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <Home className="h-6 w-6 text-primary" />
+              <CardHeader className="p-3 md:p-6">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <div className="p-1.5 md:p-2 rounded-lg bg-primary/10 flex-shrink-0">
+                    <Home className="h-4 w-4 md:h-6 md:w-6 text-primary" />
                   </div>
-                  <CardTitle className="text-lg">Hogar</CardTitle>
+                  <CardTitle className="text-sm md:text-lg">Hogar</CardTitle>
                 </div>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
+              <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+                <p className="text-xs md:text-sm text-muted-foreground">
                   Artículos y accesorios para tu nuevo hogar
                 </p>
               </CardContent>
             </Card>
 
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <Wrench className="h-6 w-6 text-primary" />
+              <CardHeader className="p-3 md:p-6">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <div className="p-1.5 md:p-2 rounded-lg bg-primary/10 flex-shrink-0">
+                    <Wrench className="h-4 w-4 md:h-6 md:w-6 text-primary" />
                   </div>
-                  <CardTitle className="text-lg">Plomería</CardTitle>
+                  <CardTitle className="text-sm md:text-lg">Plomería</CardTitle>
                 </div>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
+              <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+                <p className="text-xs md:text-sm text-muted-foreground">
                   Servicios profesionales de plomería y reparaciones
                 </p>
               </CardContent>
             </Card>
 
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <Zap className="h-6 w-6 text-primary" />
+              <CardHeader className="p-3 md:p-6">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <div className="p-1.5 md:p-2 rounded-lg bg-primary/10 flex-shrink-0">
+                    <Zap className="h-4 w-4 md:h-6 md:w-6 text-primary" />
                   </div>
-                  <CardTitle className="text-lg">Electricidad</CardTitle>
+                  <CardTitle className="text-sm md:text-lg">Electricidad</CardTitle>
                 </div>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
+              <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+                <p className="text-xs md:text-sm text-muted-foreground">
                   Electricistas certificados para instalaciones y reparaciones
                 </p>
               </CardContent>
             </Card>
 
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <Sparkles className="h-6 w-6 text-primary" />
+              <CardHeader className="p-3 md:p-6">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <div className="p-1.5 md:p-2 rounded-lg bg-primary/10 flex-shrink-0">
+                    <Sparkles className="h-4 w-4 md:h-6 md:w-6 text-primary" />
                   </div>
-                  <CardTitle className="text-lg">Limpieza</CardTitle>
+                  <CardTitle className="text-sm md:text-lg">Limpieza</CardTitle>
                 </div>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
+              <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+                <p className="text-xs md:text-sm text-muted-foreground">
                   Servicios de limpieza profesional para tu hogar
                 </p>
               </CardContent>
             </Card>
 
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <Paintbrush className="h-6 w-6 text-primary" />
+              <CardHeader className="p-3 md:p-6">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <div className="p-1.5 md:p-2 rounded-lg bg-primary/10 flex-shrink-0">
+                    <Paintbrush className="h-4 w-4 md:h-6 md:w-6 text-primary" />
                   </div>
-                  <CardTitle className="text-lg">Pintura</CardTitle>
+                  <CardTitle className="text-sm md:text-lg">Pintura</CardTitle>
                 </div>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
+              <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+                <p className="text-xs md:text-sm text-muted-foreground">
                   Pintores expertos para renovar tus espacios
                 </p>
               </CardContent>
             </Card>
 
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <KeyRound className="h-6 w-6 text-primary" />
+              <CardHeader className="p-3 md:p-6">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <div className="p-1.5 md:p-2 rounded-lg bg-primary/10 flex-shrink-0">
+                    <KeyRound className="h-4 w-4 md:h-6 md:w-6 text-primary" />
                   </div>
-                  <CardTitle className="text-lg">Cerrajería</CardTitle>
+                  <CardTitle className="text-sm md:text-lg">Cerrajería</CardTitle>
                 </div>
               </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
+              <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+                <p className="text-xs md:text-sm text-muted-foreground">
                   Cerrajeros disponibles para emergencias y cambios
                 </p>
               </CardContent>
