@@ -14,6 +14,16 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -21,6 +31,7 @@ const Navbar = () => {
   const { user, signOut } = useAuth();
   const { isAdmin } = useRole();
   const [isOpen, setIsOpen] = useState(false);
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const isAdminPage = location.pathname === '/admin';
 
   // Query to get user profile
@@ -127,7 +138,7 @@ const Navbar = () => {
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={handleSignOut}
+                  onClick={() => setShowLogoutDialog(true)}
                   aria-label="Cerrar sesión"
                 >
                   <LogOut className="h-4 w-4" />
@@ -232,7 +243,7 @@ const Navbar = () => {
                     <Button
                       variant="ghost"
                       className="justify-center h-12 text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={handleSignOut}
+                      onClick={() => setShowLogoutDialog(true)}
                       aria-label="Cerrar sesión"
                     >
                       <LogOut className="h-5 w-5" />
@@ -253,6 +264,24 @@ const Navbar = () => {
           </div>
         </div>
       </div>
+
+      {/* Logout Confirmation Dialog */}
+      <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Cerrar sesión?</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro de que quieres cerrar sesión?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>No</AlertDialogCancel>
+            <AlertDialogAction onClick={handleSignOut}>
+              Sí
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </nav>
   );
 };
