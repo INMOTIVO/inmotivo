@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 import videoThumbnail from "@/assets/inmotivo-hero-video.jpg";
 import demoVideo from "@/assets/inmotivo.mov";
-
 const HowItWorksVideo = () => {
   const [isPlaying, setIsPlaying] = useState(true); // Auto-play
   const [flippedCards, setFlippedCards] = useState([false, false, false]);
@@ -11,7 +10,6 @@ const HowItWorksVideo = () => {
     // Verificar si ya se reprodujo con sonido antes
     return localStorage.getItem('inmotivo_video_played') === 'true';
   });
-
   const handlePlayVideo = () => {
     setIsPlaying(true);
     const videoElement = document.querySelector('video');
@@ -33,11 +31,12 @@ const HowItWorksVideo = () => {
         videoElement.addEventListener('play', () => {
           localStorage.setItem('inmotivo_video_played', 'true');
           setHasPlayedWithSound(true);
-        }, { once: true });
+        }, {
+          once: true
+        });
       } else {
         videoElement.muted = true;
       }
-      
       videoElement.play().catch(error => {
         console.error('Error auto-playing video:', error);
         // Si falla el autoplay, intentar con muted
@@ -46,7 +45,6 @@ const HowItWorksVideo = () => {
       });
     }
   }, [hasPlayedWithSound]);
-
   useEffect(() => {
     const flipCard = (index: number) => {
       setTimeout(() => {
@@ -57,7 +55,6 @@ const HowItWorksVideo = () => {
         });
       }, index * 1000); // Delay de 1 segundo entre cada tarjeta
     };
-
     const interval = setInterval(() => {
       flipCard(0);
       flipCard(1);
@@ -66,9 +63,7 @@ const HowItWorksVideo = () => {
 
     return () => clearInterval(interval);
   }, []);
-
-  return (
-    <section className="py-8 md:py-12 bg-gradient-to-b from-background to-accent/20">
+  return <section className="py-8 md:py-12 bg-gradient-to-b from-background to-accent/20">
       <div className="container mx-auto px-4">
         <div className="max-w-5xl mx-auto">
           {/* Header */}
@@ -86,18 +81,9 @@ const HowItWorksVideo = () => {
             <div className="aspect-video bg-gradient-to-br from-primary/20 to-accent/20 relative">
               {/* Video Player - Always visible for auto-play */}
               <div className="absolute inset-0 bg-black">
-                <video
-                  className="w-full h-full object-cover"
-                  autoPlay
-                  controls={!hasPlayedWithSound}
-                  playsInline
-                  loop
-                  preload="auto"
-                  muted={hasPlayedWithSound}
-                  onError={(e) => {
-                    console.error('Video error:', e);
-                  }}
-                >
+                <video className="w-full h-full object-cover" autoPlay controls={!hasPlayedWithSound} playsInline loop preload="auto" muted={hasPlayedWithSound} onError={e => {
+                console.error('Video error:', e);
+              }}>
                   <source src={demoVideo} type="video/mp4" />
                   Tu navegador no soporta el elemento de video.
                 </video>
@@ -108,48 +94,56 @@ const HowItWorksVideo = () => {
           {/* Features Grid */}
           <div className="grid grid-cols-3 gap-3 md:gap-6">
             {/* Card 1 */}
-            <div className="relative h-40 md:h-48 group" style={{ perspective: '1000px' }}>
+            <div className="relative h-40 md:h-48 group" style={{
+            perspective: '1000px'
+          }}>
               {/* Animated border glow */}
               <div className="absolute inset-0 rounded-xl md:rounded-2xl bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_100%] animate-[gradient-flow_3s_linear_infinite] opacity-75 blur-sm"></div>
               
-              <div 
-                className={`relative w-full h-full transition-transform duration-700 ${flippedCards[0] ? '[transform:rotateY(180deg)]' : ''}`}
-                style={{ transformStyle: 'preserve-3d' }}
-              >
+              <div className={`relative w-full h-full transition-transform duration-700 ${flippedCards[0] ? '[transform:rotateY(180deg)]' : ''}`} style={{
+              transformStyle: 'preserve-3d'
+            }}>
                 {/* Front */}
-                <div className="absolute inset-0 text-center p-2 md:p-6 rounded-xl md:rounded-2xl bg-card border-2 border-primary/50 flex flex-col items-center justify-center shadow-[0_0_15px_rgba(var(--primary),0.3)]" style={{ backfaceVisibility: 'hidden' }}>
+                <div className="absolute inset-0 text-center p-2 md:p-6 rounded-xl md:rounded-2xl bg-card border-2 border-primary/50 flex flex-col items-center justify-center shadow-[0_0_15px_rgba(var(--primary),0.3)]" style={{
+                backfaceVisibility: 'hidden'
+              }}>
                   <div className="inline-flex p-2 md:p-4 rounded-lg md:rounded-xl bg-primary/10 text-primary mb-2 md:mb-4">
                     <Search className="h-5 w-5 md:h-8 md:w-8" />
                   </div>
                   <h3 className="text-xs md:text-xl font-semibold leading-tight px-1">1. Describe tu búsqueda</h3>
                 </div>
                 {/* Back */}
-                <div className="absolute inset-0 text-center p-2 md:p-6 rounded-xl md:rounded-2xl bg-card/95 backdrop-blur-sm border-[3px] border-primary shadow-[0_0_20px_rgba(var(--primary),0.5)] flex items-center justify-center [transform:rotateY(180deg)]" style={{ backfaceVisibility: 'hidden' }}>
-                  <p className="text-xs md:text-base text-foreground font-medium px-1 leading-tight">
-                    Usa lenguaje natural para describir el inmueble que buscas
-                  </p>
+                <div className="absolute inset-0 text-center p-2 md:p-6 rounded-xl md:rounded-2xl bg-card/95 backdrop-blur-sm border-[3px] border-primary shadow-[0_0_20px_rgba(var(--primary),0.5)] flex items-center justify-center [transform:rotateY(180deg)]" style={{
+                backfaceVisibility: 'hidden'
+              }}>
+                  <p className="text-xs md:text-base text-foreground font-medium px-1 leading-tight">Describe el inmueble que buscas para mostrarte los mejores resultados. </p>
                 </div>
               </div>
             </div>
 
             {/* Card 2 */}
-            <div className="relative h-40 md:h-48 group" style={{ perspective: '1000px' }}>
+            <div className="relative h-40 md:h-48 group" style={{
+            perspective: '1000px'
+          }}>
               {/* Animated border glow with delay */}
               <div className="absolute inset-0 rounded-xl md:rounded-2xl bg-gradient-to-r from-accent via-primary to-accent bg-[length:200%_100%] animate-[gradient-flow_3s_linear_infinite_1s] opacity-75 blur-sm"></div>
               
-              <div 
-                className={`relative w-full h-full transition-transform duration-700 ${flippedCards[1] ? '[transform:rotateY(180deg)]' : ''}`}
-                style={{ transformStyle: 'preserve-3d' }}
-              >
+              <div className={`relative w-full h-full transition-transform duration-700 ${flippedCards[1] ? '[transform:rotateY(180deg)]' : ''}`} style={{
+              transformStyle: 'preserve-3d'
+            }}>
                 {/* Front */}
-                <div className="absolute inset-0 text-center p-2 md:p-6 rounded-xl md:rounded-2xl bg-card border-2 border-accent/50 flex flex-col items-center justify-center shadow-[0_0_15px_rgba(var(--accent),0.3)]" style={{ backfaceVisibility: 'hidden' }}>
+                <div className="absolute inset-0 text-center p-2 md:p-6 rounded-xl md:rounded-2xl bg-card border-2 border-accent/50 flex flex-col items-center justify-center shadow-[0_0_15px_rgba(var(--accent),0.3)]" style={{
+                backfaceVisibility: 'hidden'
+              }}>
                   <div className="inline-flex p-2 md:p-4 rounded-lg md:rounded-xl bg-accent/10 text-accent mb-2 md:mb-4">
                     <MapPin className="h-5 w-5 md:h-8 md:w-8" />
                   </div>
                   <h3 className="text-xs md:text-xl font-semibold leading-tight px-1">2. Ubicación en tiempo real</h3>
                 </div>
                 {/* Back */}
-                <div className="absolute inset-0 text-center p-2 md:p-6 rounded-xl md:rounded-2xl bg-card/95 backdrop-blur-sm border-[3px] border-accent shadow-[0_0_20px_rgba(var(--accent),0.5)] flex items-center justify-center [transform:rotateY(180deg)]" style={{ backfaceVisibility: 'hidden' }}>
+                <div className="absolute inset-0 text-center p-2 md:p-6 rounded-xl md:rounded-2xl bg-card/95 backdrop-blur-sm border-[3px] border-accent shadow-[0_0_20px_rgba(var(--accent),0.5)] flex items-center justify-center [transform:rotateY(180deg)]" style={{
+                backfaceVisibility: 'hidden'
+              }}>
                   <p className="text-xs md:text-base text-foreground font-medium px-1 leading-tight">
                     INMOTIVO detecta tu ubicación y busca propiedades cercanas
                   </p>
@@ -158,23 +152,28 @@ const HowItWorksVideo = () => {
             </div>
 
             {/* Card 3 */}
-            <div className="relative h-40 md:h-48 group" style={{ perspective: '1000px' }}>
+            <div className="relative h-40 md:h-48 group" style={{
+            perspective: '1000px'
+          }}>
               {/* Animated border glow with delay */}
               <div className="absolute inset-0 rounded-xl md:rounded-2xl bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_100%] animate-[gradient-flow_3s_linear_infinite_2s] opacity-75 blur-sm"></div>
               
-              <div 
-                className={`relative w-full h-full transition-transform duration-700 ${flippedCards[2] ? '[transform:rotateY(180deg)]' : ''}`}
-                style={{ transformStyle: 'preserve-3d' }}
-              >
+              <div className={`relative w-full h-full transition-transform duration-700 ${flippedCards[2] ? '[transform:rotateY(180deg)]' : ''}`} style={{
+              transformStyle: 'preserve-3d'
+            }}>
                 {/* Front */}
-                <div className="absolute inset-0 text-center p-2 md:p-6 rounded-xl md:rounded-2xl bg-card border-2 border-primary/50 flex flex-col items-center justify-center shadow-[0_0_15px_rgba(var(--primary),0.3)]" style={{ backfaceVisibility: 'hidden' }}>
+                <div className="absolute inset-0 text-center p-2 md:p-6 rounded-xl md:rounded-2xl bg-card border-2 border-primary/50 flex flex-col items-center justify-center shadow-[0_0_15px_rgba(var(--primary),0.3)]" style={{
+                backfaceVisibility: 'hidden'
+              }}>
                   <div className="inline-flex p-2 md:p-4 rounded-lg md:rounded-xl bg-primary/10 text-primary mb-2 md:mb-4">
                     <Navigation className="h-5 w-5 md:h-8 md:w-8" />
                   </div>
                   <h3 className="text-xs md:text-xl font-semibold leading-tight px-1">3. Navega y explora</h3>
                 </div>
                 {/* Back */}
-                <div className="absolute inset-0 text-center p-2 md:p-6 rounded-xl md:rounded-2xl bg-card/95 backdrop-blur-sm border-[3px] border-primary shadow-[0_0_20px_rgba(var(--primary),0.5)] flex items-center justify-center [transform:rotateY(180deg)]" style={{ backfaceVisibility: 'hidden' }}>
+                <div className="absolute inset-0 text-center p-2 md:p-6 rounded-xl md:rounded-2xl bg-card/95 backdrop-blur-sm border-[3px] border-primary shadow-[0_0_20px_rgba(var(--primary),0.5)] flex items-center justify-center [transform:rotateY(180deg)]" style={{
+                backfaceVisibility: 'hidden'
+              }}>
                   <p className="text-xs md:text-base text-foreground font-medium px-1 leading-tight">
                     Ve propiedades mientras te desplazas por la ciudad
                   </p>
@@ -184,8 +183,6 @@ const HowItWorksVideo = () => {
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default HowItWorksVideo;
