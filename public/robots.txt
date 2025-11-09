@@ -1,19 +1,3 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
 User-agent: *
 Allow: /
-Sitemap: https://arrendo.com/sitemap.xml
-
-# Disallow admin or private pages
-Disallow: /auth
-Disallow: /admin
+Sitemap: https://inmotivo.com/sitemap.xml
