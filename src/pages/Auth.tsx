@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useRole } from "@/hooks/useRole";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,17 +32,39 @@ const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user, loading: authLoading, signIn, signUp, resetPassword } = useAuth();
+  const { isAdmin, loading: roleLoading } = useRole();
   const [loading, setLoading] = useState(false);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const defaultTab = searchParams.get('tab') || 'signin';
 
-  // Redirect logged-in users to dashboard
+  // Redirect logged-in users based on their role
   useEffect(() => {
-    if (!authLoading && user) {
-      navigate('/dashboard');
-    }
-  }, [user, authLoading, navigate]);
+    const redirectUser = async () => {
+      if (authLoading || roleLoading || !user) return;
+
+      // Check if user is admin
+      if (isAdmin) {
+        navigate('/admin');
+        return;
+      }
+
+      // Check user type from profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('user_type')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.user_type === 'owner') {
+        navigate('/dashboard');
+      } else {
+        navigate('/profile');
+      }
+    };
+
+    redirectUser();
+  }, [user, authLoading, roleLoading, isAdmin, navigate]);
 
   const [signInData, setSignInData] = useState({
     email: "",
