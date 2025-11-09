@@ -16,7 +16,6 @@ import { useInterpretSearch } from "@/hooks/useInterpretSearch";
 import VoiceButton from './VoiceButton';
 import { getDepartments, getMunicipalitiesByDepartment, getNeighborhoodsByMunicipality } from '@/data/colombiaLocations';
 import { cn } from "@/lib/utils";
-
 const Hero = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -42,14 +41,17 @@ const Hero = () => {
   const [useGPSForSearch, setUseGPSForSearch] = useState(false);
   const [extractedFilters, setExtractedFilters] = useState<any>(null);
   const isMobile = useIsMobile();
-  const { interpretSearch, isProcessing: isInterpretingSearch } = useInterpretSearch();
+  const {
+    interpretSearch,
+    isProcessing: isInterpretingSearch
+  } = useInterpretSearch();
   const {
     isRecording,
     isProcessing,
     audioLevel,
     startRecording,
     stopRecording,
-    recordOnce,
+    recordOnce
   } = useVoiceRecording();
 
   // Check if we should show options from URL params
@@ -196,11 +198,10 @@ const Hero = () => {
     setPendingSearchQuery(textToSearch);
     setShowLocationConfirmDialog(true);
   };
-
   const handleContinueWithCurrentLocation = async () => {
     setShowLocationConfirmDialog(false);
     setUseGPSForSearch(true); // Activar GPS para esta búsqueda
-    
+
     // Usar el hook optimizado con caché
     const result = await interpretSearch(pendingSearchQuery);
     if (!result) return; // El hook ya maneja los errores
@@ -211,11 +212,10 @@ const Hero = () => {
     // Mostrar opciones de búsqueda
     setShowOptions(true);
   };
-
   const handleChangeLocationForSearch = () => {
     setShowLocationConfirmDialog(false);
     setUseGPSForSearch(false); // Desactivar GPS, buscar por texto
-    
+
     // Interpretar la búsqueda para extraer ubicación
     const interpretAndShow = async () => {
       const result = await interpretSearch(pendingSearchQuery);
@@ -223,7 +223,6 @@ const Hero = () => {
       setExtractedFilters(result);
       setShowLocationDialog(true);
     };
-    
     interpretAndShow();
   };
   const handleContinueCurrentLocation = () => {
@@ -239,14 +238,12 @@ const Hero = () => {
     setAvailableMunicipalities(municipalities);
     setAvailableNeighborhoods([]);
   };
-
   const handleMunicipalityChange = (value: string) => {
     setCustomMunicipality(value);
     setCustomNeighborhood("");
     const neighborhoods = getNeighborhoodsByMunicipality(customDepartment, value);
     setAvailableNeighborhoods(neighborhoods);
   };
-
   const handleUseCustomLocation = async () => {
     if (!customDepartment.trim()) {
       toast.error("El departamento es obligatorio");
@@ -288,15 +285,7 @@ const Hero = () => {
         </div>
 
         <div className="relative z-10 container mx-auto px-4 py-4 flex-1 flex items-center justify-center overflow-hidden">
-          <SearchOptions 
-            searchQuery={searchQuery} 
-            municipality={municipality || "Medellín"} 
-            sector={sector} 
-            onSearchChange={newQuery => setSearchQuery(newQuery)} 
-            disableGPSNavigation={useCustomLocation}
-            useGPSForFixedView={useGPSForSearch}
-            searchLocation={extractedFilters?.location}
-          />
+          <SearchOptions searchQuery={searchQuery} municipality={municipality || "Medellín"} sector={sector} onSearchChange={newQuery => setSearchQuery(newQuery)} disableGPSNavigation={useCustomLocation} useGPSForFixedView={useGPSForSearch} searchLocation={extractedFilters?.location} />
         </div>
       </section>;
   }
@@ -316,7 +305,7 @@ const Hero = () => {
               <h1 className="text-3xl sm:text-4xl md:text-7xl font-bold text-white leading-tight">
                 Encuentra tu <span className="text-primary-glow">lugar ideal</span> de manera <span className="text-accent">inteligente</span>
               </h1>
-              <p className="text-base sm:text-lg md:text-2xl text-white/90 max-w-3xl mx-auto px-4">Descubre propiedades cerca a ti mientras viajas por la ciudad.</p>
+              <p className="text-base sm:text-lg md:text-2xl text-white/90 max-w-3xl mx-auto px-4">Descubre propiedades cerca a ti mientras recorres la ciudad.</p>
             </div>
 
             {/* Search bar */}
@@ -377,7 +366,7 @@ const Hero = () => {
               e.preventDefault();
               handleSearch();
             }
-              }} disabled={isRecording || isProcessing || isInterpretingSearch} />
+          }} disabled={isRecording || isProcessing || isInterpretingSearch} />
               <VoiceButton isRecording={isRecording} isProcessing={isProcessing} audioLevel={audioLevel} onStart={handleVoiceRecording} onStop={handleVoiceRecording} size="icon" variant="outline" disabled={isInterpretingSearch} />
               <Button variant="hero" size="sm" onClick={() => handleSearch()} disabled={!searchQuery.trim() || isRecording || isProcessing || isInterpretingSearch} className="flex-shrink-0">
                 {isInterpretingSearch ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Buscar'}
@@ -456,12 +445,7 @@ const Hero = () => {
                   </label>
                   <Popover open={openDept} onOpenChange={setOpenDept}>
                     <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={openDept}
-                        className="w-full justify-between bg-background"
-                      >
+                      <Button variant="outline" role="combobox" aria-expanded={openDept} className="w-full justify-between bg-background">
                         {customDepartment || "Selecciona un departamento"}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
@@ -472,24 +456,13 @@ const Hero = () => {
                         <CommandList>
                           <CommandEmpty>No se encontró departamento.</CommandEmpty>
                           <CommandGroup>
-                            {getDepartments().map((dept) => (
-                              <CommandItem
-                                key={dept}
-                                value={dept}
-                                onSelect={(value) => {
-                                  handleDepartmentChange(value);
-                                  setOpenDept(false);
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    customDepartment === dept ? "opacity-100" : "opacity-0"
-                                  )}
-                                />
+                            {getDepartments().map(dept => <CommandItem key={dept} value={dept} onSelect={value => {
+                            handleDepartmentChange(value);
+                            setOpenDept(false);
+                          }}>
+                                <Check className={cn("mr-2 h-4 w-4", customDepartment === dept ? "opacity-100" : "opacity-0")} />
                                 {dept}
-                              </CommandItem>
-                            ))}
+                              </CommandItem>)}
                           </CommandGroup>
                         </CommandList>
                       </Command>
@@ -503,13 +476,7 @@ const Hero = () => {
                   </label>
                   <Popover open={openMuni} onOpenChange={setOpenMuni}>
                     <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={openMuni}
-                        disabled={!customDepartment}
-                        className="w-full justify-between bg-background"
-                      >
+                      <Button variant="outline" role="combobox" aria-expanded={openMuni} disabled={!customDepartment} className="w-full justify-between bg-background">
                         {customMunicipality || (customDepartment ? "Selecciona un municipio" : "Primero selecciona un departamento")}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
@@ -520,24 +487,13 @@ const Hero = () => {
                         <CommandList>
                           <CommandEmpty>No se encontró municipio.</CommandEmpty>
                           <CommandGroup>
-                            {availableMunicipalities.map((muni) => (
-                              <CommandItem
-                                key={muni}
-                                value={muni}
-                                onSelect={(value) => {
-                                  handleMunicipalityChange(value);
-                                  setOpenMuni(false);
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    customMunicipality === muni ? "opacity-100" : "opacity-0"
-                                  )}
-                                />
+                            {availableMunicipalities.map(muni => <CommandItem key={muni} value={muni} onSelect={value => {
+                            handleMunicipalityChange(value);
+                            setOpenMuni(false);
+                          }}>
+                                <Check className={cn("mr-2 h-4 w-4", customMunicipality === muni ? "opacity-100" : "opacity-0")} />
                                 {muni}
-                              </CommandItem>
-                            ))}
+                              </CommandItem>)}
                           </CommandGroup>
                         </CommandList>
                       </Command>
@@ -551,13 +507,7 @@ const Hero = () => {
                   </label>
                   <Popover open={openNeigh} onOpenChange={setOpenNeigh}>
                     <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={openNeigh}
-                        disabled={!customMunicipality}
-                        className="w-full justify-between bg-background"
-                      >
+                      <Button variant="outline" role="combobox" aria-expanded={openNeigh} disabled={!customMunicipality} className="w-full justify-between bg-background">
                         {customNeighborhood || (customMunicipality ? "Selecciona un barrio (opcional)" : "Primero selecciona un municipio")}
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                       </Button>
@@ -568,24 +518,13 @@ const Hero = () => {
                         <CommandList>
                           <CommandEmpty>No se encontró barrio.</CommandEmpty>
                           <CommandGroup>
-                            {availableNeighborhoods.map((neighborhood) => (
-                              <CommandItem
-                                key={neighborhood}
-                                value={neighborhood}
-                                onSelect={(value) => {
-                                  setCustomNeighborhood(value);
-                                  setOpenNeigh(false);
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    customNeighborhood === neighborhood ? "opacity-100" : "opacity-0"
-                                  )}
-                                />
+                            {availableNeighborhoods.map(neighborhood => <CommandItem key={neighborhood} value={neighborhood} onSelect={value => {
+                            setCustomNeighborhood(value);
+                            setOpenNeigh(false);
+                          }}>
+                                <Check className={cn("mr-2 h-4 w-4", customNeighborhood === neighborhood ? "opacity-100" : "opacity-0")} />
                                 {neighborhood}
-                              </CommandItem>
-                            ))}
+                              </CommandItem>)}
                           </CommandGroup>
                         </CommandList>
                       </Command>
