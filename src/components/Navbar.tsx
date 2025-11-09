@@ -230,6 +230,19 @@ const Navbar = () => {
                           <User className="h-5 w-5 mr-3" />
                           Mi Perfil
                         </Button>
+                        <Button
+                          variant="ghost"
+                          className="justify-start text-base h-12 relative"
+                          onClick={() => handleNavigation("/favorites")}
+                        >
+                          <Heart className="h-5 w-5 mr-3" />
+                          Favoritos
+                          {favoritesCount > 0 && (
+                            <span className="ml-auto bg-primary text-primary-foreground text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                              {favoritesCount}
+                            </span>
+                          )}
+                        </Button>
                       </>
                     )}
                     <Button
