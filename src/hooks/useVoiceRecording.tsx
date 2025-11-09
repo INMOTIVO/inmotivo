@@ -18,15 +18,182 @@ export const useVoiceRecording = () => {
   const audioChunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
 
+  const resolveRef = useRef<((value: string) => void) | null>(null);
+  const rejectRef = useRef<((reason?: any) => void) | null>(null);
+
   const startRecording = useCallback(async () => {
-    // Not used, kept for compatibility
-    setIsRecording(true);
+    try {
+      console.log('[Voz Manual] Iniciando grabación...');
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: 44100
+        }
+      });
+      
+      streamRef.current = stream;
+      
+      let mimeType = 'audio/webm;codecs=opus';
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        mimeType = 'audio/webm';
+      }
+
+      const mr = new MediaRecorder(stream, { mimeType });
+      mediaRecorderRef.current = mr;
+      audioChunksRef.current = [];
+
+      mr.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          console.log('[Voz Manual] Chunk recibido:', e.data.size, 'bytes');
+          audioChunksRef.current.push(e.data);
+        }
+      };
+
+      mr.onstop = async () => {
+        console.log('[Voz Manual] Grabación detenida, procesando...');
+        setIsRecording(false);
+
+        if (audioChunksRef.current.length === 0) {
+          console.error('[Voz Manual] Sin chunks de audio');
+          toast.error('No se capturó audio');
+          setIsProcessing(false);
+          stream.getTracks().forEach(t => t.stop());
+          if (rejectRef.current) rejectRef.current(new Error('No audio captured'));
+          return;
+        }
+
+        const blob = new Blob(audioChunksRef.current, { type: mimeType });
+        console.log('[Voz Manual] Blob creado:', blob.size, 'bytes, tipo:', blob.type);
+
+        // Validar tamaño mínimo reducido a 1KB
+        if (blob.size < 1000) {
+          console.error('[Voz Manual] Audio muy corto:', blob.size);
+          toast.error('Audio muy corto, intenta de nuevo');
+          setIsProcessing(false);
+          stream.getTracks().forEach(t => t.stop());
+          if (rejectRef.current) rejectRef.current(new Error('Audio too short'));
+          return;
+        }
+
+        try {
+          setIsProcessing(true);
+          const reader = new FileReader();
+          reader.readAsDataURL(blob);
+          
+          reader.onloadend = async () => {
+            const base64 = reader.result?.toString().split(',')[1];
+            if (!base64) {
+              console.error('[Voz Manual] Error convirtiendo a base64');
+              toast.error('Error al procesar audio');
+              setIsProcessing(false);
+              stream.getTracks().forEach(t => t.stop());
+              if (rejectRef.current) rejectRef.current(new Error('Base64 conversion failed'));
+              return;
+            }
+
+            console.log('[Voz Manual] Base64 generado:', base64.length, 'chars');
+            console.log('[Voz Manual] Enviando a transcribe-audio...');
+
+            try {
+              const { data, error } = await supabase.functions.invoke('transcribe-audio', {
+                body: { audio: base64 }
+              });
+
+              if (error) {
+                console.error('[Voz Manual] Error de función:', error);
+                throw error;
+              }
+
+              if (data?.text) {
+                console.log('[Voz Manual] Transcripción exitosa:', data.text);
+                toast.success('Transcrito');
+                if (resolveRef.current) resolveRef.current(data.text);
+              } else {
+                throw new Error('No se recibió transcripción');
+              }
+            } catch (e: any) {
+              console.error('[Voz Manual] Error en transcripción:', e);
+              toast.error('Error al transcribir');
+              if (rejectRef.current) rejectRef.current(e);
+            } finally {
+              setIsProcessing(false);
+              stream.getTracks().forEach(t => t.stop());
+            }
+          };
+
+          reader.onerror = () => {
+            console.error('[Voz Manual] Error en FileReader');
+            toast.error('Error al leer audio');
+            setIsProcessing(false);
+            stream.getTracks().forEach(t => t.stop());
+            if (rejectRef.current) rejectRef.current(new Error('FileReader error'));
+          };
+        } catch (e) {
+          console.error('[Voz Manual] Error general:', e);
+          setIsProcessing(false);
+          stream.getTracks().forEach(t => t.stop());
+          if (rejectRef.current) rejectRef.current(e);
+        }
+      };
+
+      mr.start(100);
+      setIsRecording(true);
+      toast.success('Grabando... Presiona ✓ para enviar', { duration: 1000 });
+
+    } catch (e: any) {
+      console.error('[Voz Manual] Error al iniciar:', e);
+      toast.error('No se pudo acceder al micrófono');
+      setIsRecording(false);
+      setIsProcessing(false);
+    }
   }, []);
 
   const stopRecording = useCallback((): Promise<string> => {
     return new Promise((resolve, reject) => {
-      reject(new Error('Use recordOnce instead'));
+      resolveRef.current = resolve;
+      rejectRef.current = reject;
+
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+        console.log('[Voz Manual] Deteniendo grabación manualmente...');
+        try {
+          mediaRecorderRef.current.stop();
+        } catch (e) {
+          console.error('[Voz Manual] Error al detener:', e);
+          reject(e);
+        }
+      } else {
+        reject(new Error('No recording in progress'));
+      }
     });
+  }, []);
+
+  const cancelRecording = useCallback(() => {
+    console.log('[Voz Manual] Cancelando grabación...');
+    
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      try {
+        mediaRecorderRef.current.stop();
+      } catch (e) {
+        console.error('[Voz Manual] Error al cancelar:', e);
+      }
+    }
+
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(t => t.stop());
+    }
+
+    audioChunksRef.current = [];
+    setIsRecording(false);
+    setIsProcessing(false);
+    
+    if (rejectRef.current) {
+      rejectRef.current(new Error('Cancelled by user'));
+    }
+    
+    resolveRef.current = null;
+    rejectRef.current = null;
   }, []);
 
   const recordOnce = useCallback(async (): Promise<string> => {
@@ -139,8 +306,8 @@ export const useVoiceRecording = () => {
           const blob = new Blob(audioChunksRef.current, { type: mimeType });
           console.log('[Voz Backend] Blob creado:', blob.size, 'bytes, tipo:', blob.type);
 
-          // Validar tamaño mínimo (10KB)
-          if (blob.size < 10000) {
+          // Validar tamaño mínimo reducido a 1KB
+          if (blob.size < 1000) {
             console.error('[Voz Backend] Audio muy corto:', blob.size);
             toast.error('Audio muy corto, intenta de nuevo');
             setIsProcessing(false);
@@ -235,6 +402,7 @@ export const useVoiceRecording = () => {
     audioLevel,
     startRecording,
     stopRecording,
+    cancelRecording,
     recordOnce,
   };
 };

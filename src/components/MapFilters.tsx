@@ -23,7 +23,7 @@ interface MapFiltersProps {
 const MapFilters = ({ onFiltersChange, initialQuery = '' }: MapFiltersProps) => {
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [isProcessing, setIsProcessing] = useState(false);
-  const { isRecording, isProcessing: isTranscribing, audioLevel, startRecording, stopRecording, recordOnce } = useVoiceRecording();
+  const { isRecording, isProcessing: isTranscribing, audioLevel, startRecording, stopRecording, cancelRecording, recordOnce } = useVoiceRecording();
 
   useEffect(() => {
     if (initialQuery) {
@@ -88,13 +88,16 @@ const MapFilters = ({ onFiltersChange, initialQuery = '' }: MapFiltersProps) => 
     }
   };
 
-  const handleVoiceRecording = async () => {
+  const handleStartRecording = async () => {
     if (isRecording || isTranscribing) {
-      toast.info('Esperando resultado...');
       return;
     }
+    await startRecording();
+  };
+
+  const handleStopRecording = async () => {
     try {
-      const transcript = await recordOnce();
+      const transcript = await stopRecording();
       if (transcript && transcript.length > 0) {
         setSearchQuery(transcript);
         await handleInterpretSearch(transcript);
@@ -103,10 +106,15 @@ const MapFilters = ({ onFiltersChange, initialQuery = '' }: MapFiltersProps) => 
       }
     } catch (error: any) {
       console.error('Error with voice recording:', error);
-      if (error.message !== 'SR_ERROR' && error.message !== 'NO_RESULT') {
+      if (error.message !== 'Cancelled by user') {
         toast.error('Error al grabar, intenta de nuevo');
       }
     }
+  };
+
+  const handleCancelRecording = () => {
+    cancelRecording();
+    toast.info('Grabación cancelada');
   };
   return (
     <Card className="p-6 space-y-4">
@@ -161,8 +169,9 @@ const MapFilters = ({ onFiltersChange, initialQuery = '' }: MapFiltersProps) => 
           isRecording={isRecording}
           isProcessing={isTranscribing}
           audioLevel={audioLevel}
-          onStart={handleVoiceRecording}
-          onStop={handleVoiceRecording}
+          onStart={handleStartRecording}
+          onStop={handleStopRecording}
+          onCancel={handleCancelRecording}
           disabled={isProcessing}
           variant="outline"
           size="icon"
