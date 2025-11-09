@@ -85,11 +85,11 @@ const VoiceButton = ({
         {/* Animated Wave Bars */}
         <div className="flex-1 flex items-center gap-0.5 justify-center h-8 px-2">
           {waveBars.map((_, i) => {
-            const height = Math.sin((recordingTime * 3 + i) * 0.5) * 12 + 16;
+            const height = Math.sin((recordingTime * 10 + i) * 1.2) * 12 + 16;
             return (
               <div
                 key={i}
-                className="w-0.5 bg-primary rounded-full transition-all duration-150"
+                className="w-0.5 bg-primary rounded-full transition-all duration-75"
                 style={{
                   height: `${height}px`,
                 }}
