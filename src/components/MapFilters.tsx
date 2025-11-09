@@ -100,11 +100,16 @@ const MapFilters = ({ onFiltersChange, initialQuery = '' }: MapFiltersProps) => 
       const transcript = await stopRecording();
       if (transcript && transcript.length > 0) {
         setSearchQuery(transcript);
+        // Ejecutar búsqueda automáticamente después de transcribir
         await handleInterpretSearch(transcript);
       }
     } catch (error: any) {
       console.error('Error with voice recording:', error);
-      if (error.message !== 'Cancelled by user' && error.message !== 'No audio captured' && error.message !== 'Audio too short') {
+      // Solo mostrar error para casos críticos, excepto cancelaciones y errores menores
+      if (error.message !== 'Cancelled by user' && 
+          error.message !== 'No audio captured' && 
+          error.message !== 'Audio too short' &&
+          error.message !== 'Transcription timeout') {
         toast.error('Error al procesar audio');
       }
     }

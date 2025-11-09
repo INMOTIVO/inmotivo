@@ -77,6 +77,12 @@ export const useVoiceRecording = () => {
 
         try {
           setIsProcessing(true);
+          
+          // Timeout de 10 segundos para la transcripción
+          const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('Transcription timeout')), 10000);
+          });
+
           const reader = new FileReader();
           reader.readAsDataURL(blob);
           
@@ -94,9 +100,11 @@ export const useVoiceRecording = () => {
             console.log('[Voz Manual] Enviando a transcribe-audio...');
 
             try {
-              const { data, error } = await supabase.functions.invoke('transcribe-audio', {
+              const transcriptionPromise = supabase.functions.invoke('transcribe-audio', {
                 body: { audio: base64 }
               });
+
+              const { data, error } = await Promise.race([transcriptionPromise, timeoutPromise]) as any;
 
               if (error) {
                 console.error('[Voz Manual] Error de función:', error);
@@ -111,6 +119,9 @@ export const useVoiceRecording = () => {
               }
             } catch (e: any) {
               console.error('[Voz Manual] Error en transcripción:', e);
+              if (e.message === 'Transcription timeout') {
+                toast.error('La transcripción tardó demasiado. Intenta de nuevo.');
+              }
               if (rejectRef.current) rejectRef.current(e);
             } finally {
               setIsProcessing(false);
@@ -306,6 +317,11 @@ export const useVoiceRecording = () => {
           }
 
           try {
+            // Timeout de 10 segundos para la transcripción
+            const timeoutPromise = new Promise((_, reject) => {
+              setTimeout(() => reject(new Error('Transcription timeout')), 10000);
+            });
+
             const reader = new FileReader();
             reader.readAsDataURL(blob);
             
@@ -322,9 +338,11 @@ export const useVoiceRecording = () => {
               console.log('[Voz Backend] Enviando a transcribe-audio...');
 
               try {
-                const { data, error } = await supabase.functions.invoke('transcribe-audio', {
+                const transcriptionPromise = supabase.functions.invoke('transcribe-audio', {
                   body: { audio: base64 }
                 });
+
+                const { data, error } = await Promise.race([transcriptionPromise, timeoutPromise]) as any;
 
                 if (error) {
                   console.error('[Voz Backend] Error de función:', error);
@@ -339,6 +357,9 @@ export const useVoiceRecording = () => {
                 }
               } catch (e: any) {
                 console.error('[Voz Backend] Error en transcripción:', e);
+                if (e.message === 'Transcription timeout') {
+                  toast.error('La transcripción tardó demasiado. Intenta de nuevo.');
+                }
                 reject(e);
               } finally {
                 setIsProcessing(false);
