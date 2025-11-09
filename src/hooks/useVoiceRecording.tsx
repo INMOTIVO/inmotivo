@@ -57,7 +57,6 @@ export const useVoiceRecording = () => {
 
         if (audioChunksRef.current.length === 0) {
           console.error('[Voz Manual] Sin chunks de audio');
-          toast.error('No se capturó audio');
           setIsProcessing(false);
           stream.getTracks().forEach(t => t.stop());
           if (rejectRef.current) rejectRef.current(new Error('No audio captured'));
@@ -70,7 +69,6 @@ export const useVoiceRecording = () => {
         // Validar tamaño mínimo reducido a 1KB
         if (blob.size < 1000) {
           console.error('[Voz Manual] Audio muy corto:', blob.size);
-          toast.error('Audio muy corto, intenta de nuevo');
           setIsProcessing(false);
           stream.getTracks().forEach(t => t.stop());
           if (rejectRef.current) rejectRef.current(new Error('Audio too short'));
@@ -86,7 +84,6 @@ export const useVoiceRecording = () => {
             const base64 = reader.result?.toString().split(',')[1];
             if (!base64) {
               console.error('[Voz Manual] Error convirtiendo a base64');
-              toast.error('Error al procesar audio');
               setIsProcessing(false);
               stream.getTracks().forEach(t => t.stop());
               if (rejectRef.current) rejectRef.current(new Error('Base64 conversion failed'));
@@ -108,14 +105,12 @@ export const useVoiceRecording = () => {
 
               if (data?.text) {
                 console.log('[Voz Manual] Transcripción exitosa:', data.text);
-                toast.success('Transcrito');
                 if (resolveRef.current) resolveRef.current(data.text);
               } else {
                 throw new Error('No se recibió transcripción');
               }
             } catch (e: any) {
               console.error('[Voz Manual] Error en transcripción:', e);
-              toast.error('Error al transcribir');
               if (rejectRef.current) rejectRef.current(e);
             } finally {
               setIsProcessing(false);
@@ -125,7 +120,6 @@ export const useVoiceRecording = () => {
 
           reader.onerror = () => {
             console.error('[Voz Manual] Error en FileReader');
-            toast.error('Error al leer audio');
             setIsProcessing(false);
             stream.getTracks().forEach(t => t.stop());
             if (rejectRef.current) rejectRef.current(new Error('FileReader error'));
@@ -140,7 +134,6 @@ export const useVoiceRecording = () => {
 
       mr.start(100);
       setIsRecording(true);
-      toast.success('Grabando... Presiona ✓ para enviar', { duration: 1000 });
 
     } catch (e: any) {
       console.error('[Voz Manual] Error al iniciar:', e);
@@ -241,7 +234,6 @@ export const useVoiceRecording = () => {
           };
 
           recognition.start();
-          toast.success('Escuchando...', { duration: 600 });
 
           // Timeout de seguridad
           setTimeout(() => {
@@ -297,7 +289,6 @@ export const useVoiceRecording = () => {
 
           if (audioChunksRef.current.length === 0) {
             console.error('[Voz Backend] Sin chunks de audio');
-            toast.error('No se capturó audio');
             setIsProcessing(false);
             stream.getTracks().forEach(t => t.stop());
             return reject(new Error('No audio captured'));
@@ -309,7 +300,6 @@ export const useVoiceRecording = () => {
           // Validar tamaño mínimo reducido a 1KB
           if (blob.size < 1000) {
             console.error('[Voz Backend] Audio muy corto:', blob.size);
-            toast.error('Audio muy corto, intenta de nuevo');
             setIsProcessing(false);
             stream.getTracks().forEach(t => t.stop());
             return reject(new Error('Audio too short'));
@@ -323,7 +313,6 @@ export const useVoiceRecording = () => {
               const base64 = reader.result?.toString().split(',')[1];
               if (!base64) {
                 console.error('[Voz Backend] Error convirtiendo a base64');
-                toast.error('Error al procesar audio');
                 setIsProcessing(false);
                 stream.getTracks().forEach(t => t.stop());
                 return reject(new Error('Base64 conversion failed'));
@@ -344,14 +333,12 @@ export const useVoiceRecording = () => {
 
                 if (data?.text) {
                   console.log('[Voz Backend] Transcripción exitosa:', data.text);
-                  toast.success('Transcrito');
                   resolve(data.text);
                 } else {
                   throw new Error('No se recibió transcripción');
                 }
               } catch (e: any) {
                 console.error('[Voz Backend] Error en transcripción:', e);
-                toast.error('Error al transcribir');
                 reject(e);
               } finally {
                 setIsProcessing(false);
@@ -361,7 +348,6 @@ export const useVoiceRecording = () => {
 
             reader.onerror = () => {
               console.error('[Voz Backend] Error en FileReader');
-              toast.error('Error al leer audio');
               setIsProcessing(false);
               stream.getTracks().forEach(t => t.stop());
               reject(new Error('FileReader error'));
@@ -376,7 +362,6 @@ export const useVoiceRecording = () => {
 
         // Grabar por al menos 3 segundos antes de auto-detener
         mr.start(100); // Capturar chunks cada 100ms
-        toast.success('Grabando... (3-5s)', { duration: 600 });
         
         // Auto-detener después de 5 segundos
         setTimeout(() => {

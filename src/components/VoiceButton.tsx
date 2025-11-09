@@ -86,7 +86,7 @@ const VoiceButton = ({
         <div className="flex-1 flex items-center gap-[2px] sm:gap-0.5 justify-center h-8 px-1 min-w-0 overflow-hidden">
           {waveBars.map((_, i) => {
             // Create natural-looking wave with multiple frequencies and random variations
-            const time = recordingTime * 35; // Velocidad muy aumentada: 3.5x original
+            const time = recordingTime * 175; // Velocidad 5x aumentada para efecto tipo WhatsApp/Instagram
             const baseWave = Math.sin((time + i * 1.1) * 2.2);
             const secondWave = Math.sin((time + i * 0.5) * 3.5) * 0.7;
             const thirdWave = Math.sin((time * 1.2 + i * 1.6) * 4.2) * 0.4;

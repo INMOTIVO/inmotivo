@@ -101,20 +101,17 @@ const MapFilters = ({ onFiltersChange, initialQuery = '' }: MapFiltersProps) => 
       if (transcript && transcript.length > 0) {
         setSearchQuery(transcript);
         await handleInterpretSearch(transcript);
-      } else {
-        toast.error('No se capturó audio, intenta de nuevo');
       }
     } catch (error: any) {
       console.error('Error with voice recording:', error);
-      if (error.message !== 'Cancelled by user') {
-        toast.error('Error al grabar, intenta de nuevo');
+      if (error.message !== 'Cancelled by user' && error.message !== 'No audio captured' && error.message !== 'Audio too short') {
+        toast.error('Error al procesar audio');
       }
     }
   };
 
   const handleCancelRecording = () => {
     cancelRecording();
-    toast.info('Grabación cancelada');
   };
   return (
     <Card className="p-6 space-y-4">
