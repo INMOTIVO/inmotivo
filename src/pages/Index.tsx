@@ -7,7 +7,8 @@ import CTASection from "@/components/CTASection";
 import Footer from "@/components/Footer";
 
 const Index = () => {
-  return <div className="min-h-screen">
+  return (
+    <div className="min-h-screen">
       <HomeMenu />
       <main className="pt-16">
         <Hero />
@@ -16,6 +17,8 @@ const Index = () => {
         <CTASection />
       </main>
       <Footer className="px-0 py-px" />
-    </div>;
+    </div>
+  );
 };
+
 export default Index;

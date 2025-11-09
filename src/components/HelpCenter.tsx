@@ -71,13 +71,12 @@ const HelpCenter = ({ open, onOpenChange }: HelpCenterProps) => {
   const onSubmit = async (values: ContactFormValues) => {
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.from("contact_messages").insert({
+      const { error } = await supabase.from("help_center_messages").insert({
         user_id: user?.id || null,
         name: values.name,
         email: values.email,
         subject: values.subject,
         message: values.message,
-        property_id: null, // No está relacionado con ninguna propiedad
       });
 
       if (error) throw error;
