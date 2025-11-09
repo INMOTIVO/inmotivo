@@ -75,7 +75,7 @@ const HomeMenu = () => {
                     <Menu className="h-5 w-5" />
                   </Button>
                   {user && (
-                    <Avatar className="h-8 w-8">
+                    <Avatar className="h-8 w-8 cursor-pointer" onClick={() => navigate("/profile")}>
                       <AvatarImage src={userProfile?.avatar_url} alt={userProfile?.full_name || "Usuario"} />
                       <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
                         {getInitials(userProfile?.full_name)}
@@ -90,7 +90,10 @@ const HomeMenu = () => {
                 </SheetHeader>
                 <div className="flex flex-col gap-4 mt-6">
                   {user ? (
-                    <div className="px-4 py-3 rounded-lg bg-accent/30 border border-border">
+                    <div 
+                      className="px-4 py-3 rounded-lg bg-accent/30 border border-border cursor-pointer hover:bg-accent/50 transition-colors" 
+                      onClick={() => handleNavigation("/profile")}
+                    >
                       <div className="flex items-center gap-3">
                         <User className="h-5 w-5 text-primary" />
                         <div>
