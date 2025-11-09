@@ -53,18 +53,8 @@ export const useAuth = () => {
   };
 
   const signOut = async () => {
-    try {
-      const { error } = await supabase.auth.signOut();
-      // Limpiar el estado local incluso si hay error del servidor
-      setSession(null);
-      setUser(null);
-      return { error: null };
-    } catch (error) {
-      // Limpiar el estado local incluso con excepciones
-      setSession(null);
-      setUser(null);
-      return { error: null };
-    }
+    const { error } = await supabase.auth.signOut();
+    return { error };
   };
 
   const resetPassword = async (email: string) => {

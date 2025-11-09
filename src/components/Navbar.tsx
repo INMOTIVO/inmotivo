@@ -55,10 +55,14 @@ const Navbar = () => {
   const isOwner = profile?.user_type === 'owner';
 
   const handleSignOut = async () => {
-    await signOut();
-    toast.success("Sesión cerrada exitosamente");
-    setIsOpen(false);
-    navigate("/");
+    const { error } = await signOut();
+    if (error) {
+      toast.error("Error al cerrar sesión");
+    } else {
+      toast.success("Sesión cerrada exitosamente");
+      setIsOpen(false);
+      navigate("/");
+    }
   };
 
   const handleNavigation = (path: string) => {
