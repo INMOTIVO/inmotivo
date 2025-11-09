@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import Navbar from '@/components/Navbar';
 import PropertiesManagementTable from '@/components/PropertiesManagementTable';
 import { MessagesDialog } from '@/components/MessagesDialog';
-import { Plus, Home, MessageCircle, Edit, Trash2, Eye, User, ArrowLeft } from 'lucide-react';
+import { Plus, Home, MessageCircle, Edit, Trash2, Eye, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -381,16 +381,12 @@ const ProviderDashboard = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="properties" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="properties" className="text-xs sm:text-sm">
               <span className="hidden sm:inline">Mis </span>Propiedades
             </TabsTrigger>
             <TabsTrigger value="messages" className="text-xs sm:text-sm">
               Mensajes ({messages.length})
-            </TabsTrigger>
-            <TabsTrigger value="profile" className="text-xs sm:text-sm">
-              <User className="mr-0 sm:mr-2 h-4 w-4" />
-              <span className="hidden sm:inline">Mi </span>Perfil
             </TabsTrigger>
           </TabsList>
 
@@ -557,83 +553,6 @@ const ProviderDashboard = () => {
                 ))}
               </div>
             )}
-          </TabsContent>
-
-          <TabsContent value="profile">
-            <Card>
-              <CardHeader>
-                <CardTitle>Información Personal</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Actualiza tus datos de contacto. Esta información será visible para los clientes interesados en tus propiedades.
-                </p>
-              </CardHeader>
-              <CardContent>
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmitProfile)} className="space-y-6">
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Correo Electrónico</Label>
-                        <Input
-                          id="email"
-                          type="email"
-                          value={user?.email || ''}
-                          disabled
-                          className="bg-muted"
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          El correo no se puede modificar
-                        </p>
-                      </div>
-
-                      <FormField
-                        control={form.control}
-                        name="full_name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Nombre Completo *</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Juan Pérez" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="phone"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Teléfono Celular</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="+57 300 123 4567"
-                                value={field.value}
-                                onChange={(e) => {
-                                  const formatted = formatPhoneInput(e.target.value);
-                                  field.onChange(formatted);
-                                }}
-                                onBlur={field.onBlur}
-                                name={field.name}
-                                ref={field.ref}
-                              />
-                            </FormControl>
-                            <p className="text-xs text-muted-foreground">
-                              Escribe el número y se formateará automáticamente
-                            </p>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-
-                    <Button type="submit" disabled={savingProfile}>
-                      {savingProfile ? 'Guardando...' : 'Guardar Cambios'}
-                    </Button>
-                  </form>
-                </Form>
-              </CardContent>
-            </Card>
           </TabsContent>
         </Tabs>
 

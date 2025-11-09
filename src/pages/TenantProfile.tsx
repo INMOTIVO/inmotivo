@@ -19,6 +19,22 @@ const TenantProfile = () => {
   const { isAdmin, loading: roleLoading } = useRole();
   const navigate = useNavigate();
 
+  // Fetch user profile to check user type
+  const { data: userTypeData } = useQuery({
+    queryKey: ['user-type', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('user_type')
+        .eq('id', user!.id)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
@@ -30,6 +46,13 @@ const TenantProfile = () => {
       navigate('/admin');
     }
   }, [isAdmin, loading, roleLoading, navigate]);
+
+  // Redirect owners to dashboard
+  useEffect(() => {
+    if (userTypeData && userTypeData.user_type === 'owner') {
+      navigate('/dashboard');
+    }
+  }, [userTypeData, navigate]);
 
   // Fetch user profile
   const { data: profile } = useQuery({

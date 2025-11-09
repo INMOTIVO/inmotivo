@@ -97,7 +97,24 @@ const Navbar = () => {
             </a>
             {user ? (
               <>
-                {!isAdmin && (
+                {isAdmin ? (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => navigate("/admin")}
+                  >
+                    <Shield className="h-4 w-4 mr-2" />
+                    Panel Administrador
+                  </Button>
+                ) : isOwner ? (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => navigate("/dashboard")}
+                  >
+                    Mi Panel
+                  </Button>
+                ) : (
                   <Button 
                     variant="ghost" 
                     size="sm"
@@ -105,22 +122,6 @@ const Navbar = () => {
                   >
                     <User className="h-4 w-4 mr-2" />
                     Mi Perfil
-                  </Button>
-                )}
-                {(isAdmin || isOwner) && (
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => navigate(isAdmin ? "/admin" : "/dashboard")}
-                  >
-                    {isAdmin ? (
-                      <>
-                        <Shield className="h-4 w-4 mr-2" />
-                        Panel Administrador
-                      </>
-                    ) : (
-                      'Mi Panel'
-                    )}
                   </Button>
                 )}
                 <Button 
@@ -191,7 +192,24 @@ const Navbar = () => {
                 </Button>
                 {user ? (
                   <>
-                    {!isAdmin && (
+                    {isAdmin ? (
+                      <Button
+                        variant="ghost"
+                        className="justify-start text-base h-12"
+                        onClick={() => handleNavigation("/admin")}
+                      >
+                        <Shield className="h-5 w-5 mr-3" />
+                        Panel Administrador
+                      </Button>
+                    ) : isOwner ? (
+                      <Button
+                        variant="ghost"
+                        className="justify-start text-base h-12"
+                        onClick={() => handleNavigation("/dashboard")}
+                      >
+                        Mi Panel
+                      </Button>
+                    ) : (
                       <>
                         <Button
                           variant="ghost"
@@ -210,22 +228,6 @@ const Navbar = () => {
                           Favoritos
                         </Button>
                       </>
-                    )}
-                    {(isAdmin || isOwner) && (
-                      <Button
-                        variant="ghost"
-                        className="justify-start text-base h-12"
-                        onClick={() => handleNavigation(isAdmin ? "/admin" : "/dashboard")}
-                      >
-                        {isAdmin ? (
-                          <>
-                            <Shield className="h-5 w-5 mr-3" />
-                            Panel Administrador
-                          </>
-                        ) : (
-                          'Mi Panel'
-                        )}
-                      </Button>
                     )}
                     <Button
                       variant="ghost"
