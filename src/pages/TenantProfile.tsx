@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useRole } from '@/hooks/useRole';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
@@ -15,6 +16,7 @@ import { es } from 'date-fns/locale';
 
 const TenantProfile = () => {
   const { user, loading } = useAuth();
+  const { isAdmin, loading: roleLoading } = useRole();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -22,6 +24,12 @@ const TenantProfile = () => {
       navigate('/auth');
     }
   }, [user, loading, navigate]);
+
+  useEffect(() => {
+    if (!loading && !roleLoading && isAdmin) {
+      navigate('/admin');
+    }
+  }, [isAdmin, loading, roleLoading, navigate]);
 
   // Fetch user profile
   const { data: profile } = useQuery({
