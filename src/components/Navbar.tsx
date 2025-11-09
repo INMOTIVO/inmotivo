@@ -135,8 +135,8 @@ const Navbar = () => {
                     Mi Perfil
                   </Button>
                 )}
-                {/* Favorites Button - Hidden for admin users */}
-                {!isAdmin && (
+                {/* Favorites Button - Hidden for admin and owner users */}
+                {!isAdmin && !isOwner && (
                   <Button
                     variant="ghost"
                     size="icon"
@@ -229,14 +229,6 @@ const Navbar = () => {
                         >
                           <User className="h-5 w-5 mr-3" />
                           Mi Perfil
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          className="justify-start text-base h-12"
-                          onClick={() => handleNavigation("/favorites")}
-                        >
-                          <Heart className="h-5 w-5 mr-3" />
-                          Favoritos
                         </Button>
                       </>
                     )}
