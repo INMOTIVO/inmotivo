@@ -85,13 +85,20 @@ const VoiceButton = ({
         {/* Animated Wave Bars */}
         <div className="flex-1 flex items-center gap-0.5 justify-center h-8 px-2">
           {waveBars.map((_, i) => {
-            const height = Math.sin((recordingTime * 10 + i) * 1.2) * 12 + 16;
+            // Create natural-looking wave with multiple frequencies and random variations
+            const time = recordingTime * 15; // Faster base speed
+            const baseWave = Math.sin((time + i * 0.8) * 1.5);
+            const secondWave = Math.sin((time + i * 0.3) * 2.5) * 0.5;
+            const randomVariation = Math.sin((time * 0.7 + i * 1.2) * 3) * 0.3;
+            const combined = (baseWave + secondWave + randomVariation) / 1.8;
+            const height = combined * 10 + 16;
+            
             return (
               <div
                 key={i}
-                className="w-0.5 bg-primary rounded-full transition-all duration-75"
+                className="w-0.5 bg-primary rounded-full transition-all duration-100 ease-out"
                 style={{
-                  height: `${height}px`,
+                  height: `${Math.max(8, Math.min(28, height))}px`,
                 }}
               />
             );
