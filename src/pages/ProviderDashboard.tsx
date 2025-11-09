@@ -18,7 +18,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-
 interface Property {
   id: string;
   title: string;
@@ -31,7 +30,6 @@ interface Property {
   neighborhood: string;
   created_at: string;
 }
-
 interface ContactMessage {
   id: string;
   sender_name: string;
@@ -45,50 +43,44 @@ interface ContactMessage {
     title: string;
   };
 }
-
 interface Profile {
   id: string;
   full_name: string | null;
   phone: string | null;
 }
-
 const profileSchema = z.object({
   full_name: z.string().min(2, 'El nombre debe tener al menos 2 caracteres').max(100),
-  phone: z.string()
-    .transform(val => {
-      if (!val) return '';
-      // Eliminar todos los caracteres no numéricos
-      const digits = val.replace(/\D/g, '');
-      // Si comienza con 57, usar esos dígitos; si no, agregar 57
-      const withCountryCode = digits.startsWith('57') ? digits : '57' + digits;
-      // Validar que tenga 12 dígitos en total (57 + 10 dígitos)
-      if (withCountryCode.length !== 12) {
-        throw new z.ZodError([{
-          code: 'custom',
-          path: ['phone'],
-          message: 'El teléfono debe tener 10 dígitos'
-        }]);
-      }
-      // Formatear: +57 XXX XXX XXXX
-      return `+${withCountryCode.slice(0, 2)} ${withCountryCode.slice(2, 5)} ${withCountryCode.slice(5, 8)} ${withCountryCode.slice(8)}`;
-    })
-    .optional()
-    .or(z.literal('')),
+  phone: z.string().transform(val => {
+    if (!val) return '';
+    // Eliminar todos los caracteres no numéricos
+    const digits = val.replace(/\D/g, '');
+    // Si comienza con 57, usar esos dígitos; si no, agregar 57
+    const withCountryCode = digits.startsWith('57') ? digits : '57' + digits;
+    // Validar que tenga 12 dígitos en total (57 + 10 dígitos)
+    if (withCountryCode.length !== 12) {
+      throw new z.ZodError([{
+        code: 'custom',
+        path: ['phone'],
+        message: 'El teléfono debe tener 10 dígitos'
+      }]);
+    }
+    // Formatear: +57 XXX XXX XXXX
+    return `+${withCountryCode.slice(0, 2)} ${withCountryCode.slice(2, 5)} ${withCountryCode.slice(5, 8)} ${withCountryCode.slice(8)}`;
+  }).optional().or(z.literal(''))
 });
-
 const formatPhoneInput = (value: string): string => {
   if (!value) return '';
   // Eliminar todos los caracteres no numéricos
   let digits = value.replace(/\D/g, '');
-  
+
   // Si empieza con 57, mantenerlo; si no, agregarlo
   if (!digits.startsWith('57')) {
     digits = '57' + digits;
   }
-  
+
   // Limitar a 12 dígitos (57 + 10)
   digits = digits.slice(0, 12);
-  
+
   // Formatear mientras escribe
   if (digits.length <= 2) {
     return `+${digits}`;
@@ -100,10 +92,15 @@ const formatPhoneInput = (value: string): string => {
     return `+${digits.slice(0, 2)} ${digits.slice(2, 5)} ${digits.slice(5, 8)} ${digits.slice(8)}`;
   }
 };
-
 const ProviderDashboard = () => {
-  const { user, loading } = useAuth();
-  const { isAdmin, loading: roleLoading } = useRole();
+  const {
+    user,
+    loading
+  } = useAuth();
+  const {
+    isAdmin,
+    loading: roleLoading
+  } = useRole();
   const navigate = useNavigate();
   const [properties, setProperties] = useState<Property[]>([]);
   const [messages, setMessages] = useState<ContactMessage[]>([]);
@@ -112,15 +109,13 @@ const ProviderDashboard = () => {
   const [savingProfile, setSavingProfile] = useState(false);
   const [showPropertiesView, setShowPropertiesView] = useState<'all' | 'available' | 'draft' | 'suspended' | null>(null);
   const [messagesDialogOpen, setMessagesDialogOpen] = useState(false);
-
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       full_name: '',
-      phone: '',
-    },
+      phone: ''
+    }
   });
-
   useEffect(() => {
     if (!loading && !roleLoading) {
       if (!user) {
@@ -130,7 +125,6 @@ const ProviderDashboard = () => {
       }
     }
   }, [user, isAdmin, loading, roleLoading, navigate]);
-
   useEffect(() => {
     if (user) {
       fetchProperties();
@@ -142,35 +136,25 @@ const ProviderDashboard = () => {
   // Realtime listener para mensajes
   useEffect(() => {
     if (!user) return;
-
-    const channel = supabase
-      .channel('contact-messages-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'contact_messages'
-        },
-        () => {
-          fetchMessages();
-        }
-      )
-      .subscribe();
-
+    const channel = supabase.channel('contact-messages-changes').on('postgres_changes', {
+      event: '*',
+      schema: 'public',
+      table: 'contact_messages'
+    }, () => {
+      fetchMessages();
+    }).subscribe();
     return () => {
       supabase.removeChannel(channel);
     };
   }, [user]);
-
   const fetchProperties = async () => {
     try {
-      const { data, error } = await supabase
-        .from('properties')
-        .select('*')
-        .eq('owner_id', user?.id)
-        .order('created_at', { ascending: false });
-
+      const {
+        data,
+        error
+      } = await supabase.from('properties').select('*').eq('owner_id', user?.id).order('created_at', {
+        ascending: false
+      });
       if (error) throw error;
       setProperties(data || []);
     } catch (error) {
@@ -180,61 +164,53 @@ const ProviderDashboard = () => {
       setLoadingData(false);
     }
   };
-
   const fetchMessages = async () => {
     try {
-      const { data, error } = await supabase
-        .from('contact_messages')
-        .select(`
+      const {
+        data,
+        error
+      } = await supabase.from('contact_messages').select(`
           *,
           properties!inner(title, owner_id)
-        `)
-        .eq('properties.owner_id', user?.id)
-        .order('created_at', { ascending: false });
-
+        `).eq('properties.owner_id', user?.id).order('created_at', {
+        ascending: false
+      });
       if (error) throw error;
       setMessages(data || []);
     } catch (error) {
       console.error('Error fetching messages:', error);
     }
   };
-
   const fetchProfile = async () => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, full_name, phone')
-        .eq('id', user?.id)
-        .single();
-
+      const {
+        data,
+        error
+      } = await supabase.from('profiles').select('id, full_name, phone').eq('id', user?.id).single();
       if (error && error.code !== 'PGRST116') throw error;
-      
       if (data) {
         setProfile(data);
         form.reset({
           full_name: data.full_name || '',
-          phone: data.phone || '',
+          phone: data.phone || ''
         });
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
     }
   };
-
   const onSubmitProfile = async (values: z.infer<typeof profileSchema>) => {
     setSavingProfile(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .upsert({
-          id: user?.id,
-          full_name: values.full_name,
-          phone: values.phone || null,
-          updated_at: new Date().toISOString(),
-        });
-
+      const {
+        error
+      } = await supabase.from('profiles').upsert({
+        id: user?.id,
+        full_name: values.full_name,
+        phone: values.phone || null,
+        updated_at: new Date().toISOString()
+      });
       if (error) throw error;
-      
       toast.success('Perfil actualizado correctamente');
       fetchProfile();
     } catch (error) {
@@ -244,16 +220,12 @@ const ProviderDashboard = () => {
       setSavingProfile(false);
     }
   };
-
   const handleDeleteProperty = async (id: string) => {
     if (!confirm('¿Estás seguro de eliminar esta propiedad?')) return;
-
     try {
-      const { error } = await supabase
-        .from('properties')
-        .delete()
-        .eq('id', id);
-
+      const {
+        error
+      } = await supabase.from('properties').delete().eq('id', id);
       if (error) throw error;
       toast.success('Propiedad eliminada');
       fetchProperties();
@@ -262,53 +234,34 @@ const ProviderDashboard = () => {
       toast.error('Error al eliminar propiedad');
     }
   };
-
   if (loading || roleLoading || loadingData) {
-    return (
-      <div className="min-h-screen">
+    return <div className="min-h-screen">
         <Navbar />
         <div className="container mx-auto px-4 pt-24">
           <p>Cargando...</p>
         </div>
-      </div>
-    );
+      </div>;
   }
-
   if (showPropertiesView) {
-    return (
-      <div className="min-h-screen bg-background">
+    return <div className="min-h-screen bg-background">
         <Navbar />
         <main className="container mx-auto px-4 pt-24 pb-12">
-          <PropertiesManagementTable 
-            filterStatus={showPropertiesView}
-            userId={user?.id}
-            isAdmin={false}
-            onBack={() => setShowPropertiesView(null)}
-          />
+          <PropertiesManagementTable filterStatus={showPropertiesView} userId={user?.id} isAdmin={false} onBack={() => setShowPropertiesView(null)} />
         </main>
-      </div>
-    );
+      </div>;
   }
-
   const propertyTypeLabels: Record<string, string> = {
     apartment: 'Apartamento',
     house: 'Casa',
     studio: 'Apartaestudio',
     commercial: 'Local Comercial',
-    warehouse: 'Bodega',
+    warehouse: 'Bodega'
   };
-
-  return (
-    <div className="min-h-screen bg-background">
+  return <div className="min-h-screen bg-background">
       <Navbar />
       
       <main className="container mx-auto px-4 pt-24 pb-12">
-        <Button
-          variant="default"
-          size="icon"
-          onClick={() => navigate('/')}
-          className="mb-4 rounded-full w-12 h-12 shadow-xl bg-primary hover:bg-primary/90"
-        >
+        <Button variant="default" size="icon" onClick={() => navigate('/')} className="mb-4 rounded-full w-12 h-12 shadow-xl bg-primary hover:bg-primary/90">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         
@@ -317,7 +270,7 @@ const ProviderDashboard = () => {
             <p className="text-base sm:text-lg text-muted-foreground mb-2">
               Bienvenido, <span className="text-foreground font-semibold">{profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'Usuario'}</span>
             </p>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">Panel de Proveedor</h1>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">Panel de propietarios</h1>
             <p className="text-sm sm:text-base text-muted-foreground mt-2">
               Gestiona tus propiedades y mensajes
             </p>
@@ -339,7 +292,7 @@ const ProviderDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {properties.filter((p) => p.status === 'available').length}
+                {properties.filter(p => p.status === 'available').length}
               </div>
             </CardContent>
           </Card>
@@ -356,10 +309,7 @@ const ProviderDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card 
-            className="cursor-pointer hover:shadow-lg transition-shadow" 
-            onClick={() => setMessagesDialogOpen(true)}
-          >
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => setMessagesDialogOpen(true)}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">
                 Mensajes Recibidos
@@ -369,11 +319,9 @@ const ProviderDashboard = () => {
             <CardContent>
               <div className="text-2xl font-bold">
                 {messages.length}
-                {messages.filter(m => !m.is_read).length > 0 && (
-                  <Badge variant="destructive" className="ml-2 text-sm">
+                {messages.filter(m => !m.is_read).length > 0 && <Badge variant="destructive" className="ml-2 text-sm">
                     {messages.filter(m => !m.is_read).length} nuevos
-                  </Badge>
-                )}
+                  </Badge>}
               </div>
             </CardContent>
           </Card>
@@ -391,8 +339,7 @@ const ProviderDashboard = () => {
           </TabsList>
 
           <TabsContent value="properties" className="space-y-4">
-            {properties.length === 0 ? (
-              <Card>
+            {properties.length === 0 ? <Card>
                 <CardContent className="pt-6 text-center">
                   <p className="text-muted-foreground mb-4">
                     Aún no has publicado ninguna propiedad
@@ -402,41 +349,23 @@ const ProviderDashboard = () => {
                     Publicar Primera Propiedad
                   </Button>
                 </CardContent>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {properties.map((property) => {
-                  const images = property.images as string[];
-                  const priceFormatted = new Intl.NumberFormat('es-CO', {
-                    style: 'currency',
-                    currency: property.currency,
-                    minimumFractionDigits: 0,
-                  }).format(property.price);
-
-                  return (
-                    <Card key={property.id} className="overflow-hidden">
-                      {images[0] && (
-                        <img
-                          src={images[0]}
-                          alt={property.title}
-                          className="w-full h-48 object-cover"
-                        />
-                      )}
+              </Card> : <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {properties.map(property => {
+              const images = property.images as string[];
+              const priceFormatted = new Intl.NumberFormat('es-CO', {
+                style: 'currency',
+                currency: property.currency,
+                minimumFractionDigits: 0
+              }).format(property.price);
+              return <Card key={property.id} className="overflow-hidden">
+                      {images[0] && <img src={images[0]} alt={property.title} className="w-full h-48 object-cover" />}
                       <CardContent className="p-4 space-y-3">
                         <div className="flex items-start justify-between">
                           <h3 className="font-semibold text-lg line-clamp-1">
                             {property.title}
                           </h3>
-                          <Badge
-                            variant={
-                              property.status === 'available'
-                                ? 'default'
-                                : 'secondary'
-                            }
-                          >
-                            {property.status === 'available'
-                              ? 'Activa'
-                              : 'Borrador'}
+                          <Badge variant={property.status === 'available' ? 'default' : 'secondary'}>
+                            {property.status === 'available' ? 'Activa' : 'Borrador'}
                           </Badge>
                         </div>
 
@@ -450,63 +379,40 @@ const ProviderDashboard = () => {
                         </p>
 
                         <div className="flex gap-2 pt-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="flex-1"
-                            onClick={() => navigate(`/property/${property.id}`)}
-                          >
+                          <Button size="sm" variant="outline" className="flex-1" onClick={() => navigate(`/property/${property.id}`)}>
                             <Eye className="mr-1 h-4 w-4" />
                             Ver
                           </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="flex-1"
-                            onClick={() =>
-                              navigate(`/edit-property/${property.id}`)
-                            }
-                          >
+                          <Button size="sm" variant="outline" className="flex-1" onClick={() => navigate(`/edit-property/${property.id}`)}>
                             <Edit className="mr-1 h-4 w-4" />
                             Editar
                           </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDeleteProperty(property.id)}
-                          >
+                          <Button size="sm" variant="outline" onClick={() => handleDeleteProperty(property.id)}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
-            )}
+                    </Card>;
+            })}
+              </div>}
           </TabsContent>
 
           <TabsContent value="messages" className="space-y-4">
-            {messages.length === 0 ? (
-              <Card>
+            {messages.length === 0 ? <Card>
                 <CardContent className="pt-6 text-center">
                   <p className="text-muted-foreground">
                     No has recibido mensajes aún
                   </p>
                 </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-4">
-                {messages.map((message) => (
-                  <Card key={message.id}>
+              </Card> : <div className="space-y-4">
+                {messages.map(message => <Card key={message.id}>
                     <CardContent className="pt-6 space-y-3">
                       <div className="flex justify-between items-start">
                         <div>
                           <h3 className="font-semibold">{message.sender_name}</h3>
                           <p className="text-sm text-muted-foreground">
                             {message.sender_email}
-                            {message.sender_phone &&
-                              ` • ${message.sender_phone}`}
+                            {message.sender_phone && ` • ${message.sender_phone}`}
                           </p>
                         </div>
                         <Badge variant="secondary">
@@ -533,40 +439,23 @@ const ProviderDashboard = () => {
                             Responder por Email
                           </a>
                         </Button>
-                        {message.sender_phone && (
-                          <Button size="sm" variant="outline" asChild>
-                            <a
-                              href={`https://wa.me/${message.sender_phone.replace(
-                                /\D/g,
-                                ''
-                              )}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
+                        {message.sender_phone && <Button size="sm" variant="outline" asChild>
+                            <a href={`https://wa.me/${message.sender_phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer">
                               WhatsApp
                             </a>
-                          </Button>
-                        )}
+                          </Button>}
                       </div>
                     </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
+                  </Card>)}
+              </div>}
           </TabsContent>
         </Tabs>
 
-        <MessagesDialog
-          open={messagesDialogOpen}
-          onOpenChange={setMessagesDialogOpen}
-          messages={messages}
-          userId={user?.id || ''}
-          onMessagesUpdate={fetchMessages}
-          onMessageRead={(id) => setMessages((prev) => prev.map(m => m.id === id ? { ...m, is_read: true } : m))}
-        />
+        <MessagesDialog open={messagesDialogOpen} onOpenChange={setMessagesDialogOpen} messages={messages} userId={user?.id || ''} onMessagesUpdate={fetchMessages} onMessageRead={id => setMessages(prev => prev.map(m => m.id === id ? {
+        ...m,
+        is_read: true
+      } : m))} />
       </main>
-    </div>
-  );
+    </div>;
 };
-
 export default ProviderDashboard;
