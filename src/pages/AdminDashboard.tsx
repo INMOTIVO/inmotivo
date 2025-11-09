@@ -703,7 +703,13 @@ const AdminDashboard = () => {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                              user.user_type === 'owner' 
+                                ? 'bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200'
+                                : user.user_type === 'agency'
+                                ? 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200'
+                                : 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200'
+                            }`}>
                               {user.user_type === 'tenant' ? 'Arrendatario' : 
                                user.user_type === 'owner' ? 'Propietario' : 
                                user.user_type === 'agency' ? 'Inmobiliaria' : 'No especificado'}
