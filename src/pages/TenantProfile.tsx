@@ -238,7 +238,7 @@ const TenantProfile = () => {
             {loadingFavorites ? (
               <p className="text-center py-8">Cargando favoritos...</p>
             ) : favorites && favorites.length > 0 ? (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {favorites.map((fav: any) => (
                   <Card 
                     key={fav.id} 
@@ -435,7 +435,7 @@ const TenantProfile = () => {
         {/* Useful Recommendations Section */}
         <div className="mt-12">
           <h2 className="text-3xl font-bold mb-6">Recomendados útiles</h2>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 md:gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card className="hover:shadow-lg transition-shadow cursor-pointer">
               <CardHeader>
                 <div className="flex items-center gap-3">
