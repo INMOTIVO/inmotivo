@@ -248,7 +248,10 @@ const Navbar = () => {
                     <Button
                       variant="ghost"
                       className="justify-start text-base h-12 text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={() => setShowLogoutDialog(true)}
+                      onClick={() => {
+                        setIsOpen(false);
+                        setShowLogoutDialog(true);
+                      }}
                       aria-label="Cerrar sesión"
                     >
                       <LogOut className="h-5 w-5 mr-3" />
