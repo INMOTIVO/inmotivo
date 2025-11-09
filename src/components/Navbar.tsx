@@ -128,9 +128,9 @@ const Navbar = () => {
                   variant="outline" 
                   size="sm"
                   onClick={handleSignOut}
+                  aria-label="Cerrar sesión"
                 >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Cerrar Sesión
+                  <LogOut className="h-4 w-4" />
                 </Button>
               </>
             ) : (
@@ -231,11 +231,11 @@ const Navbar = () => {
                     )}
                     <Button
                       variant="ghost"
-                      className="justify-start text-base h-12 text-destructive hover:text-destructive hover:bg-destructive/10"
+                      className="justify-center h-12 text-destructive hover:text-destructive hover:bg-destructive/10"
                       onClick={handleSignOut}
+                      aria-label="Cerrar sesión"
                     >
-                      <LogOut className="h-5 w-5 mr-3" />
-                      Cerrar Sesión
+                      <LogOut className="h-5 w-5" />
                     </Button>
                   </>
                 ) : (
