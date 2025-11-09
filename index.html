@@ -89,6 +89,23 @@
       gtag('config', 'G-R77V454KLT');
     </script>
   </head>
+  <script>
+    (function() {
+      const sendPV = () => {
+        if (typeof gtag === 'function') {
+          gtag('event', 'page_view', {
+            page_location: location.href,
+            page_path: location.pathname + location.search,
+            page_title: document.title
+          });
+        }
+      };
+      sendPV();
+      const _ps = history.pushState; history.pushState = function(){ _ps.apply(this, arguments); sendPV(); };
+      const _rs = history.replaceState; history.replaceState = function(){ _rs.apply(this, arguments); sendPV(); };
+      window.addEventListener('popstate', sendPV);
+    })();
+  </script>
 
   <body>
     <div id="root"></div>
