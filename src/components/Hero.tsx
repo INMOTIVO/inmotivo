@@ -124,7 +124,6 @@ const Hero = () => {
           setMunicipality(municipalityName);
           setSector(sectorName);
           setLocation(sectorName ? `${municipalityName}, ${sectorName}` : municipalityName);
-          toast.success("Ubicación detectada correctamente");
         } catch (error) {
           console.error("Error getting location:", error);
           // Usar ubicación por defecto en caso de error
