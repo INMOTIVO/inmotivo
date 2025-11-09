@@ -1,20 +1,16 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Menu, User, Home as HomeIcon, HelpCircle } from "lucide-react";
+import { Menu, Building2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import HelpCenter from "./HelpCenter";
+
 const HomeMenu = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
-  const [showHelpCenter, setShowHelpCenter] = useState(false);
+
   const handleNavigation = (path: string) => {
     setIsOpen(false);
     navigate(path);
-  };
-  const handleHelpCenter = () => {
-    setIsOpen(false);
-    setShowHelpCenter(true);
   };
   return <>
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-border">
@@ -45,17 +41,8 @@ const HomeMenu = () => {
                 </SheetHeader>
                 <div className="flex flex-col gap-4 mt-6">
                   <Button variant="ghost" className="justify-start text-base h-12" onClick={() => handleNavigation("/auth")}>
-                    <User className="h-5 w-5 mr-3" />
-                    Iniciar sesión
-                  </Button>
-                  
-                  <Button variant="ghost" className="justify-start text-base h-12" onClick={() => handleNavigation("/auth")}>Publicar inmueble<HomeIcon className="h-5 w-5 mr-3" />
-                    Publica tu inmueble
-                  </Button>
-                  
-                  <Button variant="ghost" className="justify-start text-base h-12" onClick={handleHelpCenter}>
-                    <HelpCircle className="h-5 w-5 mr-3" />
-                    Centro de ayuda
+                    <Building2 className="h-5 w-5 mr-3" />
+                    Publicar inmueble
                   </Button>
                 </div>
               </SheetContent>
@@ -64,8 +51,6 @@ const HomeMenu = () => {
         </div>
       </nav>
 
-      {/* Help Center Dialog */}
-      <HelpCenter open={showHelpCenter} onOpenChange={setShowHelpCenter} />
     </>;
 };
 export default HomeMenu;
