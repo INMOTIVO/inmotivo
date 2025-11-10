@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
+import { useRole } from "@/hooks/useRole";
 import { supabase } from "@/integrations/supabase/client";
 import HelpCenter from "./HelpCenter";
 const HomeMenu = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isAdmin } = useRole();
   const [isOpen, setIsOpen] = useState(false);
   const [showHelpCenter, setShowHelpCenter] = useState(false);
   const [userProfile, setUserProfile] = useState<{ full_name?: string; avatar_url?: string } | null>(null);
@@ -41,6 +43,25 @@ const HomeMenu = () => {
   const handleHelpCenter = () => {
     setIsOpen(false);
     setShowHelpCenter(true);
+  };
+
+  const handleAvatarClick = async () => {
+    if (isAdmin) {
+      navigate('/admin');
+    } else {
+      // Check user type from profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('user_type')
+        .eq('id', user?.id)
+        .single();
+
+      if (profile?.user_type === 'owner') {
+        navigate('/dashboard');
+      } else {
+        navigate('/profile');
+      }
+    }
   };
 
   const getInitials = (fullName?: string) => {
@@ -83,7 +104,7 @@ const HomeMenu = () => {
                   {user ? (
                     <div 
                       className="px-4 py-3 rounded-lg bg-accent/30 border border-border cursor-pointer hover:bg-accent/50 transition-colors" 
-                      onClick={() => handleNavigation("/profile")}
+                      onClick={handleAvatarClick}
                     >
                       <div className="flex items-center gap-3">
                         <User className="h-5 w-5 text-primary" />
@@ -115,7 +136,7 @@ const HomeMenu = () => {
               </SheetContent>
             </Sheet>
             {user && (
-              <Avatar className="h-10 w-10 cursor-pointer border-2 border-border hover:border-primary transition-colors shadow-sm" onClick={() => navigate("/profile")}>
+              <Avatar className="h-10 w-10 cursor-pointer border-2 border-border hover:border-primary transition-colors shadow-sm" onClick={handleAvatarClick}>
                 <AvatarImage src={userProfile?.avatar_url} alt={userProfile?.full_name || "Usuario"} />
                 <AvatarFallback className="bg-primary text-primary-foreground text-sm font-semibold">
                   {getInitials(userProfile?.full_name)}
