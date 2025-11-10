@@ -29,48 +29,62 @@ export const useVoiceRecording = () => {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
-          sampleRate: 44100
         }
       });
       
       streamRef.current = stream;
+      audioChunksRef.current = [];
       
+      // Detectar el mejor formato de audio disponible
       let mimeType = 'audio/webm;codecs=opus';
       if (!MediaRecorder.isTypeSupported(mimeType)) {
         mimeType = 'audio/webm';
+        if (!MediaRecorder.isTypeSupported(mimeType)) {
+          mimeType = 'audio/mp4';
+          if (!MediaRecorder.isTypeSupported(mimeType)) {
+            mimeType = ''; // Usar el formato por defecto del navegador
+          }
+        }
       }
+      console.log('[Voz Manual] Formato de audio:', mimeType || 'default');
 
-      const mr = new MediaRecorder(stream, { mimeType });
+      const mr = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
       mediaRecorderRef.current = mr;
-      audioChunksRef.current = [];
 
       mr.ondataavailable = (e) => {
-        if (e.data.size > 0) {
+        if (e.data && e.data.size > 0) {
           console.log('[Voz Manual] Chunk recibido:', e.data.size, 'bytes');
           audioChunksRef.current.push(e.data);
         }
       };
 
+      mr.onerror = (e) => {
+        console.error('[Voz Manual] Error en MediaRecorder:', e);
+      };
+
       mr.onstop = async () => {
         console.log('[Voz Manual] Grabación detenida, procesando...');
+        console.log('[Voz Manual] Total de chunks:', audioChunksRef.current.length);
         setIsRecording(false);
 
         if (audioChunksRef.current.length === 0) {
-          console.error('[Voz Manual] Sin chunks de audio');
+          console.error('[Voz Manual] Sin chunks de audio capturados');
           setIsProcessing(false);
           stream.getTracks().forEach(t => t.stop());
+          toast.error('No se capturó audio. Intenta hablar más fuerte.');
           if (rejectRef.current) rejectRef.current(new Error('No audio captured'));
           return;
         }
 
-        const blob = new Blob(audioChunksRef.current, { type: mimeType });
+        const blob = new Blob(audioChunksRef.current, { type: mimeType || 'audio/webm' });
         console.log('[Voz Manual] Blob creado:', blob.size, 'bytes, tipo:', blob.type);
 
-        // Validar tamaño mínimo reducido a 1KB
-        if (blob.size < 1000) {
-          console.error('[Voz Manual] Audio muy corto:', blob.size);
+        // Validar tamaño mínimo de 500 bytes (muy permisivo)
+        if (blob.size < 500) {
+          console.error('[Voz Manual] Audio muy corto:', blob.size, 'bytes');
           setIsProcessing(false);
           stream.getTracks().forEach(t => t.stop());
+          toast.error('Audio muy corto. Habla por al menos 1 segundo.');
           if (rejectRef.current) rejectRef.current(new Error('Audio too short'));
           return;
         }
@@ -143,9 +157,11 @@ export const useVoiceRecording = () => {
         }
       };
 
-      // Capturar chunks cada segundo para mejor compatibilidad mobile/web
-      mr.start(1000);
+      // Iniciar grabación con timeslice de 500ms (buen balance móvil/web)
+      // Esto solicita chunks cada 500ms para asegurar captura continua
+      mr.start(500);
       setIsRecording(true);
+      console.log('[Voz Manual] MediaRecorder iniciado, esperando chunks...');
 
     } catch (e: any) {
       console.error('[Voz Manual] Error al iniciar:', e);
@@ -272,48 +288,61 @@ export const useVoiceRecording = () => {
             echoCancellation: true,
             noiseSuppression: true,
             autoGainControl: true,
-            sampleRate: 44100
           }
         });
         
         streamRef.current = stream;
+        audioChunksRef.current = [];
         
-        // Usar audio/webm si está disponible
+        // Detectar el mejor formato de audio disponible
         let mimeType = 'audio/webm;codecs=opus';
         if (!MediaRecorder.isTypeSupported(mimeType)) {
           mimeType = 'audio/webm';
+          if (!MediaRecorder.isTypeSupported(mimeType)) {
+            mimeType = 'audio/mp4';
+            if (!MediaRecorder.isTypeSupported(mimeType)) {
+              mimeType = '';
+            }
+          }
         }
+        console.log('[Voz Backend] Formato de audio:', mimeType || 'default');
 
-        const mr = new MediaRecorder(stream, { mimeType });
+        const mr = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
         mediaRecorderRef.current = mr;
-        audioChunksRef.current = [];
 
         mr.ondataavailable = (e) => {
-          if (e.data.size > 0) {
+          if (e.data && e.data.size > 0) {
             console.log('[Voz Backend] Chunk recibido:', e.data.size, 'bytes');
             audioChunksRef.current.push(e.data);
           }
         };
 
+        mr.onerror = (e) => {
+          console.error('[Voz Backend] Error en MediaRecorder:', e);
+        };
+
         mr.onstop = async () => {
           console.log('[Voz Backend] Grabación detenida, procesando...');
+          console.log('[Voz Backend] Total de chunks:', audioChunksRef.current.length);
           setIsRecording(false);
 
           if (audioChunksRef.current.length === 0) {
-            console.error('[Voz Backend] Sin chunks de audio');
+            console.error('[Voz Backend] Sin chunks de audio capturados');
             setIsProcessing(false);
             stream.getTracks().forEach(t => t.stop());
+            toast.error('No se capturó audio. Intenta hablar más fuerte.');
             return reject(new Error('No audio captured'));
           }
 
-          const blob = new Blob(audioChunksRef.current, { type: mimeType });
+          const blob = new Blob(audioChunksRef.current, { type: mimeType || 'audio/webm' });
           console.log('[Voz Backend] Blob creado:', blob.size, 'bytes, tipo:', blob.type);
 
-          // Validar tamaño mínimo reducido a 1KB
-          if (blob.size < 1000) {
-            console.error('[Voz Backend] Audio muy corto:', blob.size);
+          // Validar tamaño mínimo de 500 bytes
+          if (blob.size < 500) {
+            console.error('[Voz Backend] Audio muy corto:', blob.size, 'bytes');
             setIsProcessing(false);
             stream.getTracks().forEach(t => t.stop());
+            toast.error('Audio muy corto. Habla por al menos 1 segundo.');
             return reject(new Error('Audio too short'));
           }
 
@@ -382,14 +411,19 @@ export const useVoiceRecording = () => {
           }
         };
 
-        // Capturar chunks cada segundo para mejor compatibilidad
-        mr.start(1000);
+        // Iniciar grabación con timeslice de 500ms
+        mr.start(500);
+        console.log('[Voz Backend] MediaRecorder iniciado en modo automático');
         
         // Auto-detener después de 30 segundos máximo (modo automático)
         const autoStopTimer = setTimeout(() => {
           if (mr.state === 'recording') {
             console.log('[Voz Backend] Auto-deteniendo después de 30s (límite máximo)');
-            try { mr.stop(); } catch {}
+            try { 
+              mr.stop();
+            } catch (e) {
+              console.error('[Voz Backend] Error al auto-detener:', e);
+            }
           }
         }, 30000);
 
