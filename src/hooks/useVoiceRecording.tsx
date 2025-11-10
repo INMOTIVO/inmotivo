@@ -143,7 +143,8 @@ export const useVoiceRecording = () => {
         }
       };
 
-      mr.start(100);
+      // Capturar chunks cada segundo para mejor compatibilidad mobile/web
+      mr.start(1000);
       setIsRecording(true);
 
     } catch (e: any) {
@@ -246,10 +247,10 @@ export const useVoiceRecording = () => {
 
           recognition.start();
 
-          // Timeout de seguridad
+          // Timeout de seguridad aumentado a 15 segundos
           setTimeout(() => {
             try { recognition.stop(); } catch {}
-          }, 8000);
+          }, 15000);
         });
 
         setIsProcessing(false);
@@ -381,16 +382,16 @@ export const useVoiceRecording = () => {
           }
         };
 
-        // Grabar por al menos 3 segundos antes de auto-detener
-        mr.start(100); // Capturar chunks cada 100ms
+        // Capturar chunks cada segundo para mejor compatibilidad
+        mr.start(1000);
         
-        // Auto-detener después de 5 segundos
-        setTimeout(() => {
+        // Auto-detener después de 30 segundos máximo (modo automático)
+        const autoStopTimer = setTimeout(() => {
           if (mr.state === 'recording') {
-            console.log('[Voz Backend] Auto-deteniendo después de 5s');
+            console.log('[Voz Backend] Auto-deteniendo después de 30s (límite máximo)');
             try { mr.stop(); } catch {}
           }
-        }, 5000);
+        }, 30000);
 
       } catch (e: any) {
         console.error('[Voz Backend] Error al iniciar:', e);
