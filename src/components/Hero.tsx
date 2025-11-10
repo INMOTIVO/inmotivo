@@ -610,7 +610,14 @@ const Hero = () => {
                   </Popover>
                 </div>
 
-                <Button onClick={handleUseCustomLocation} variant="outline" className="w-full">
+                <Button 
+                  onClick={handleUseCustomLocation} 
+                  variant={customDepartment ? "default" : "outline"} 
+                  className={cn(
+                    "w-full transition-all duration-300",
+                    customDepartment && "border-2 border-yellow-400 shadow-lg shadow-yellow-400/30 animate-pulse"
+                  )}
+                >
                   Buscar en otra ubicación
                 </Button>
                 <p className="text-xs text-muted-foreground">
