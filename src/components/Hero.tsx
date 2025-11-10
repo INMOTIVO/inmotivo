@@ -615,7 +615,7 @@ const Hero = () => {
                   variant={customDepartment ? "default" : "outline"} 
                   className={cn(
                     "w-full transition-all duration-300",
-                    customDepartment && "border-2 border-yellow-400 shadow-lg shadow-yellow-400/30 animate-pulse"
+                    customDepartment && "border-2 border-yellow-400"
                   )}
                 >
                   Buscar en otra ubicación
