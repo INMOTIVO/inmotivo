@@ -4,6 +4,7 @@ import Hero from "@/components/Hero";
 import HowItWorksVideo from "@/components/HowItWorksVideo";
 import PopularCities from "@/components/PopularCities";
 import PropertiesGrid from "@/components/PropertiesGrid";
+import CityTypeCards from "@/components/CityTypeCards";
 import CTASection from "@/components/CTASection";
 import Footer from "@/components/Footer";
 
@@ -16,6 +17,7 @@ const Index = () => {
         <HowItWorksVideo />
         <PopularCities />
         <PropertiesGrid />
+        <CityTypeCards />
         <CTASection />
       </main>
       <Footer className="px-0 py-px" />
