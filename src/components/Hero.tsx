@@ -331,10 +331,10 @@ const Hero = () => {
                         type="button"
                         onClick={() => setListingType("rent")}
                         className={cn(
-                          "flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all",
+                          "flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all border-2",
                           listingType === "rent"
-                            ? "bg-background text-foreground shadow-sm"
-                            : "text-muted-foreground hover:text-foreground"
+                            ? "bg-background text-foreground shadow-sm border-yellow-400"
+                            : "text-muted-foreground hover:text-foreground border-transparent"
                         )}
                       >
                         Arrendar
@@ -343,10 +343,10 @@ const Hero = () => {
                         type="button"
                         onClick={() => setListingType("sale")}
                         className={cn(
-                          "flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all",
+                          "flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all border-2",
                           listingType === "sale"
-                            ? "bg-background text-foreground shadow-sm"
-                            : "text-muted-foreground hover:text-foreground"
+                            ? "bg-background text-foreground shadow-sm border-yellow-400"
+                            : "text-muted-foreground hover:text-foreground border-transparent"
                         )}
                       >
                         Comprar
@@ -419,10 +419,10 @@ const Hero = () => {
                 type="button"
                 onClick={() => setListingType("rent")}
                 className={cn(
-                  "flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-all",
+                  "flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-all border-2",
                   listingType === "rent"
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-background text-foreground shadow-sm border-yellow-400"
+                    : "text-muted-foreground hover:text-foreground border-transparent"
                 )}
               >
                 Arrendar
@@ -431,10 +431,10 @@ const Hero = () => {
                 type="button"
                 onClick={() => setListingType("sale")}
                 className={cn(
-                  "flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-all",
+                  "flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-all border-2",
                   listingType === "sale"
-                    ? "bg-background text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-background text-foreground shadow-sm border-yellow-400"
+                    : "text-muted-foreground hover:text-foreground border-transparent"
                 )}
               >
                 Comprar
