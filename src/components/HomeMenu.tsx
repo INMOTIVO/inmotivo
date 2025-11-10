@@ -69,14 +69,6 @@ const HomeMenu = () => {
 
             {/* Hamburger Menu with Avatar */}
             <div className="flex items-center gap-3">
-              {user && (
-                <Avatar className="h-10 w-10 cursor-pointer border-2 border-border hover:border-primary transition-colors shadow-sm" onClick={() => navigate("/profile")}>
-                  <AvatarImage src={userProfile?.avatar_url} alt={userProfile?.full_name || "Usuario"} />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-sm font-semibold">
-                    {getInitials(userProfile?.full_name)}
-                  </AvatarFallback>
-                </Avatar>
-              )}
               <Sheet open={isOpen} onOpenChange={setIsOpen}>
                 <SheetTrigger asChild>
                   <Button variant="outline" size="icon" className="h-10 w-10 rounded-full shadow-sm hover:bg-accent hover:border-primary transition-colors" aria-label="Abrir menú">
@@ -122,6 +114,14 @@ const HomeMenu = () => {
                 </div>
               </SheetContent>
             </Sheet>
+            {user && (
+              <Avatar className="h-10 w-10 cursor-pointer border-2 border-border hover:border-primary transition-colors shadow-sm" onClick={() => navigate("/profile")}>
+                <AvatarImage src={userProfile?.avatar_url} alt={userProfile?.full_name || "Usuario"} />
+                <AvatarFallback className="bg-primary text-primary-foreground text-sm font-semibold">
+                  {getInitials(userProfile?.full_name)}
+                </AvatarFallback>
+              </Avatar>
+            )}
             </div>
           </div>
         </div>
