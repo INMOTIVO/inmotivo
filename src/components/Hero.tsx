@@ -324,18 +324,8 @@ const Hero = () => {
               
               <div className="relative bg-white rounded-xl md:rounded-2xl shadow-2xl p-3 md:p-4">
                 <div className="space-y-2 md:space-y-3">
-                  <div className="flex items-start gap-2 border border-border rounded-lg p-2">
-                    <Search className="h-4 w-4 text-muted-foreground mt-2 flex-shrink-0" />
-                    <Textarea placeholder="Describe la propiedad que buscas" className="border-0 focus-visible:ring-0 text-base md:text-sm leading-normal resize-none min-h-[44px] max-h-[96px] md:max-h-[120px] w-full overflow-y-auto" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onKeyDown={e => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSearch();
-                    }
-                  }} />
-                  </div>
-                  
-                  {/* Listing Type Selector */}
-                  <div className="flex items-center gap-2 px-2">
+                  {/* Listing Type Selector - PRIMERO */}
+                  <div className="flex items-center gap-2">
                     <div className="inline-flex rounded-lg border border-border bg-muted p-1 w-full">
                       <button
                         type="button"
@@ -364,26 +354,38 @@ const Hero = () => {
                     </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 pt-2 border-t">
+                  {/* Descripción - SEGUNDO */}
+                  <div className="flex items-start gap-2 border border-border rounded-lg p-2">
+                    <Search className="h-4 w-4 text-muted-foreground mt-2 flex-shrink-0" />
+                    <Textarea placeholder="Describe la propiedad que buscas" className="border-0 focus-visible:ring-0 text-base md:text-sm leading-normal resize-none min-h-[44px] max-h-[96px] md:max-h-[120px] w-full overflow-y-auto" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onKeyDown={e => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSearch();
+                    }
+                  }} />
+                  </div>
+
+                  {/* Botón Buscar - TERCERO */}
+                  <div className="flex items-center gap-2 w-full">
+                    <Button variant="hero" size="lg" onClick={() => handleSearch()} disabled={!searchQuery.trim() || isRecording || isProcessing || isInterpretingSearch || loadingLocation} className="flex-1 min-w-[120px] text-base font-semibold">
+                      {isInterpretingSearch ? <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Procesando...
+                        </> : 'Buscar'}
+                    </Button>
+                    <VoiceButton isRecording={isRecording} isProcessing={isProcessing} audioLevel={audioLevel} onStart={handleVoiceRecording} onStop={handleVoiceRecording} disabled={loadingLocation || isInterpretingSearch} />
+                  </div>
+
+                  {/* Tu ubicación - CUARTO */}
+                  <div className="flex flex-col sm:flex-row items-center gap-2 pt-2 border-t">
                     {loadingLocation ? <div className="flex items-center gap-2">
                         <Loader2 className="h-4 w-4 text-muted-foreground animate-spin" />
                         <span className="text-xs text-muted-foreground">Detectando ubicación...</span>
-                      </div> : <>
-                        <div className="flex items-center gap-1.5 flex-1 min-w-0 w-full sm:w-auto justify-center sm:justify-start">
-                          <MapPin className="h-4 w-4 text-primary animate-bounce flex-shrink-0" />
-                          <span className="text-sm font-medium">Tu ubicación:</span>
-                          {municipality && sector ? <span className="text-sm font-medium truncate">{municipality}, {sector}</span> : municipality ? <span className="text-sm font-medium truncate">{municipality}</span> : <span className="text-sm font-medium truncate">Medellín</span>}
-                        </div>
-                        <div className="flex items-center gap-2 w-full sm:w-auto">
-                          <Button variant="hero" size="lg" onClick={() => handleSearch()} disabled={!searchQuery.trim() || isRecording || isProcessing || isInterpretingSearch || loadingLocation} className="flex-1 sm:flex-initial min-w-[120px] text-base font-semibold">
-                            {isInterpretingSearch ? <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Procesando...
-                              </> : 'Buscar'}
-                          </Button>
-                          <VoiceButton isRecording={isRecording} isProcessing={isProcessing} audioLevel={audioLevel} onStart={handleVoiceRecording} onStop={handleVoiceRecording} disabled={loadingLocation || isInterpretingSearch} />
-                        </div>
-                      </>}
+                      </div> : <div className="flex items-center gap-1.5 justify-center">
+                        <MapPin className="h-4 w-4 text-primary animate-bounce flex-shrink-0" />
+                        <span className="text-sm font-medium">Tu ubicación:</span>
+                        {municipality && sector ? <span className="text-sm font-medium truncate">{municipality}, {sector}</span> : municipality ? <span className="text-sm font-medium truncate">{municipality}</span> : <span className="text-sm font-medium truncate">Medellín</span>}
+                      </div>}
                   </div>
                 </div>
               </div>
