@@ -7,8 +7,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 import heroImage from "@/assets/hero-medellin.jpg";
 import { toast } from "sonner";
 import SearchOptions from './SearchOptions';
@@ -337,17 +335,33 @@ const Hero = () => {
                   </div>
                   
                   {/* Listing Type Selector */}
-                  <div className="flex items-center gap-4 px-2">
-                    <RadioGroup value={listingType} onValueChange={(value: "rent" | "sale") => setListingType(value)} className="flex gap-6">
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="rent" id="rent" />
-                        <Label htmlFor="rent" className="text-sm font-medium cursor-pointer">Arrendar</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="sale" id="sale" />
-                        <Label htmlFor="sale" className="text-sm font-medium cursor-pointer">Comprar</Label>
-                      </div>
-                    </RadioGroup>
+                  <div className="flex items-center gap-2 px-2">
+                    <div className="inline-flex rounded-lg border border-border bg-muted p-1 w-full">
+                      <button
+                        type="button"
+                        onClick={() => setListingType("rent")}
+                        className={cn(
+                          "flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all",
+                          listingType === "rent"
+                            ? "bg-background text-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        Arrendar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setListingType("sale")}
+                        className={cn(
+                          "flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all",
+                          listingType === "sale"
+                            ? "bg-background text-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        Comprar
+                      </button>
+                    </div>
                   </div>
 
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 pt-2 border-t">
@@ -398,16 +412,32 @@ const Hero = () => {
                 {isInterpretingSearch ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Buscar'}
               </Button>
             </div>
-            <RadioGroup value={listingType} onValueChange={(value: "rent" | "sale") => setListingType(value)} className="flex gap-4 justify-center">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="rent" id="rent-mobile" />
-                <Label htmlFor="rent-mobile" className="text-xs font-medium cursor-pointer">Arrendar</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="sale" id="sale-mobile" />
-                <Label htmlFor="sale-mobile" className="text-xs font-medium cursor-pointer">Comprar</Label>
-              </div>
-            </RadioGroup>
+            <div className="inline-flex rounded-lg border border-border bg-muted p-1 w-full">
+              <button
+                type="button"
+                onClick={() => setListingType("rent")}
+                className={cn(
+                  "flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-all",
+                  listingType === "rent"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Arrendar
+              </button>
+              <button
+                type="button"
+                onClick={() => setListingType("sale")}
+                className={cn(
+                  "flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-all",
+                  listingType === "sale"
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Comprar
+              </button>
+            </div>
           </div>
         </div>}
 
