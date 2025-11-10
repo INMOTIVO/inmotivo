@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { X, Navigation, Edit2, MapPin, Car } from 'lucide-react';
+import { X, Navigation, Edit2, MapPin, Car, Search } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { playNotificationSound } from '@/utils/notificationSound';
@@ -866,7 +866,7 @@ const NavigationMap = ({
                       }}
                     >
                       <div className="flex-1 min-w-0 flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
+                        <Search className="h-4 w-4 text-primary flex-shrink-0" />
                         <p className="text-sm font-medium leading-tight line-clamp-1">
                           {searchCriteria || 'Propiedades cerca'}
                         </p>
