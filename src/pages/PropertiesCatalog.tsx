@@ -269,41 +269,60 @@ const PropertiesCatalog = () => {
               )}
             </h1>
             {queryParam && (
-              isEditingQuery ? (
-                <div className="inline-flex items-center gap-2 px-3 md:px-4 py-2 bg-primary/10 rounded-full max-w-[90%] md:max-w-xl">
-                  <Search className="h-4 w-4 text-primary flex-shrink-0" />
-                  <Input
-                    value={editedQuery}
-                    onChange={(e) => setEditedQuery(e.target.value)}
-                    onKeyDown={handleKeyPress}
-                    placeholder="Describe tu búsqueda..."
-                    className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 h-7 px-0 text-xs md:text-sm font-semibold text-primary"
-                    autoFocus
-                  />
-                  <Button
-                    onClick={handleSaveQuery}
-                    size="icon"
-                    variant="ghost"
-                    className="h-7 w-7 flex-shrink-0 hover:bg-primary/20"
+              <div className="w-full max-w-2xl mx-auto">
+                {isEditingQuery ? (
+                  <div className="bg-card border-2 border-primary rounded-2xl p-4 shadow-lg">
+                    <div className="flex items-center gap-3 mb-3">
+                      <Search className="h-5 w-5 text-primary flex-shrink-0" />
+                      <span className="text-sm font-semibold text-foreground">Modificar búsqueda</span>
+                    </div>
+                    <Input
+                      value={editedQuery}
+                      onChange={(e) => setEditedQuery(e.target.value)}
+                      onKeyDown={handleKeyPress}
+                      placeholder="Ej: Apartamento 2 habitaciones en Laureles..."
+                      className="mb-3 text-sm"
+                      autoFocus
+                    />
+                    <div className="flex gap-2 justify-end">
+                      <Button
+                        onClick={handleCancelEdit}
+                        size="sm"
+                        variant="outline"
+                      >
+                        Cancelar
+                      </Button>
+                      <Button
+                        onClick={handleSaveQuery}
+                        size="sm"
+                        className="gap-2"
+                      >
+                        <Search className="h-4 w-4" />
+                        Buscar
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div 
+                    className="bg-card border border-border rounded-2xl p-4 hover:border-primary/50 transition-all cursor-pointer group shadow-sm hover:shadow-md" 
+                    onClick={handleEditQuery}
                   >
-                    <Search className="h-4 w-4 text-primary" />
-                  </Button>
-                  <Button
-                    onClick={handleCancelEdit}
-                    size="icon"
-                    variant="ghost"
-                    className="h-7 w-7 flex-shrink-0 hover:bg-destructive/20"
-                  >
-                    <X className="h-4 w-4 text-destructive" />
-                  </Button>
-                </div>
-              ) : (
-                <div className="inline-flex items-center gap-2 px-3 md:px-4 py-2 bg-primary/10 rounded-full max-w-[90%] group cursor-pointer hover:bg-primary/20 transition-colors" onClick={handleEditQuery}>
-                  <span className="text-xs md:text-sm text-muted-foreground whitespace-nowrap">Buscaste:</span>
-                  <span className="text-xs md:text-sm font-semibold text-primary truncate">"{queryParam}"</span>
-                  <Edit2 className="h-3.5 w-3.5 text-primary opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
-                </div>
-              )
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <Search className="h-5 w-5 text-primary flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs text-muted-foreground mb-1">Tu búsqueda:</p>
+                          <p className="text-sm font-semibold text-foreground truncate">"{queryParam}"</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 text-primary flex-shrink-0">
+                        <span className="text-sm font-medium hidden sm:inline">Editar</span>
+                        <Edit2 className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
           </div>
 
