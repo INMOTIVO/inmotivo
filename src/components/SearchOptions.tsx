@@ -127,7 +127,7 @@ const SearchOptions = ({
             </div>
             
             <div className="space-y-1.5 md:space-y-2">
-              <h3 className="text-lg md:text-2xl font-bold">Ver propiedades cerca</h3>
+              <h3 className="text-lg md:text-2xl font-bold">Ver propiedades</h3>
               <p className="text-xs md:text-base text-muted-foreground line-clamp-2">
                 {useGPSForFixedView 
                   ? "Explora propiedades a máximo 2km de tu ubicación actual."
