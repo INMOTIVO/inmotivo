@@ -68,22 +68,21 @@ const HomeMenu = () => {
             </div>
 
             {/* Hamburger Menu with Avatar */}
-            <Sheet open={isOpen} onOpenChange={setIsOpen}>
-              <SheetTrigger asChild>
-                <div className="flex items-center gap-2 px-2 py-1.5 rounded-full bg-background border border-border hover:bg-accent/50 transition-colors cursor-pointer">
-                  <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Abrir menú">
+            <div className="flex items-center gap-3">
+              {user && (
+                <Avatar className="h-10 w-10 cursor-pointer border-2 border-border hover:border-primary transition-colors shadow-sm" onClick={() => navigate("/profile")}>
+                  <AvatarImage src={userProfile?.avatar_url} alt={userProfile?.full_name || "Usuario"} />
+                  <AvatarFallback className="bg-primary text-primary-foreground text-sm font-semibold">
+                    {getInitials(userProfile?.full_name)}
+                  </AvatarFallback>
+                </Avatar>
+              )}
+              <Sheet open={isOpen} onOpenChange={setIsOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="outline" size="icon" className="h-10 w-10 rounded-full shadow-sm hover:bg-accent hover:border-primary transition-colors" aria-label="Abrir menú">
                     <Menu className="h-5 w-5" />
                   </Button>
-                  {user && (
-                    <Avatar className="h-8 w-8 cursor-pointer" onClick={() => navigate("/profile")}>
-                      <AvatarImage src={userProfile?.avatar_url} alt={userProfile?.full_name || "Usuario"} />
-                      <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
-                        {getInitials(userProfile?.full_name)}
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
-                </div>
-              </SheetTrigger>
+                </SheetTrigger>
               <SheetContent side="right" className="w-[300px] z-[200]">
                 <SheetHeader>
                   <SheetTitle className="text-left">Menú</SheetTitle>
@@ -123,6 +122,7 @@ const HomeMenu = () => {
                 </div>
               </SheetContent>
             </Sheet>
+            </div>
           </div>
         </div>
       </nav>
