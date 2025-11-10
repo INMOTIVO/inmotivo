@@ -66,13 +66,13 @@ export const useVoiceRecording = () => {
         const blob = new Blob(audioChunksRef.current, { type: mimeType });
         console.log('[Voz Manual] Blob creado:', blob.size, 'bytes, tipo:', blob.type);
 
-        // Validar tamaño mínimo (al menos 2KB de audio)
-        if (blob.size < 2000) {
+        // Validar tamaño mínimo reducido para móvil (500 bytes)
+        if (blob.size < 500) {
           console.error('[Voz Manual] Audio muy corto:', blob.size);
           setIsProcessing(false);
           stream.getTracks().forEach(t => t.stop());
-          if (rejectRef.current) rejectRef.current(new Error('Audio demasiado corto, habla más'));
-          toast.error('Audio muy corto, intenta de nuevo hablando más');
+          if (rejectRef.current) rejectRef.current(new Error('Audio demasiado corto'));
+          toast.error('Audio muy corto, habla más');
           return;
         }
 
@@ -118,26 +118,27 @@ export const useVoiceRecording = () => {
   }, []);
 
   const stopRecording = useCallback((): Promise<string> => {
+    setIsProcessing(true);
     return new Promise((resolve, reject) => {
       resolveRef.current = resolve;
       rejectRef.current = reject;
 
       if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-        console.log('[Voz Manual] Deteniendo grabación manualmente...');
+        console.log('[Voz Manual] Deteniendo grabación...');
         try {
-          // Detener inmediatamente sin esperar más chunks
           mediaRecorderRef.current.stop();
           
-          // También detener el stream inmediatamente
           if (streamRef.current) {
             streamRef.current.getTracks().forEach(track => track.stop());
           }
         } catch (e) {
           console.error('[Voz Manual] Error al detener:', e);
+          setIsProcessing(false);
           reject(e);
         }
       } else {
         console.warn('[Voz Manual] No hay grabación activa');
+        setIsProcessing(false);
         reject(new Error('No hay grabación activa'));
       }
     });

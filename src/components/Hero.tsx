@@ -178,17 +178,18 @@ const Hero = () => {
   const handleStopVoiceRecording = async () => {
     try {
       const transcript = await stopRecording();
-      console.log('[Voz] Final transcript (hero):', transcript);
-      if (transcript && transcript.length > 0) {
+      console.log('[Voz] Transcripción:', transcript);
+      
+      if (transcript && transcript.trim().length > 0) {
         setSearchQuery(transcript);
-        await handleSearch(transcript);
+        toast.success('Listo');
       } else {
-        toast.error('No se capturó audio, intenta de nuevo');
+        toast.error('No se detectó audio');
       }
     } catch (error: any) {
-      console.error('Error with voice recording:', error);
-      if (error.message !== 'Cancelled by user') {
-        toast.error('Error al grabar, intenta de nuevo');
+      console.error('[Voz] Error:', error);
+      if (error.message !== 'Cancelled by user' && error.message !== 'No hay grabación activa') {
+        toast.error('Intenta de nuevo');
       }
     }
   };
