@@ -1,16 +1,40 @@
 import { useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 
-type Props = {
-  citySlug: string; // "medellin"
-  cityName: string; // "Medellín"
-  typeSlug: string; // "apartamentos" | "casas"
-  typeName: string; // "Apartamentos" | "Casas"
-  barrios?: string[]; // ["Poblado","Laureles",...]
+const cityMap: Record<string, { name: string; barrios: string[] }> = {
+  medellin: {
+    name: "Medellín",
+    barrios: ["El Poblado", "Laureles", "Envigado", "Belén", "Sabaneta"]
+  },
+  bogota: {
+    name: "Bogotá",
+    barrios: ["Chapinero", "Usaquén", "Suba", "Kennedy", "Engativá"]
+  },
+  cali: {
+    name: "Cali",
+    barrios: ["Granada", "San Fernando", "Ciudad Jardín", "El Peñón"]
+  }
 };
 
-export default function LandingCityType({ citySlug, cityName, typeSlug, typeName, barrios = [] }: Props) {
-  const canonical = `https://inmotivo.com/${citySlug}/arriendo/${typeSlug}`;
+const typeMap: Record<string, string> = {
+  apartamentos: "Apartamentos",
+  casas: "Casas",
+  apartamento: "Apartamento",
+  casa: "Casa"
+};
+
+export default function LandingCityType() {
+  const { city, type } = useParams<{ city?: string; type?: string }>();
+  
+  const citySlug = city || "medellin";
+  const typeSlug = type || "apartamentos";
+  
+  const cityData = cityMap[citySlug] || { name: citySlug, barrios: [] };
+  const cityName = cityData.name;
+  const typeName = typeMap[typeSlug] || typeSlug;
+  const barrios = cityData.barrios;
+
+  const canonical = `https://inmotivo.com/ciudad/${citySlug}${typeSlug ? `/${typeSlug}` : ""}`;
 
   useEffect(() => {
     document.title = `${typeName} en arriendo en ${cityName} | INMOTIVO`;
