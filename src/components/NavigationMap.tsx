@@ -190,7 +190,8 @@ const NavigationMap = ({
           lon: userLocation.lng,
           radius: searchRadius,
           priceMax: filters.maxPrice,
-          type: filters.propertyType || 'all'
+          type: filters.propertyType || 'all',
+          listingType: filters.listingType || 'rent'
         });
         
         return geojson;

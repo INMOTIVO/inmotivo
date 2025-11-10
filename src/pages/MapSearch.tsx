@@ -12,6 +12,7 @@ const MapSearch = () => {
   const navigate = useNavigate();
   const typeParam = searchParams.get('type');
   const queryParam = searchParams.get('query');
+  const listingTypeParam = searchParams.get('listingType') || 'rent';
   
   const [filters, setFilters] = useState<{
     radius: number;
@@ -19,9 +20,11 @@ const MapSearch = () => {
     maxPrice?: number;
     bedrooms?: number;
     propertyType?: string;
+    listingType?: 'rent' | 'sale';
   }>({
     radius: 2,
     propertyType: typeParam || undefined,
+    listingType: listingTypeParam as 'rent' | 'sale',
   });
 
   useEffect(() => {

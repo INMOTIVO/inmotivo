@@ -59,6 +59,7 @@ const NearbyProperties = ({ filters, searchCriteria }: NearbyPropertiesProps) =>
         .from('properties')
         .select('*')
         .eq('status', 'available')
+        .eq('listing_type', filters.listingType || 'rent')
         .lte('price', 25000000) // Max price 25M
         .order('created_at', { ascending: false }) // Ordenar para obtener variedad
         .limit(20); // Obtener más propiedades para tener variedad

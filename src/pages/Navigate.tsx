@@ -18,6 +18,7 @@ const Navigate = () => {
   const destLat = searchParams.get('destLat');
   const destLng = searchParams.get('destLng');
   const destName = searchParams.get('destName');
+  const listingType = searchParams.get('listingType') || 'rent';
   const isDirectNavigation = !!(destLat && destLng); // Flag for direct property navigation
   
   // Initialize destination and isNavigating immediately if direct navigation
@@ -34,7 +35,7 @@ const Navigate = () => {
   
   const [isNavigating, setIsNavigating] = useState(isDirectNavigation);
   const [searchCriteria, setSearchCriteria] = useState(destName || '');
-  const [filters, setFilters] = useState<any>({});
+  const [filters, setFilters] = useState<any>({ listingType });
   const [isInitializing, setIsInitializing] = useState(!isDirectNavigation); // Start initializing for GPS mode
   
   // Get initial query from URL params

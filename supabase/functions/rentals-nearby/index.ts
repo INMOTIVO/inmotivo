@@ -18,6 +18,7 @@ serve(async (req) => {
     const radius = parseInt(url.searchParams.get("radius") || "300");
     const priceMax = parseFloat(url.searchParams.get("priceMax") || "0");
     const type = url.searchParams.get("type") || "all";
+    const listingType = url.searchParams.get("listingType") || "rent";
 
     if (isNaN(lat) || isNaN(lon)) {
       return new Response(
@@ -35,7 +36,8 @@ serve(async (req) => {
     let query = supabase
       .from("properties")
       .select("*")
-      .eq("status", "available");
+      .eq("status", "available")
+      .eq("listing_type", listingType);
 
     // Filter by type
     if (type !== "all") {

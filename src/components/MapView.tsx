@@ -60,6 +60,7 @@ interface MapViewProps {
     maxPrice?: number;
     bedrooms?: number;
     propertyType?: string;
+    listingType?: 'rent' | 'sale';
   };
 }
 
@@ -143,6 +144,7 @@ const MapView: React.FC<MapViewProps> = ({ radius, filters }) => {
         .from('properties')
         .select('*')
         .eq('status', 'available')
+        .eq('listing_type', filters.listingType || 'rent')
         .lte('price', 25000000) // Max price 25M
         .not('latitude', 'is', null)
         .not('longitude', 'is', null);

@@ -9,6 +9,7 @@ interface NearbyParams {
   radius: number;
   priceMax?: number;
   type?: string;
+  listingType?: string;
 }
 
 interface RouteParams {
@@ -26,6 +27,7 @@ export const fetchNearbyProperties = async (params: NearbyParams) => {
       radius: params.radius.toString(),
       ...(params.priceMax && { priceMax: params.priceMax.toString() }),
       ...(params.type && { type: params.type }),
+      ...(params.listingType && { listingType: params.listingType }),
     });
 
     const response = await fetch(

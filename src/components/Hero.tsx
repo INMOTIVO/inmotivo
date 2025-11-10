@@ -7,6 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import heroImage from "@/assets/hero-medellin.jpg";
 import { toast } from "sonner";
 import SearchOptions from './SearchOptions';
@@ -20,6 +22,7 @@ const Hero = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
+  const [listingType, setListingType] = useState<"rent" | "sale">("rent");
   const [location, setLocation] = useState("Medellín");
   const [municipality, setMunicipality] = useState("");
   const [sector, setSector] = useState("");
@@ -284,7 +287,16 @@ const Hero = () => {
         </div>
 
         <div className="relative z-10 container mx-auto px-4 py-4 flex-1 flex items-center justify-center overflow-hidden">
-          <SearchOptions searchQuery={searchQuery} municipality={municipality || "Medellín"} sector={sector} onSearchChange={newQuery => setSearchQuery(newQuery)} disableGPSNavigation={useCustomLocation} useGPSForFixedView={useGPSForSearch} searchLocation={extractedFilters?.location} />
+          <SearchOptions 
+            searchQuery={searchQuery} 
+            municipality={municipality || "Medellín"} 
+            sector={sector} 
+            listingType={listingType}
+            onSearchChange={newQuery => setSearchQuery(newQuery)} 
+            disableGPSNavigation={useCustomLocation} 
+            useGPSForFixedView={useGPSForSearch} 
+            searchLocation={extractedFilters?.location} 
+          />
         </div>
       </section>;
   }
@@ -323,6 +335,21 @@ const Hero = () => {
                     }
                   }} />
                   </div>
+                  
+                  {/* Listing Type Selector */}
+                  <div className="flex items-center gap-4 px-2">
+                    <RadioGroup value={listingType} onValueChange={(value: "rent" | "sale") => setListingType(value)} className="flex gap-6">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="rent" id="rent" />
+                        <Label htmlFor="rent" className="text-sm font-medium cursor-pointer">Arrendar</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="sale" id="sale" />
+                        <Label htmlFor="sale" className="text-sm font-medium cursor-pointer">Comprar</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 pt-2 border-t">
                     {loadingLocation ? <div className="flex items-center gap-2">
                         <Loader2 className="h-4 w-4 text-muted-foreground animate-spin" />
@@ -357,7 +384,7 @@ const Hero = () => {
 
       {/* Fixed search bar for mobile when scrolling */}
       {isMobile && showFixedSearch && <div className="fixed bottom-6 left-0 right-0 z-50 bg-white shadow-2xl border-t border-border/50 animate-in slide-in-from-bottom-5 duration-300">
-          <div className="p-3">
+          <div className="p-3 space-y-2">
             <div className="flex items-center gap-2">
               <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
               <Input placeholder="¿Qué buscas?" className="flex-1 border-input text-base leading-normal min-h-[44px] shadow-lg border-2" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onKeyDown={e => {
@@ -371,6 +398,16 @@ const Hero = () => {
                 {isInterpretingSearch ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Buscar'}
               </Button>
             </div>
+            <RadioGroup value={listingType} onValueChange={(value: "rent" | "sale") => setListingType(value)} className="flex gap-4 justify-center">
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="rent" id="rent-mobile" />
+                <Label htmlFor="rent-mobile" className="text-xs font-medium cursor-pointer">Arrendar</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="sale" id="sale-mobile" />
+                <Label htmlFor="sale-mobile" className="text-xs font-medium cursor-pointer">Comprar</Label>
+              </div>
+            </RadioGroup>
           </div>
         </div>}
 

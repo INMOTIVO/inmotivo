@@ -33,6 +33,7 @@ const PropertiesCatalog = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const queryParam = searchParams.get('query');
+  const listingTypeParam = searchParams.get('listingType') || 'rent';
   const userLat = searchParams.get('lat');
   const userLng = searchParams.get('lng');
   const radius = searchParams.get('radius');
@@ -99,12 +100,13 @@ const PropertiesCatalog = () => {
 
   // Fetch properties based on filters
   const { data: properties, isLoading: isLoadingProperties } = useQuery({
-    queryKey: ['catalog-properties', filters, userLat, userLng, radius],
+    queryKey: ['catalog-properties', filters, userLat, userLng, radius, listingTypeParam],
     queryFn: async () => {
       let query = supabase
         .from('properties')
         .select('*')
         .eq('status', 'available')
+        .eq('listing_type', listingTypeParam)
         .lte('price', 25000000); // Max price 25M
 
       if (filters.minPrice) query = query.gte('price', filters.minPrice);
@@ -254,9 +256,9 @@ const PropertiesCatalog = () => {
 
           <div className="mb-6 text-center px-4">
             <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-3">
-              Propiedades que <span className="text-primary">coinciden</span>
+              Propiedades para <span className="text-primary">{listingTypeParam === 'rent' ? 'arrendar' : 'comprar'}</span>
               <br className="hidden sm:block" />
-              <span className="sm:inline"> </span>con tu búsqueda
+              <span className="sm:inline"> </span>que coinciden con tu búsqueda
               {userLat && userLng && radius && (
                 <span className="block text-lg md:text-xl text-muted-foreground mt-2">
                   a máximo {parseFloat(radius) / 1000} km de tu ubicación

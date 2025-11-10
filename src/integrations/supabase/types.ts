@@ -341,6 +341,7 @@ export type Database = {
           id: string
           images: Json | null
           latitude: number | null
+          listing_type: string | null
           longitude: number | null
           neighborhood: string | null
           owner_id: string | null
@@ -370,6 +371,7 @@ export type Database = {
           id?: string
           images?: Json | null
           latitude?: number | null
+          listing_type?: string | null
           longitude?: number | null
           neighborhood?: string | null
           owner_id?: string | null
@@ -399,6 +401,7 @@ export type Database = {
           id?: string
           images?: Json | null
           latitude?: number | null
+          listing_type?: string | null
           longitude?: number | null
           neighborhood?: string | null
           owner_id?: string | null

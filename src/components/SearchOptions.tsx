@@ -9,6 +9,7 @@ interface SearchOptionsProps {
   searchQuery: string;
   municipality: string;
   sector: string;
+  listingType?: "rent" | "sale";
   onSearchChange?: (newQuery: string) => void;
   disableGPSNavigation?: boolean;
   useGPSForFixedView?: boolean;
@@ -18,6 +19,7 @@ const SearchOptions = ({
   searchQuery,
   municipality,
   sector,
+  listingType = "rent",
   onSearchChange,
   disableGPSNavigation = false,
   useGPSForFixedView = false,
@@ -45,29 +47,29 @@ const SearchOptions = ({
         navigator.geolocation.getCurrentPosition(
           (position) => {
             const { latitude, longitude } = position.coords;
-            navigate(`/catalogo?query=${encodeURIComponent(editedQuery)}&lat=${latitude}&lng=${longitude}&radius=2000`);
+            navigate(`/catalogo?query=${encodeURIComponent(editedQuery)}&lat=${latitude}&lng=${longitude}&radius=2000&listingType=${listingType}`);
           },
           (error) => {
             console.error('Error getting location:', error);
             toast.error("No se pudo obtener tu ubicación");
             // Fallback: navegar sin ubicación
-            navigate(`/catalogo?query=${encodeURIComponent(editedQuery)}`);
+            navigate(`/catalogo?query=${encodeURIComponent(editedQuery)}&listingType=${listingType}`);
           }
         );
       } else {
         toast.error("Tu navegador no soporta geolocalización");
-        navigate(`/catalogo?query=${encodeURIComponent(editedQuery)}`);
+        navigate(`/catalogo?query=${encodeURIComponent(editedQuery)}&listingType=${listingType}`);
       }
     } else {
       // Navegar sin ubicación GPS, solo con el query de búsqueda
       // La ubicación se extraerá del texto mediante el edge function
-      navigate(`/catalogo?query=${encodeURIComponent(editedQuery)}`);
+      navigate(`/catalogo?query=${encodeURIComponent(editedQuery)}&listingType=${listingType}`);
     }
   };
   const handleGPSNavigation = () => {
     setIsStartingNav(true);
     // Navegar inmediatamente sin delay
-    navigate(`/navegacion?query=${encodeURIComponent(editedQuery)}&autostart=true`);
+    navigate(`/navegacion?query=${encodeURIComponent(editedQuery)}&autostart=true&listingType=${listingType}`);
   };
   return <div className="w-full max-w-4xl mx-auto space-y-1 md:space-y-2 animate-fade-in px-4">
       <div className="text-center space-y-1">
