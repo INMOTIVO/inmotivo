@@ -6,7 +6,8 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import PropertyCard from '@/components/PropertyCard';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { ArrowLeft, Loader2, Edit2, Search, X } from 'lucide-react';
 import { FunctionsHttpError } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
@@ -37,6 +38,8 @@ const PropertiesCatalog = () => {
   const radius = searchParams.get('radius');
   const [filters, setFilters] = useState<any>({});
   const [isLoadingFilters, setIsLoadingFilters] = useState(true);
+  const [isEditingQuery, setIsEditingQuery] = useState(false);
+  const [editedQuery, setEditedQuery] = useState(queryParam || '');
 
   // Interpret search query to get filters
   useEffect(() => {
@@ -204,6 +207,37 @@ const PropertiesCatalog = () => {
 
   const isLoading = isLoadingFilters || isLoadingProperties;
 
+  const handleEditQuery = () => {
+    setEditedQuery(queryParam || '');
+    setIsEditingQuery(true);
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingQuery(false);
+    setEditedQuery(queryParam || '');
+  };
+
+  const handleSaveQuery = () => {
+    if (editedQuery.trim()) {
+      const params = new URLSearchParams();
+      params.set('query', editedQuery.trim());
+      if (userLat) params.set('lat', userLat);
+      if (userLng) params.set('lng', userLng);
+      if (radius) params.set('radius', radius);
+      navigate(`/catalogo?${params.toString()}`);
+      setIsEditingQuery(false);
+      toast.success('Búsqueda actualizada');
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSaveQuery();
+    } else if (e.key === 'Escape') {
+      handleCancelEdit();
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -235,10 +269,41 @@ const PropertiesCatalog = () => {
               )}
             </h1>
             {queryParam && (
-            <div className="inline-flex items-center gap-2 px-3 md:px-4 py-2 bg-primary/10 rounded-full max-w-[90%]">
-              <span className="text-xs md:text-sm text-muted-foreground whitespace-nowrap">Buscaste:</span>
-              <span className="text-xs md:text-sm font-semibold text-primary truncate">"{queryParam}"</span>
-            </div>
+              isEditingQuery ? (
+                <div className="inline-flex items-center gap-2 px-3 md:px-4 py-2 bg-primary/10 rounded-full max-w-[90%] md:max-w-xl">
+                  <Search className="h-4 w-4 text-primary flex-shrink-0" />
+                  <Input
+                    value={editedQuery}
+                    onChange={(e) => setEditedQuery(e.target.value)}
+                    onKeyDown={handleKeyPress}
+                    placeholder="Describe tu búsqueda..."
+                    className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 h-7 px-0 text-xs md:text-sm font-semibold text-primary"
+                    autoFocus
+                  />
+                  <Button
+                    onClick={handleSaveQuery}
+                    size="icon"
+                    variant="ghost"
+                    className="h-7 w-7 flex-shrink-0 hover:bg-primary/20"
+                  >
+                    <Search className="h-4 w-4 text-primary" />
+                  </Button>
+                  <Button
+                    onClick={handleCancelEdit}
+                    size="icon"
+                    variant="ghost"
+                    className="h-7 w-7 flex-shrink-0 hover:bg-destructive/20"
+                  >
+                    <X className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="inline-flex items-center gap-2 px-3 md:px-4 py-2 bg-primary/10 rounded-full max-w-[90%] group cursor-pointer hover:bg-primary/20 transition-colors" onClick={handleEditQuery}>
+                  <span className="text-xs md:text-sm text-muted-foreground whitespace-nowrap">Buscaste:</span>
+                  <span className="text-xs md:text-sm font-semibold text-primary truncate">"{queryParam}"</span>
+                  <Edit2 className="h-3.5 w-3.5 text-primary opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                </div>
+              )
             )}
           </div>
 
