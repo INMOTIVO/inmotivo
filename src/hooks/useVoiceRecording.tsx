@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
+
 
 declare global {
   interface Window {
@@ -40,7 +40,7 @@ export const useVoiceRecording = () => {
         mimeType = 'audio/webm';
       }
 
-      const mr = new MediaRecorder(stream, { mimeType });
+      const mr = new MediaRecorder(stream, { mimeType, audioBitsPerSecond: 64000 });
       mediaRecorderRef.current = mr;
       audioChunksRef.current = [];
 
@@ -75,64 +75,37 @@ export const useVoiceRecording = () => {
           return;
         }
 
-        try {
-          setIsProcessing(true);
-          const reader = new FileReader();
-          reader.readAsDataURL(blob);
-          
-          reader.onloadend = async () => {
-            const base64 = reader.result?.toString().split(',')[1];
-            if (!base64) {
-              console.error('[Voz Manual] Error convirtiendo a base64');
-              setIsProcessing(false);
-              stream.getTracks().forEach(t => t.stop());
-              if (rejectRef.current) rejectRef.current(new Error('Base64 conversion failed'));
-              return;
+          try {
+            setIsProcessing(true);
+            console.log('[Voz Manual] Enviando blob directo (FormData) a transcribe-audio...');
+            const formData = new FormData();
+            formData.append('file', blob, 'audio.webm');
+            const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/transcribe-audio`, {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
+              body: formData,
+            });
+            if (!resp.ok) {
+              const t = await resp.text();
+              throw new Error(`Func error ${resp.status}: ${t}`);
             }
-
-            console.log('[Voz Manual] Base64 generado:', base64.length, 'chars');
-            console.log('[Voz Manual] Enviando a transcribe-audio...');
-
-            try {
-              const { data, error } = await supabase.functions.invoke('transcribe-audio', {
-                body: { audio: base64 }
-              });
-
-              if (error) {
-                console.error('[Voz Manual] Error de función:', error);
-                throw error;
-              }
-
-              if (data?.text) {
-                console.log('[Voz Manual] Transcripción exitosa:', data.text);
-                if (resolveRef.current) resolveRef.current(data.text);
-              } else {
-                throw new Error('No se recibió transcripción');
-              }
-            } catch (e: any) {
-              console.error('[Voz Manual] Error en transcripción:', e);
-              if (rejectRef.current) rejectRef.current(e);
-            } finally {
-              setIsProcessing(false);
-              stream.getTracks().forEach(t => t.stop());
+            const data = await resp.json();
+            if (data?.text) {
+              console.log('[Voz Manual] Transcripción exitosa:', data.text);
+              if (resolveRef.current) resolveRef.current(data.text);
+            } else {
+              throw new Error('No se recibió transcripción');
             }
-          };
-
-          reader.onerror = () => {
-            console.error('[Voz Manual] Error en FileReader');
+          } catch (e: any) {
+            console.error('[Voz Manual] Error en transcripción:', e);
+            if (rejectRef.current) rejectRef.current(e);
+          } finally {
             setIsProcessing(false);
             stream.getTracks().forEach(t => t.stop());
-            if (rejectRef.current) rejectRef.current(new Error('FileReader error'));
-          };
-        } catch (e) {
-          console.error('[Voz Manual] Error general:', e);
-          setIsProcessing(false);
-          stream.getTracks().forEach(t => t.stop());
-          if (rejectRef.current) rejectRef.current(e);
-        }
+          }
       };
 
-      mr.start(100);
+      mr.start(500);
       setIsRecording(true);
 
     } catch (e: any) {
@@ -272,7 +245,7 @@ export const useVoiceRecording = () => {
           mimeType = 'audio/webm';
         }
 
-        const mr = new MediaRecorder(stream, { mimeType });
+        const mr = new MediaRecorder(stream, { mimeType, audioBitsPerSecond: 64000 });
         mediaRecorderRef.current = mr;
         audioChunksRef.current = [];
 
@@ -306,70 +279,44 @@ export const useVoiceRecording = () => {
           }
 
           try {
-            const reader = new FileReader();
-            reader.readAsDataURL(blob);
-            
-            reader.onloadend = async () => {
-              const base64 = reader.result?.toString().split(',')[1];
-              if (!base64) {
-                console.error('[Voz Backend] Error convirtiendo a base64');
-                setIsProcessing(false);
-                stream.getTracks().forEach(t => t.stop());
-                return reject(new Error('Base64 conversion failed'));
-              }
-
-              console.log('[Voz Backend] Base64 generado:', base64.length, 'chars');
-              console.log('[Voz Backend] Enviando a transcribe-audio...');
-
-              try {
-                const { data, error } = await supabase.functions.invoke('transcribe-audio', {
-                  body: { audio: base64 }
-                });
-
-                if (error) {
-                  console.error('[Voz Backend] Error de función:', error);
-                  throw error;
-                }
-
-                if (data?.text) {
-                  console.log('[Voz Backend] Transcripción exitosa:', data.text);
-                  resolve(data.text);
-                } else {
-                  throw new Error('No se recibió transcripción');
-                }
-              } catch (e: any) {
-                console.error('[Voz Backend] Error en transcripción:', e);
-                reject(e);
-              } finally {
-                setIsProcessing(false);
-                stream.getTracks().forEach(t => t.stop());
-              }
-            };
-
-            reader.onerror = () => {
-              console.error('[Voz Backend] Error en FileReader');
-              setIsProcessing(false);
-              stream.getTracks().forEach(t => t.stop());
-              reject(new Error('FileReader error'));
-            };
+            console.log('[Voz Backend] Enviando blob directo (FormData) a transcribe-audio...');
+            const formData = new FormData();
+            formData.append('file', blob, 'audio.webm');
+            const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/transcribe-audio`, {
+              method: 'POST',
+              headers: { Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}` },
+              body: formData,
+            });
+            if (!resp.ok) {
+              const t = await resp.text();
+              throw new Error(`Func error ${resp.status}: ${t}`);
+            }
+            const data = await resp.json();
+            if (data?.text) {
+              console.log('[Voz Backend] Transcripción exitosa:', data.text);
+              resolve(data.text);
+            } else {
+              throw new Error('No se recibió transcripción');
+            }
           } catch (e) {
-            console.error('[Voz Backend] Error general:', e);
+            console.error('[Voz Backend] Error en transcripción:', e);
+            reject(e);
+          } finally {
             setIsProcessing(false);
             stream.getTracks().forEach(t => t.stop());
-            reject(e);
           }
         };
 
         // Grabar por al menos 3 segundos antes de auto-detener
-        mr.start(100); // Capturar chunks cada 100ms
+        mr.start(500); // Capturar chunks cada 500ms
         
-        // Auto-detener después de 5 segundos
+        // Auto-detener después de 30 segundos (seguridad)
         setTimeout(() => {
           if (mr.state === 'recording') {
-            console.log('[Voz Backend] Auto-deteniendo después de 5s');
+            console.log('[Voz Backend] Auto-deteniendo después de 30s');
             try { mr.stop(); } catch {}
           }
-        }, 5000);
+        }, 30000);
 
       } catch (e: any) {
         console.error('[Voz Backend] Error al iniciar:', e);

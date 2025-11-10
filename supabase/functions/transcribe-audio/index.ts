@@ -38,28 +38,36 @@ serve(async (req) => {
   }
 
   try {
-    const { audio } = await req.json();
-
-    if (!audio) {
-      throw new Error("No se proporcionó audio");
-    }
-
     const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
     if (!OPENAI_API_KEY) {
       throw new Error("OPENAI_API_KEY no configurada");
     }
 
-    // Convertir base64 a binary de forma eficiente
-    const bytes = processBase64Chunks(audio);
+    const contentType = req.headers.get("content-type") || "";
+    let blob: Blob | null = null;
 
-    // Crear FormData con el audio
+    if (contentType.includes("multipart/form-data")) {
+      const form = await req.formData();
+      const file = form.get("file");
+      if (file && file instanceof Blob) {
+        blob = file as Blob;
+      }
+    } else {
+      const { audio } = await req.json();
+      if (audio) {
+        const bytes = processBase64Chunks(audio);
+        blob = new Blob([bytes], { type: "audio/webm" });
+      }
+    }
+
+    if (!blob) {
+      throw new Error("No se proporcionó audio");
+    }
+
     const formData = new FormData();
-    const blob = new Blob([bytes], { type: "audio/webm" });
     formData.append("file", blob, "audio.webm");
     formData.append("model", "whisper-1");
-    // OpenAI exige ISO-639-1, por eso usamos "es" (no regional)
     formData.append("language", "es");
-    // Hint para mantener nombres/lugares colombianos sin normalizar
     formData.append("prompt", "Transcribe literalmente en español colombiano. No normalices números ni cambies nombres propios o lugares. Contexto inmobiliario: apartamento, casa, habitaciones, baños, parqueadero, arriendo, venta, millones, Medellín, Envigado, Sabaneta, Itagüí, Laureles, Poblado, Belén.");
 
     const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
@@ -76,7 +84,7 @@ serve(async (req) => {
 
     const result = await response.json();
 
-    console.log("Transcripción completada (whisper)", { requested_lang: "es-CO" });
+    console.log("Transcripción completada (whisper)");
 
     return new Response(
       JSON.stringify({ text: result.text }),
