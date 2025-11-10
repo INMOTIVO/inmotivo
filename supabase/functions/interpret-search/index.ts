@@ -30,7 +30,18 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: "Extrae filtros de búsqueda de propiedades. Si no es una búsqueda de inmuebles, marca is_valid=false."
+            content: `Eres un asistente que extrae filtros de búsqueda de propiedades inmobiliarias.
+
+PALABRAS CLAVE VÁLIDAS que indican búsqueda de propiedades:
+- Tipos de inmuebles: apartamento, casa, apartaestudio, local, locales, bodega, bodegas, oficina, loft, penthouse, finca, lote
+- Características: habitación, habitaciones, alcobas, alcoba, cuarto, cuartos, pieza, piezas, baño, baños, sala, comedor, cocina, patio, balcón, terraza, garaje, parqueadero
+- Acciones: arrendar, arriendo, alquilar, alquiler, comprar, compra, venta, vender
+- Ubicaciones: barrio, sector, zona, cerca de, en
+
+Si el texto del usuario contiene CUALQUIERA de estas palabras, marca is_valid=true.
+Si el texto NO menciona ninguna de estas palabras, marca is_valid=false.
+
+Extrae ubicación, precio, habitaciones y tipo de propiedad cuando se mencionen.`
           },
           {
             role: "user",
@@ -72,8 +83,8 @@ serve(async (req) => {
                   },
                   propertyType: {
                     type: "string",
-                    enum: ["all", "apartment", "house", "commercial", "warehouse", "studio"],
-                    description: "Tipo de propiedad"
+                    enum: ["all", "apartment", "house", "commercial", "warehouse", "studio", "room", "office"],
+                    description: "apartment=apartamento, house=casa, studio=apartaestudio, commercial=local, warehouse=bodega, room=habitación, office=oficina, all=todos"
                   }
                 },
                 required: ["is_valid"],
