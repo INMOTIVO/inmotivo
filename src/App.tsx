@@ -17,6 +17,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import CreateProperty from "./pages/CreateProperty";
 import Favorites from "./pages/Favorites";
 import TenantProfile from "./pages/TenantProfile";
+import LandingCityType from "./pages/LandingCityType";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,6 +42,9 @@ const AppRoutes = () => {
       <Route path="/create-property" element={<CreateProperty />} />
       <Route path="/edit-property/:id" element={<CreateProperty />} />
       <Route path="/marketing-preview" element={<AdCreativesPreview />} />
+      <Route path="/ciudad/:city" element={<LandingCityType />} />
+      <Route path="/ciudad/:city/:type" element={<LandingCityType />} />
+      <Route path="/tipo/:type" element={<LandingCityType />} />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
     </Routes>
