@@ -30,18 +30,11 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `Eres un asistente que extrae filtros de búsqueda de propiedades inmobiliarias.
+            content: `Extrae filtros de búsqueda inmobiliaria. 
 
-PALABRAS CLAVE VÁLIDAS que indican búsqueda de propiedades:
-- Tipos de inmuebles: apartamento, casa, apartaestudio, local, locales, bodega, bodegas, oficina, loft, penthouse, finca, lote
-- Características: habitación, habitaciones, alcobas, alcoba, cuarto, cuartos, pieza, piezas, baño, baños, sala, comedor, cocina, patio, balcón, terraza, garaje, parqueadero
-- Acciones: arrendar, arriendo, alquilar, alquiler, comprar, compra, venta, vender
-- Ubicaciones: barrio, sector, zona, cerca de, en
+VÁLIDO si contiene: apartamento, casa, local, bodega, oficina, habitación, alcoba, baño, sala, patio, balcón, arrendar, comprar, venta, barrio, zona.
 
-Si el texto del usuario contiene CUALQUIERA de estas palabras, marca is_valid=true.
-Si el texto NO menciona ninguna de estas palabras, marca is_valid=false.
-
-Extrae ubicación, precio, habitaciones y tipo de propiedad cuando se mencionen.`
+Extrae: ubicación, precio, habitaciones, tipo.`
           },
           {
             role: "user",
@@ -59,32 +52,32 @@ Extrae ubicación, precio, habitaciones y tipo de propiedad cuando se mencionen.
                 properties: {
                   is_valid: {
                     type: "boolean",
-                    description: "true si es búsqueda de inmuebles, false si no"
+                    description: "true si busca inmuebles"
                   },
                   location: {
                     type: "string",
-                    description: "Ubicación mencionada (departamento, municipio, sector, barrio)"
+                    description: "Ubicación"
                   },
                   radius: {
                     type: "number",
-                    description: "Radio en km (1-20). Default 5."
+                    description: "Radio km (1-20)"
                   },
                   minPrice: {
                     type: "number",
-                    description: "Precio mínimo COP"
+                    description: "Precio mín COP"
                   },
                   maxPrice: {
                     type: "number",
-                    description: "Precio máximo COP"
+                    description: "Precio máx COP"
                   },
                   bedrooms: {
                     type: "number",
-                    description: "Habitaciones mínimas"
+                    description: "Habitaciones mín"
                   },
                   propertyType: {
                     type: "string",
                     enum: ["all", "apartment", "house", "commercial", "warehouse", "studio", "room", "office"],
-                    description: "apartment=apartamento, house=casa, studio=apartaestudio, commercial=local, warehouse=bodega, room=habitación, office=oficina, all=todos"
+                    description: "Tipo de propiedad"
                   }
                 },
                 required: ["is_valid"],
