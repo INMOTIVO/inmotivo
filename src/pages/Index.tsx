@@ -2,10 +2,7 @@ import { useNavigate } from "react-router-dom";
 import HomeMenu from "@/components/HomeMenu";
 import Hero from "@/components/Hero";
 import HowItWorksVideo from "@/components/HowItWorksVideo";
-import PopularCities from "@/components/PopularCities";
 import PropertiesGrid from "@/components/PropertiesGrid";
-import CityTypeCards from "@/components/CityTypeCards";
-import MedellinBarriosCards from "@/components/MedellinBarriosCards";
 import CTASection from "@/components/CTASection";
 import Footer from "@/components/Footer";
 
@@ -16,10 +13,7 @@ const Index = () => {
       <main className="pt-16">
         <Hero />
         <HowItWorksVideo />
-        <PopularCities />
         <PropertiesGrid />
-        <CityTypeCards />
-        <MedellinBarriosCards />
         <CTASection />
       </main>
       <Footer className="px-0 py-px" />

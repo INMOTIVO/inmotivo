@@ -17,16 +17,6 @@ import AdminDashboard from "./pages/AdminDashboard";
 import CreateProperty from "./pages/CreateProperty";
 import Favorites from "./pages/Favorites";
 import TenantProfile from "./pages/TenantProfile";
-import MedellinAparts from "./pages/MedellinAparts";
-import SabanetaCasas from "./pages/SabanetaCasas";
-import ItaguiAparts from "./pages/ItaguiAparts";
-import EnvigadoAparts from "./pages/EnvigadoAparts";
-import BelloAparts from "./pages/BelloAparts";
-import MedellinPobladoAparts from "./pages/MedellinPobladoAparts";
-import MedellinLaurelesAparts from "./pages/MedellinLaurelesAparts";
-import MedellinBelenAparts from "./pages/MedellinBelenAparts";
-import MedellinEstadioAparts from "./pages/MedellinEstadioAparts";
-import MedellinBuenosAiresAparts from "./pages/MedellinBuenosAiresAparts";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -51,16 +41,6 @@ const AppRoutes = () => {
       <Route path="/create-property" element={<CreateProperty />} />
       <Route path="/edit-property/:id" element={<CreateProperty />} />
       <Route path="/marketing-preview" element={<AdCreativesPreview />} />
-      <Route path="/medellin/arriendo/apartamentos" element={<MedellinAparts />} />
-      <Route path="/medellin/arriendo/apartamentos/el-poblado" element={<MedellinPobladoAparts />} />
-      <Route path="/medellin/arriendo/apartamentos/laureles" element={<MedellinLaurelesAparts />} />
-      <Route path="/medellin/arriendo/apartamentos/belen" element={<MedellinBelenAparts />} />
-      <Route path="/medellin/arriendo/apartamentos/estadio" element={<MedellinEstadioAparts />} />
-      <Route path="/medellin/arriendo/apartamentos/buenos-aires" element={<MedellinBuenosAiresAparts />} />
-      <Route path="/sabaneta/arriendo/casas" element={<SabanetaCasas />} />
-      <Route path="/itagui/arriendo/apartamentos" element={<ItaguiAparts />} />
-      <Route path="/envigado/arriendo/apartamentos" element={<EnvigadoAparts />} />
-      <Route path="/bello/arriendo/apartamentos" element={<BelloAparts />} />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
     </Routes>
