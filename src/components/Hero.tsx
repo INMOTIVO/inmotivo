@@ -612,10 +612,10 @@ const Hero = () => {
 
                 <Button 
                   onClick={handleUseCustomLocation} 
-                  variant={customDepartment ? "default" : "outline"} 
+                  variant={customMunicipality ? "default" : "outline"} 
                   className={cn(
                     "w-full transition-all duration-300",
-                    customDepartment && "border-2 border-yellow-400"
+                    customMunicipality && "border-2 border-yellow-400"
                   )}
                 >
                   Buscar en otra ubicación
