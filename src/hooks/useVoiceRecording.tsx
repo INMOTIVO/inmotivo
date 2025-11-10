@@ -66,12 +66,13 @@ export const useVoiceRecording = () => {
         const blob = new Blob(audioChunksRef.current, { type: mimeType });
         console.log('[Voz Manual] Blob creado:', blob.size, 'bytes, tipo:', blob.type);
 
-        // Validar tamaño mínimo reducido a 1KB
-        if (blob.size < 1000) {
+        // Validar tamaño mínimo (al menos 2KB de audio)
+        if (blob.size < 2000) {
           console.error('[Voz Manual] Audio muy corto:', blob.size);
           setIsProcessing(false);
           stream.getTracks().forEach(t => t.stop());
-          if (rejectRef.current) rejectRef.current(new Error('Audio too short'));
+          if (rejectRef.current) rejectRef.current(new Error('Audio demasiado corto, habla más'));
+          toast.error('Audio muy corto, intenta de nuevo hablando más');
           return;
         }
 
@@ -124,13 +125,20 @@ export const useVoiceRecording = () => {
       if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
         console.log('[Voz Manual] Deteniendo grabación manualmente...');
         try {
+          // Detener inmediatamente sin esperar más chunks
           mediaRecorderRef.current.stop();
+          
+          // También detener el stream inmediatamente
+          if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop());
+          }
         } catch (e) {
           console.error('[Voz Manual] Error al detener:', e);
           reject(e);
         }
       } else {
-        reject(new Error('No recording in progress'));
+        console.warn('[Voz Manual] No hay grabación activa');
+        reject(new Error('No hay grabación activa'));
       }
     });
   }, []);
