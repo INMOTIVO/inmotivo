@@ -1,3 +1,3 @@
 User-agent: *
 Allow: /
-Sitemap: https://inmotivo.com/sitemap.xml
+Sitemap: https://inmotivo.com/sitemap_index.xml

@@ -5,7 +5,7 @@ const Footer = ({ className }: { className?: string }) => {
   const navigate = useNavigate();
   return <footer className={cn("bg-foreground text-background py-6", className)}>
       <div className="container mx-auto px-4">
-        <div className="flex flex-col md:grid md:grid-cols-5 gap-4 md:gap-6 mb-4 md:mb-6">
+        <div className="flex flex-col md:grid md:grid-cols-6 gap-4 md:gap-6 mb-4 md:mb-6">
           {/* Brand */}
           <div className="space-y-4 flex flex-col items-center md:items-start text-center md:text-left">
             <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
@@ -25,13 +25,29 @@ const Footer = ({ className }: { className?: string }) => {
           {/* Popular Zones */}
           <div className="hidden md:block">
             <h3 className="font-semibold text-lg mb-4">Zonas Populares</h3>
-            <ul className="space-y-2 text-background/70">
-              <li><Link to="/medellin/arriendo/apartamentos" className="hover:text-primary transition-colors">Apartamentos en Medellín</Link></li>
-              <li><Link to="/sabaneta/arriendo/casas" className="hover:text-primary transition-colors">Casas en Sabaneta</Link></li>
-              <li><Link to="/itagui/arriendo/apartamentos" className="hover:text-primary transition-colors">Apartamentos en Itagüí</Link></li>
-              <li><Link to="/envigado/arriendo/apartamentos" className="hover:text-primary transition-colors">Apartamentos en Envigado</Link></li>
-              <li><Link to="/bello/arriendo/apartamentos" className="hover:text-primary transition-colors">Apartamentos en Bello</Link></li>
-            </ul>
+            <nav aria-label="Zonas populares">
+              <ul className="space-y-2 text-background/70">
+                <li><Link to="/medellin/arriendo/apartamentos" className="hover:text-primary transition-colors">Apartamentos en Medellín</Link></li>
+                <li><Link to="/sabaneta/arriendo/casas" className="hover:text-primary transition-colors">Casas en Sabaneta</Link></li>
+                <li><Link to="/itagui/arriendo/apartamentos" className="hover:text-primary transition-colors">Apartamentos en Itagüí</Link></li>
+                <li><Link to="/envigado/arriendo/apartamentos" className="hover:text-primary transition-colors">Apartamentos en Envigado</Link></li>
+                <li><Link to="/bello/arriendo/apartamentos" className="hover:text-primary transition-colors">Apartamentos en Bello</Link></li>
+              </ul>
+            </nav>
+          </div>
+
+          {/* Medellín - Barrios */}
+          <div className="hidden md:block">
+            <h3 className="font-semibold text-lg mb-4">Medellín - Barrios</h3>
+            <nav aria-label="Barrios de Medellín">
+              <ul className="space-y-2 text-background/70">
+                <li><Link to="/medellin/arriendo/apartamentos/el-poblado" className="hover:text-primary transition-colors">El Poblado</Link></li>
+                <li><Link to="/medellin/arriendo/apartamentos/laureles" className="hover:text-primary transition-colors">Laureles</Link></li>
+                <li><Link to="/medellin/arriendo/apartamentos/belen" className="hover:text-primary transition-colors">Belén</Link></li>
+                <li><Link to="/medellin/arriendo/apartamentos/estadio" className="hover:text-primary transition-colors">Estadio</Link></li>
+                <li><Link to="/medellin/arriendo/apartamentos/buenos-aires" className="hover:text-primary transition-colors">Buenos Aires</Link></li>
+              </ul>
+            </nav>
           </div>
 
           {/* Quick Links */}
