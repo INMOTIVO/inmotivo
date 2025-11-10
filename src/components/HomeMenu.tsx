@@ -111,7 +111,7 @@ const HomeMenu = () => {
                     </Button>
                   )}
                   
-                  <Button variant="ghost" className="justify-start text-base h-12" onClick={() => handleNavigation("/auth")}>
+                  <Button variant="ghost" className="justify-start text-base h-12" onClick={() => handleNavigation("/auth?tab=signup")}>
                     <HomeIcon className="h-5 w-5 mr-3" />
                     Publicar inmueble
                   </Button>
