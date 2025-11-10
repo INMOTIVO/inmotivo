@@ -71,12 +71,9 @@ const SearchOptions = ({
     // Navegar inmediatamente sin delay
     navigate(`/navegacion?query=${encodeURIComponent(editedQuery)}&autostart=true&listingType=${listingType}`);
   };
-  const actionText = listingType === 'rent' ? 'arrendar' : 'comprar';
-  const actionTextCapitalized = listingType === 'rent' ? 'Arrendar' : 'Comprar';
-  
   return <div className="w-full max-w-4xl mx-auto space-y-1 md:space-y-2 animate-fade-in px-4">
       <div className="text-center space-y-1">
-        <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-50">¿Cómo quieres buscar para {actionText}?</h2>
+        <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-50">¿Cómo quieres buscar?</h2>
         <p className="text-sm md:text-lg text-white/90">
           Ubicación actual: {municipality}{sector && `, ${sector}`}
         </p>
@@ -93,7 +90,7 @@ const SearchOptions = ({
               <div className="space-y-1.5 md:space-y-2">
                 <h3 className="text-lg md:text-2xl font-bold">Navegar con GPS</h3>
                 <p className="text-xs md:text-base text-muted-foreground line-clamp-2">
-                  Descubre propiedades para {actionText} mientras te desplazas en tiempo real.
+                  Descubre propiedades mientras te desplazas en tiempo real.
                 </p>
               </div>
 
@@ -132,13 +129,13 @@ const SearchOptions = ({
             </div>
             
             <div className="space-y-1.5 md:space-y-2">
-              <h3 className="text-lg md:text-2xl font-bold">Ver propiedades para {actionText}</h3>
+              <h3 className="text-lg md:text-2xl font-bold">Ver propiedades</h3>
               <p className="text-xs md:text-base text-muted-foreground line-clamp-2">
                 {useGPSForFixedView 
-                  ? `Explora propiedades para ${actionText} a máximo 2km de tu ubicación actual.`
+                  ? "Explora propiedades a máximo 2km de tu ubicación actual."
                   : searchLocation
-                    ? `Busca propiedades para ${actionText} en ${searchLocation}`
-                    : `Busca propiedades para ${actionText} según la ubicación que especificaste.`
+                    ? `Busca en ${searchLocation}`
+                    : "Busca según la ubicación que especificaste."
                 }
               </p>
             </div>
@@ -146,7 +143,7 @@ const SearchOptions = ({
             <ul className="space-y-1.5 md:space-y-2 text-xs md:text-sm text-muted-foreground hidden md:block flex-grow">
               <li className="flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-primary" />
-                {useGPSForFixedView ? `Propiedades para ${actionText} a 2km` : `Búsqueda para ${actionText} por ubicación`}
+                {useGPSForFixedView ? "Búsqueda a 2km a la redonda" : "Búsqueda por ubicación de texto"}
               </li>
               <li className="flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-primary" />
@@ -160,7 +157,7 @@ const SearchOptions = ({
 
             <Button variant="default" size="lg" className="w-full mt-auto bg-gradient-to-br from-primary via-primary to-primary/70 shadow-lg hover:shadow-xl transition-all duration-200 active:scale-95 pointer-events-auto">
               <Map className="mr-2 h-5 w-5 md:h-6 md:w-6" />
-              Ver Propiedades para {actionTextCapitalized}
+              Ver Propiedades
             </Button>
           </div>
         </Card>
