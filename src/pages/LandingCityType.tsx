@@ -1,50 +1,26 @@
 import { useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 
-const cityMap: Record<string, { name: string; barrios: string[] }> = {
-  medellin: {
-    name: "Medellín",
-    barrios: ["El Poblado", "Laureles", "Envigado", "Belén", "Sabaneta"]
-  },
-  bogota: {
-    name: "Bogotá",
-    barrios: ["Chapinero", "Usaquén", "Suba", "Kennedy", "Engativá"]
-  },
-  cali: {
-    name: "Cali",
-    barrios: ["Granada", "San Fernando", "Ciudad Jardín", "El Peñón"]
-  }
+type Props = {
+  citySlug: string;
+  cityName: string;
+  typeSlug: string;
+  typeName: string;
+  barrios?: string[];
 };
 
-const typeMap: Record<string, string> = {
-  apartamentos: "Apartamentos",
-  casas: "Casas",
-  apartamento: "Apartamento",
-  casa: "Casa"
-};
-
-export default function LandingCityType() {
-  const { city, type } = useParams<{ city?: string; type?: string }>();
-  
-  const citySlug = city || "medellin";
-  const typeSlug = type || "apartamentos";
-  
-  const cityData = cityMap[citySlug] || { name: citySlug, barrios: [] };
-  const cityName = cityData.name;
-  const typeName = typeMap[typeSlug] || typeSlug;
-  const barrios = cityData.barrios;
-
-  const canonical = `https://inmotivo.com/ciudad/${citySlug}${typeSlug ? `/${typeSlug}` : ""}`;
+export default function LandingCityType({
+  citySlug, cityName, typeSlug, typeName, barrios = [],
+}: Props) {
+  const canonical = `https://inmotivo.com/${citySlug}/arriendo/${typeSlug}`;
 
   useEffect(() => {
     document.title = `${typeName} en arriendo en ${cityName} | INMOTIVO`;
     const descTxt = `Encuentra ${typeName.toLowerCase()} en arriendo en ${cityName} cerca de tu ruta. Búsqueda con GPS en vivo, filtros por precio y barrios. INMOTIVO: rápido y sencillo.`;
-
     const metaDesc =
       (document.querySelector('meta[name="description"]') as HTMLMetaElement) ??
       document.head.appendChild(Object.assign(document.createElement("meta"), { name: "description" }));
     metaDesc.setAttribute("content", descTxt);
-
     const linkCanonical =
       (document.querySelector('link[rel="canonical"]') as HTMLLinkElement) ??
       document.head.appendChild(Object.assign(document.createElement("link"), { rel: "canonical" }));
@@ -56,26 +32,23 @@ export default function LandingCityType() {
       <h1 className="text-3xl md:text-4xl font-bold mb-3">
         {typeName} en arriendo en {cityName}
       </h1>
-
       <p className="text-muted-foreground mb-6">
         Explora el mapa con GPS en tiempo real. Ajusta el radio y recibe opciones cercanas a tu ruta.
       </p>
-
       <div className="flex flex-wrap gap-3 mb-8">
         <Link
-          to={`/navegacion?query=${encodeURIComponent(typeSlug.slice(0, -1))}&autostart=true`}
+          to={`/navegacion?query=${encodeURIComponent(typeSlug.slice(0,-1))}&autostart=true`}
           className="inline-flex items-center rounded-xl px-4 py-2 bg-green-600 text-white hover:bg-green-700"
         >
           Ver en mapa (navegación)
         </Link>
         <Link
-          to={`/navegacion?query=${encodeURIComponent(typeSlug.slice(0, -1))}`}
+          to={`/navegacion?query=${encodeURIComponent(typeSlug.slice(0,-1))}`}
           className="inline-flex items-center rounded-xl px-4 py-2 border border-green-600 text-green-700 hover:bg-green-50"
         >
           Buscar en mapa
         </Link>
       </div>
-
       {barrios.length > 0 && (
         <div className="mb-10">
           <h2 className="text-xl font-semibold mb-3">Barrios populares</h2>
@@ -83,7 +56,7 @@ export default function LandingCityType() {
             {barrios.map((b) => (
               <Link
                 key={b}
-                to={`/navegacion?query=${encodeURIComponent(`${typeSlug.slice(0, -1)} en ${b}`)}`}
+                to={`/navegacion?query=${encodeURIComponent(`${typeSlug.slice(0,-1)} en ${b}`)}`}
                 className="rounded-full border px-3 py-1 text-sm hover:bg-gray-50"
               >
                 {b}

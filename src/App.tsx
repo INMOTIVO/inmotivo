@@ -17,7 +17,11 @@ import AdminDashboard from "./pages/AdminDashboard";
 import CreateProperty from "./pages/CreateProperty";
 import Favorites from "./pages/Favorites";
 import TenantProfile from "./pages/TenantProfile";
-import LandingCityType from "./pages/LandingCityType";
+import MedellinAparts from "./pages/MedellinAparts";
+import SabanetaCasas from "./pages/SabanetaCasas";
+import ItaguiAparts from "./pages/ItaguiAparts";
+import EnvigadoAparts from "./pages/EnvigadoAparts";
+import BelloAparts from "./pages/BelloAparts";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,9 +46,11 @@ const AppRoutes = () => {
       <Route path="/create-property" element={<CreateProperty />} />
       <Route path="/edit-property/:id" element={<CreateProperty />} />
       <Route path="/marketing-preview" element={<AdCreativesPreview />} />
-      <Route path="/ciudad/:city" element={<LandingCityType />} />
-      <Route path="/ciudad/:city/:type" element={<LandingCityType />} />
-      <Route path="/tipo/:type" element={<LandingCityType />} />
+      <Route path="/medellin/arriendo/apartamentos" element={<MedellinAparts />} />
+      <Route path="/sabaneta/arriendo/casas" element={<SabanetaCasas />} />
+      <Route path="/itagui/arriendo/apartamentos" element={<ItaguiAparts />} />
+      <Route path="/envigado/arriendo/apartamentos" element={<EnvigadoAparts />} />
+      <Route path="/bello/arriendo/apartamentos" element={<BelloAparts />} />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
     </Routes>

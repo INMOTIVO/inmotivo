@@ -1,11 +1,11 @@
 import { Mail, Phone, Instagram, Facebook } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 const Footer = ({ className }: { className?: string }) => {
   const navigate = useNavigate();
   return <footer className={cn("bg-foreground text-background py-6", className)}>
       <div className="container mx-auto px-4">
-        <div className="flex flex-col md:grid md:grid-cols-4 gap-4 md:gap-8 mb-4 md:mb-6">
+        <div className="flex flex-col md:grid md:grid-cols-5 gap-4 md:gap-6 mb-4 md:mb-6">
           {/* Brand */}
           <div className="space-y-4 flex flex-col items-center md:items-start text-center md:text-left">
             <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
@@ -20,6 +20,18 @@ const Footer = ({ className }: { className?: string }) => {
             </div>
             <p className="text-background/70">
           </p>
+          </div>
+
+          {/* Popular Zones */}
+          <div className="hidden md:block">
+            <h3 className="font-semibold text-lg mb-4">Zonas Populares</h3>
+            <ul className="space-y-2 text-background/70">
+              <li><Link to="/medellin/arriendo/apartamentos" className="hover:text-primary transition-colors">Apartamentos en Medellín</Link></li>
+              <li><Link to="/sabaneta/arriendo/casas" className="hover:text-primary transition-colors">Casas en Sabaneta</Link></li>
+              <li><Link to="/itagui/arriendo/apartamentos" className="hover:text-primary transition-colors">Apartamentos en Itagüí</Link></li>
+              <li><Link to="/envigado/arriendo/apartamentos" className="hover:text-primary transition-colors">Apartamentos en Envigado</Link></li>
+              <li><Link to="/bello/arriendo/apartamentos" className="hover:text-primary transition-colors">Apartamentos en Bello</Link></li>
+            </ul>
           </div>
 
           {/* Quick Links */}
