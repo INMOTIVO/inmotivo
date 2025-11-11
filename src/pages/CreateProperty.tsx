@@ -445,11 +445,10 @@ const CreateProperty = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label>Tipo de transacción *</Label>
                 <RadioGroup
                   value={listingType}
                   onValueChange={(value: 'rent' | 'sale') => setListingType(value)}
-                  className="flex gap-4 mt-2"
+                  className="flex gap-4"
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="rent" id="rent" />
