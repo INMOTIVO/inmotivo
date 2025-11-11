@@ -794,7 +794,7 @@ const AdminDashboard = () => {
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="recent" className="text-xs sm:text-sm">
               <BarChart3 className="mr-0 sm:mr-2 h-4 w-4" />
-              <span className="hidden sm:inline">Actividad </span>Reciente
+              <span className="hidden sm:inline">Actividad </span>reciente
             </TabsTrigger>
             <TabsTrigger value="analytics" className="text-xs sm:text-sm">
               <TrendingUp className="mr-0 sm:mr-2 h-4 w-4" />
