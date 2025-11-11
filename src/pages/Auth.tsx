@@ -59,7 +59,8 @@ const Auth = () => {
       if (profile?.user_type === 'owner') {
         navigate('/dashboard');
       } else {
-        navigate('/profile');
+        // Arrendatarios y compradores van al inicio (buscador)
+        navigate('/');
       }
     };
 
@@ -112,7 +113,8 @@ const Auth = () => {
         if (profile?.user_type === 'owner') {
           navigate("/dashboard");
         } else {
-          navigate("/profile");
+          // Arrendatarios y compradores van al inicio (buscador)
+          navigate("/");
         }
       } else {
         navigate("/");
@@ -148,7 +150,8 @@ const Auth = () => {
       if (signUpData.userType === "owner") {
         navigate("/dashboard");
       } else {
-        navigate("/profile");
+        // Arrendatarios y compradores van al inicio (buscador)
+        navigate("/");
       }
     }
 
