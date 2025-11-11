@@ -780,7 +780,7 @@ const CreateProperty = () => {
               )}
 
               <div>
-                <Label>Amenidades</Label>
+                <Label>Facilidades</Label>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
                   {commonAmenities.map((amenity) => (
                     <div key={amenity} className="flex items-center space-x-2">
