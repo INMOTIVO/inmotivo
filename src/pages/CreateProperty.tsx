@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import Navbar from '@/components/Navbar';
 import { Upload, X, Loader2, MapPin, ArrowLeft, Star } from 'lucide-react';
 import { toast } from 'sonner';
@@ -59,6 +60,8 @@ const CreateProperty = () => {
     latitude: 6.2442,
     longitude: -75.5812,
   });
+
+  const [listingType, setListingType] = useState<'rent' | 'sale'>('rent');
 
   const [amenities, setAmenities] = useState<string[]>([]);
   const [furnished, setFurnished] = useState(false);
@@ -165,6 +168,7 @@ const CreateProperty = () => {
         longitude: data.longitude || -75.5812,
       });
 
+      setListingType((data.listing_type as 'rent' | 'sale') || 'rent');
       setImages((data.images as string[]) || []);
       setAmenities((data.amenities as string[]) || []);
       setFurnished(data.furnished || false);
@@ -276,6 +280,7 @@ const CreateProperty = () => {
         title: validation.data.title,
         description: validation.data.description,
         property_type: validation.data.property_type,
+        listing_type: listingType,
         price: validation.data.price,
         address: validation.data.address,
         city: validation.data.city,
@@ -439,6 +444,28 @@ const CreateProperty = () => {
               <CardTitle>Información Básica</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div>
+                <Label>Tipo de transacción *</Label>
+                <RadioGroup
+                  value={listingType}
+                  onValueChange={(value: 'rent' | 'sale') => setListingType(value)}
+                  className="flex gap-4 mt-2"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="rent" id="rent" />
+                    <Label htmlFor="rent" className="font-normal cursor-pointer">
+                      Arrendar
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="sale" id="sale" />
+                    <Label htmlFor="sale" className="font-normal cursor-pointer">
+                      Vender
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
               <div>
                 <Label htmlFor="title">Título de la propiedad *</Label>
                 <Input
