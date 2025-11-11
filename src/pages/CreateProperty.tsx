@@ -693,35 +693,41 @@ const CreateProperty = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="bedrooms">Habitaciones</Label>
-                  <Input
-                    id="bedrooms"
-                    type="number"
-                    value={formData.bedrooms || ''}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        bedrooms: parseInt(e.target.value) || 0,
-                      })
-                    }
-                  />
-                </div>
+                {/* Solo mostrar habitaciones para propiedades residenciales */}
+                {['apartment', 'house', 'studio'].includes(formData.property_type) && (
+                  <div>
+                    <Label htmlFor="bedrooms">Habitaciones</Label>
+                    <Input
+                      id="bedrooms"
+                      type="number"
+                      value={formData.bedrooms || ''}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          bedrooms: parseInt(e.target.value) || 0,
+                        })
+                      }
+                    />
+                  </div>
+                )}
 
-                <div>
-                  <Label htmlFor="bathrooms">Baños</Label>
-                  <Input
-                    id="bathrooms"
-                    type="number"
-                    value={formData.bathrooms || ''}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        bathrooms: parseInt(e.target.value) || 0,
-                      })
-                    }
-                  />
-                </div>
+                {/* Solo mostrar baños para propiedades residenciales */}
+                {['apartment', 'house', 'studio'].includes(formData.property_type) && (
+                  <div>
+                    <Label htmlFor="bathrooms">Baños</Label>
+                    <Input
+                      id="bathrooms"
+                      type="number"
+                      value={formData.bathrooms || ''}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          bathrooms: parseInt(e.target.value) || 0,
+                        })
+                      }
+                    />
+                  </div>
+                )}
 
                 <div>
                   <Label htmlFor="area_m2">Área (m²) *</Label>
@@ -744,31 +750,34 @@ const CreateProperty = () => {
                 </div>
               </div>
 
-              <div className="flex items-center space-x-6">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="furnished"
-                    checked={furnished}
-                    onCheckedChange={(checked) => setFurnished(checked as boolean)}
-                  />
-                  <Label htmlFor="furnished" className="cursor-pointer">
-                    Amoblado
-                  </Label>
-                </div>
+              {/* Solo mostrar opciones residenciales para propiedades residenciales */}
+              {['apartment', 'house', 'studio'].includes(formData.property_type) && (
+                <div className="flex items-center space-x-6">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="furnished"
+                      checked={furnished}
+                      onCheckedChange={(checked) => setFurnished(checked as boolean)}
+                    />
+                    <Label htmlFor="furnished" className="cursor-pointer">
+                      Amoblado
+                    </Label>
+                  </div>
 
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="pets"
-                    checked={petsAllowed}
-                    onCheckedChange={(checked) =>
-                      setPetsAllowed(checked as boolean)
-                    }
-                  />
-                  <Label htmlFor="pets" className="cursor-pointer">
-                    Acepta mascotas
-                  </Label>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="pets"
+                      checked={petsAllowed}
+                      onCheckedChange={(checked) =>
+                        setPetsAllowed(checked as boolean)
+                      }
+                    />
+                    <Label htmlFor="pets" className="cursor-pointer">
+                      Acepta mascotas
+                    </Label>
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div>
                 <Label>Amenidades</Label>
