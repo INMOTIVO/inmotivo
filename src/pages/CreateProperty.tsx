@@ -346,7 +346,11 @@ const CreateProperty = () => {
         </div>
       </div>;
   }
-  const commonAmenities = ['Piscina', 'Gimnasio', 'Parqueadero', 'Portería 24h', 'Zona BBQ', 'Salón Social', 'Ascensor', 'Balcón', 'Terraza', 'Zona de lavandería'];
+  const residentialAmenities = ['Piscina', 'Gimnasio', 'Parqueadero', 'Portería 24h', 'Zona BBQ', 'Salón Social', 'Ascensor', 'Balcón', 'Terraza', 'Zona de lavandería'];
+  const commercialAmenities = ['Portería 24/7', 'Ascensor', 'Parqueaderos', 'Zona de comida', 'Zona de cargue y descargue', 'Rampa de acceso', 'Seguridad privada', 'Vigilancia CCTV', 'Entrada independiente'];
+  
+  const isCommercial = ['commercial', 'warehouse'].includes(formData.property_type);
+  const availableAmenities = isCommercial ? commercialAmenities : residentialAmenities;
   return <div className="min-h-screen bg-background">
       <Navbar />
 
@@ -587,7 +591,7 @@ const CreateProperty = () => {
               <div>
                 <Label>Facilidades</Label>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
-                  {commonAmenities.map(amenity => <div key={amenity} className="flex items-center space-x-2">
+                  {availableAmenities.map(amenity => <div key={amenity} className="flex items-center space-x-2">
                       <Checkbox id={amenity} checked={amenities.includes(amenity)} onCheckedChange={checked => {
                     if (checked) {
                       setAmenities([...amenities, amenity]);
