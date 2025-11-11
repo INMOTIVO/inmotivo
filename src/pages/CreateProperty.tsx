@@ -101,7 +101,7 @@ const CreateProperty = () => {
       address = place.formatted_address.split(',')[0];
     }
 
-    // Actualizar todos los campos usando functional update para evitar dependencia
+    // Actualizar todos los campos
     setFormData(prev => ({
       ...prev,
       address: address || prev.address,
@@ -110,7 +110,16 @@ const CreateProperty = () => {
       latitude: lat,
       longitude: lng
     }));
-    toast.success('Dirección autocompletada correctamente');
+    
+    // Notificar qué campos se llenaron automáticamente
+    const autoFilledFields = [];
+    if (address) autoFilledFields.push('dirección');
+    if (city) autoFilledFields.push('ciudad');
+    if (neighborhood) autoFilledFields.push('barrio');
+    
+    if (autoFilledFields.length > 0) {
+      toast.success(`Se completó automáticamente: ${autoFilledFields.join(', ')}`);
+    }
   }, []);
   useGoogleMapsPlaces({
     inputRef: addressInputRef,
