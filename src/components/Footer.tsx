@@ -1,7 +1,11 @@
 import { Mail, Phone, Instagram, Facebook } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
-const Footer = ({ className }: { className?: string }) => {
+const Footer = ({
+  className
+}: {
+  className?: string;
+}) => {
   const navigate = useNavigate();
   return <footer className={cn("bg-foreground text-background py-6", className)}>
       <div className="container mx-auto px-4">
@@ -56,9 +60,7 @@ const Footer = ({ className }: { className?: string }) => {
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="h-4 w-4" />
-                <a href="tel:+573001234567" className="hover:text-primary transition-colors">
-                  +57 300 123 4567
-                </a>
+                <a href="tel:+573001234567" className="hover:text-primary transition-colors">+57 3053564865</a>
               </li>
               <li className="flex items-center gap-3">
                 <a href="https://instagram.com/inmotivo" target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">
