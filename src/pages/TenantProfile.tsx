@@ -132,47 +132,6 @@ const TenantProfile = () => {
     enabled: !!user,
   });
 
-  // Fetch replies received
-  const { data: repliesReceived, isLoading: loadingReplies } = useQuery({
-    queryKey: ['tenant-replies', user?.id],
-    queryFn: async () => {
-      const { data: messages, error: messagesError } = await supabase
-        .from('contact_messages')
-        .select('id')
-        .eq('user_id', user!.id);
-
-      if (messagesError) throw messagesError;
-      if (!messages || messages.length === 0) return [];
-
-      const messageIds = messages.map(m => m.id);
-
-      const { data, error } = await supabase
-        .from('message_replies')
-        .select(`
-          id,
-          reply_text,
-          created_at,
-          contact_message:contact_messages (
-            id,
-            message,
-            property:properties (
-              id,
-              title,
-              images
-            )
-          ),
-          replier:profiles!message_replies_replied_by_fkey (
-            full_name
-          )
-        `)
-        .in('contact_message_id', messageIds)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!user,
-  });
 
   if (loading || !user) {
     return <div className="min-h-screen flex items-center justify-center">
@@ -209,7 +168,7 @@ const TenantProfile = () => {
         </div>
 
         <Tabs defaultValue="favorites" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 lg:w-auto">
+          <TabsList className="grid w-full grid-cols-2 lg:w-auto">
             <TabsTrigger value="favorites" className="gap-2">
               <Heart className="h-4 w-4" />
               <span className="hidden sm:inline">Favoritos</span>
@@ -222,13 +181,6 @@ const TenantProfile = () => {
               <span className="hidden sm:inline">Contactados</span>
               {contactedProperties && contactedProperties.length > 0 && (
                 <Badge variant="secondary">{contactedProperties.length}</Badge>
-              )}
-            </TabsTrigger>
-            <TabsTrigger value="replies" className="gap-2">
-              <Mail className="h-4 w-4" />
-              <span className="hidden sm:inline">Respuestas</span>
-              {repliesReceived && repliesReceived.length > 0 && (
-                <Badge variant="secondary">{repliesReceived.length}</Badge>
               )}
             </TabsTrigger>
           </TabsList>
@@ -363,73 +315,6 @@ const TenantProfile = () => {
             )}
           </TabsContent>
 
-          {/* Replies Tab */}
-          <TabsContent value="replies" className="space-y-4">
-            {loadingReplies ? (
-              <p className="text-center py-8">Cargando respuestas...</p>
-            ) : repliesReceived && repliesReceived.length > 0 ? (
-              <div className="space-y-4">
-                {repliesReceived.map((reply: any) => (
-                  <Card key={reply.id}>
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <CardTitle 
-                            className="text-lg cursor-pointer hover:text-primary transition-colors"
-                            onClick={() => navigate(`/property/${reply.contact_message.property.id}`)}
-                          >
-                            {reply.contact_message.property.title}
-                          </CardTitle>
-                          <CardDescription>
-                            Respuesta de {reply.replier?.full_name || 'Propietario'}
-                          </CardDescription>
-                        </div>
-                        <Badge>Nueva</Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Calendar className="h-4 w-4" />
-                        {format(new Date(reply.created_at), "d 'de' MMMM, yyyy 'a las' HH:mm", { locale: es })}
-                      </div>
-                      <div className="space-y-2">
-                        <div className="bg-muted/50 p-3 rounded-lg">
-                          <p className="text-xs font-medium text-muted-foreground mb-1">Tu mensaje:</p>
-                          <p className="text-sm">{reply.contact_message.message}</p>
-                        </div>
-                        <div className="bg-primary/10 p-3 rounded-lg border border-primary/20">
-                          <p className="text-xs font-medium text-primary mb-1">Respuesta:</p>
-                          <p className="text-sm">{reply.reply_text}</p>
-                        </div>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => navigate(`/property/${reply.contact_message.property.id}`)}
-                      >
-                        Ver propiedad
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <Card>
-                <CardContent className="py-12 text-center">
-                  <Mail className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <p className="text-lg font-medium mb-2">
-                    No tienes respuestas aún
-                  </p>
-                  <p className="text-muted-foreground mb-4">
-                    Cuando los propietarios respondan tus mensajes, aparecerán aquí
-                  </p>
-                  <Button onClick={() => navigate('/')}>
-                    Buscar propiedades
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
         </Tabs>
 
         {/* Useful Recommendations Section */}
