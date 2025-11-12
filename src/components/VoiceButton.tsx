@@ -85,27 +85,28 @@ const VoiceButton = ({
         {/* Animated Wave Bars */}
         <div className="flex-1 flex items-center gap-[2px] sm:gap-0.5 justify-center h-8 px-1 min-w-0 overflow-hidden">
           {waveBars.map((_, i) => {
-            // Create natural-looking wave with multiple frequencies and random variations
-            const time = recordingTime * 175;
-            const baseWave = Math.sin((time + i * 1.1) * 2.2);
-            const secondWave = Math.sin((time + i * 0.5) * 3.5) * 0.7;
-            const thirdWave = Math.sin((time * 1.2 + i * 1.6) * 4.2) * 0.4;
-            const randomNoise = Math.sin((time * 2.0 + i * 0.9) * 5) * 0.25;
-            const combined = (baseWave + secondWave + thirdWave + randomNoise) / 2.35;
+            // Crear ondas naturales con variación de frecuencia
+            const time = recordingTime * 150;
+            const baseWave = Math.sin((time + i * 0.8) * 2.5);
+            const secondWave = Math.sin((time + i * 0.4) * 3.8) * 0.6;
+            const combined = (baseWave + secondWave) / 1.6;
             
-            // Modulate wave height by actual audio level (0-1)
-            // When audioLevel is low (silence), waves are small
-            // When audioLevel is high (noise), waves are tall
-            const baseHeight = combined * 12 + 16;
-            const audioMultiplier = Math.max(0.2, audioLevel); // Minimum 0.2 to keep some animation visible
+            // Altura base mínima para animación sutil
+            const minHeight = 6;
+            const baseHeight = combined * 8 + 14;
+            
+            // Multiplicador de audio más sensible
+            // audioLevel va de 0 a 1, lo amplificamos para mejor respuesta visual
+            const audioMultiplier = Math.max(0.15, Math.min(2.5, audioLevel * 3));
             const height = baseHeight * audioMultiplier;
             
             return (
               <div
                 key={i}
-                className="w-[2px] sm:w-0.5 bg-primary rounded-full transition-all duration-100 ease-out flex-shrink-0"
+                className="w-[2px] sm:w-0.5 bg-primary rounded-full flex-shrink-0"
                 style={{
-                  height: `${Math.max(4, Math.min(30, height))}px`,
+                  height: `${Math.max(minHeight, Math.min(32, height))}px`,
+                  transition: 'height 0.05s ease-out', // Transición ultra rápida
                 }}
               />
             );

@@ -24,20 +24,32 @@ export const useVoiceRecording = () => {
   const resolveRef = useRef<((value: string) => void) | null>(null);
   const rejectRef = useRef<((reason?: any) => void) | null>(null);
 
-  // 🎚️ Monitoreo de nivel de audio (sin cambios)
+  // 🎚️ Monitoreo de nivel de audio optimizado para mejor sensibilidad
   const startAudioLevelMonitoring = useCallback((stream: MediaStream) => {
     try {
       const audioContext = new AudioContext();
       const analyser = audioContext.createAnalyser();
       const mic = audioContext.createMediaStreamSource(stream);
-      analyser.fftSize = 256;
+      
+      // Configuración para mayor sensibilidad y respuesta rápida
+      analyser.fftSize = 512; // Mayor resolución de frecuencia
+      analyser.smoothingTimeConstant = 0.2; // Menor suavizado = más reactivo
+      analyser.minDecibels = -90;
+      analyser.maxDecibels = -10;
+      
       mic.connect(analyser);
       const dataArray = new Uint8Array(analyser.frequencyBinCount);
 
       const updateLevel = () => {
         analyser.getByteFrequencyData(dataArray);
+        
+        // Calcular promedio ponderado con énfasis en frecuencias de voz
         const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-        setAudioLevel(Math.min(1, (avg / 128) * 2));
+        
+        // Amplificación más agresiva para mejor respuesta visual
+        const normalized = Math.min(1, (avg / 100) * 2.5);
+        
+        setAudioLevel(normalized);
         animationFrameRef.current = requestAnimationFrame(updateLevel);
       };
 
@@ -58,6 +70,11 @@ export const useVoiceRecording = () => {
   // 🎤 INICIO DE GRABACIÓN CON TRANSCRIPCIÓN EN VIVO
   const startRecording = useCallback(async () => {
     try {
+      // Obtener stream de audio SIEMPRE (para monitoreo de nivel)
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      startAudioLevelMonitoring(stream);
+      
       // Intentar usar SpeechRecognition primero (para texto en vivo)
       const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (SR) {
@@ -88,6 +105,7 @@ export const useVoiceRecording = () => {
         recognition.onend = () => {
           console.log("[SR] Finalizado");
           setIsRecording(false);
+          stopAudioLevelMonitoring();
         };
 
         recognition.start();
@@ -97,9 +115,6 @@ export const useVoiceRecording = () => {
 
       // 🧩 Si no hay SpeechRecognition, usa flujo actual (backend Supabase)
       console.log("[Voz] SR no disponible, usando MediaRecorder...");
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      streamRef.current = stream;
-      startAudioLevelMonitoring(stream);
       const mr = new MediaRecorder(stream, { mimeType: 'audio/webm;codecs=opus' });
       mediaRecorderRef.current = mr;
       audioChunksRef.current = [];
