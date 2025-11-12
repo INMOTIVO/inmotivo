@@ -23,7 +23,7 @@ interface MapFiltersProps {
 const MapFilters = ({ onFiltersChange, initialQuery = '' }: MapFiltersProps) => {
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [isProcessing, setIsProcessing] = useState(false);
-  const { isRecording, isProcessing: isTranscribing, audioLevel, startRecording, stopRecording, cancelRecording, recordOnce } = useVoiceRecording();
+  const { isRecording, isProcessing: isTranscribing, audioLevel, realtimeTranscript, startRecording, stopRecording, cancelRecording, recordOnce } = useVoiceRecording();
 
   useEffect(() => {
     if (initialQuery) {
@@ -166,6 +166,7 @@ const MapFilters = ({ onFiltersChange, initialQuery = '' }: MapFiltersProps) => 
           isRecording={isRecording}
           isProcessing={isTranscribing}
           audioLevel={audioLevel}
+          realtimeTranscript={realtimeTranscript}
           onStart={handleStartRecording}
           onStop={handleStopRecording}
           onCancel={handleCancelRecording}

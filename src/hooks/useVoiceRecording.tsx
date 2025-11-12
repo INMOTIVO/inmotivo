@@ -13,6 +13,7 @@ export const useVoiceRecording = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
+  const [realtimeTranscript, setRealtimeTranscript] = useState('');
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -20,6 +21,7 @@ export const useVoiceRecording = () => {
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
+  const recognitionRef = useRef<any>(null);
 
   const resolveRef = useRef<((value: string) => void) | null>(null);
   const rejectRef = useRef<((reason?: any) => void) | null>(null);
@@ -74,6 +76,18 @@ export const useVoiceRecording = () => {
     setAudioLevel(0);
   }, []);
 
+  const stopRealtimeTranscription = useCallback(() => {
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+        console.log('[Speech Recognition] Detenido');
+      } catch (e) {
+        console.warn('[Speech Recognition] Error al detener:', e);
+      }
+      recognitionRef.current = null;
+    }
+  }, []);
+
   const startRecording = useCallback(async () => {
     try {
       console.log('[Voz Manual] Iniciando grabación...');
@@ -90,6 +104,66 @@ export const useVoiceRecording = () => {
       
       // Iniciar monitoreo de nivel de audio
       startAudioLevelMonitoring(stream);
+
+      // Iniciar transcripción en tiempo real con Web Speech API
+      const SR: any = (window.SpeechRecognition || window.webkitSpeechRecognition);
+      if (SR) {
+        const recognition = new SR();
+        recognition.lang = 'es-CO';
+        recognition.interimResults = true; // Crucial para tiempo real
+        recognition.continuous = true; // Mantener escuchando
+        recognition.maxAlternatives = 1;
+        
+        recognitionRef.current = recognition;
+        setRealtimeTranscript('');
+
+        recognition.onresult = (event: any) => {
+          let interimTranscript = '';
+          let finalTranscript = '';
+          
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+              finalTranscript += transcript + ' ';
+            } else {
+              interimTranscript += transcript;
+            }
+          }
+          
+          // Actualizar transcript en tiempo real
+          setRealtimeTranscript(prev => {
+            const newText = prev + finalTranscript + interimTranscript;
+            console.log('[Transcripción RT]:', newText);
+            return newText;
+          });
+        };
+
+        recognition.onerror = (e: any) => {
+          console.warn('[Speech Recognition] Error:', e.error);
+          if (e.error !== 'no-speech' && e.error !== 'aborted') {
+            toast.error('Error en transcripción en tiempo real');
+          }
+        };
+
+        recognition.onend = () => {
+          console.log('[Speech Recognition] Finalizado');
+          // Si aún está grabando, reiniciar
+          if (mediaRecorderRef.current?.state === 'recording') {
+            try {
+              recognition.start();
+            } catch (e) {
+              console.warn('[Speech Recognition] No se pudo reiniciar:', e);
+            }
+          }
+        };
+
+        try {
+          recognition.start();
+          console.log('[Speech Recognition] Iniciado para transcripción en tiempo real');
+        } catch (e) {
+          console.warn('[Speech Recognition] No se pudo iniciar:', e);
+        }
+      }
       
       let mimeType = 'audio/webm;codecs=opus';
       if (!MediaRecorder.isTypeSupported(mimeType)) {
@@ -176,6 +250,8 @@ export const useVoiceRecording = () => {
 
   const stopRecording = useCallback((): Promise<string> => {
     setIsProcessing(true);
+    stopRealtimeTranscription();
+    
     return new Promise((resolve, reject) => {
       resolveRef.current = resolve;
       rejectRef.current = reject;
@@ -199,12 +275,14 @@ export const useVoiceRecording = () => {
         reject(new Error('No hay grabación activa'));
       }
     });
-  }, []);
+  }, [stopRealtimeTranscription]);
 
   const cancelRecording = useCallback(() => {
     console.log('[Voz Manual] Cancelando grabación...');
     
     stopAudioLevelMonitoring();
+    stopRealtimeTranscription();
+    setRealtimeTranscript('');
     
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
       try {
@@ -228,7 +306,7 @@ export const useVoiceRecording = () => {
     
     resolveRef.current = null;
     rejectRef.current = null;
-  }, [stopAudioLevelMonitoring]);
+  }, [stopAudioLevelMonitoring, stopRealtimeTranscription]);
 
   const recordOnce = useCallback(async (): Promise<string> => {
     const SR: any = (window.SpeechRecognition || window.webkitSpeechRecognition);
@@ -400,6 +478,7 @@ export const useVoiceRecording = () => {
     isRecording,
     isProcessing,
     audioLevel,
+    realtimeTranscript,
     startRecording,
     stopRecording,
     cancelRecording,

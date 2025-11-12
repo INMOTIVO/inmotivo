@@ -50,6 +50,7 @@ const Hero = () => {
     isRecording,
     isProcessing,
     audioLevel,
+    realtimeTranscript,
     startRecording,
     stopRecording,
     cancelRecording
@@ -383,7 +384,7 @@ const Hero = () => {
                           Procesando...
                         </> : 'Buscar'}
                     </Button>
-                    <VoiceButton isRecording={isRecording} isProcessing={isProcessing} audioLevel={audioLevel} onStart={handleStartVoiceRecording} onStop={handleStopVoiceRecording} onCancel={handleCancelVoiceRecording} disabled={loadingLocation || isInterpretingSearch} />
+                    <VoiceButton isRecording={isRecording} isProcessing={isProcessing} audioLevel={audioLevel} realtimeTranscript={realtimeTranscript} onStart={handleStartVoiceRecording} onStop={handleStopVoiceRecording} onCancel={handleCancelVoiceRecording} disabled={loadingLocation || isInterpretingSearch} />
                   </div>
 
                   {/* Tu ubicación - CUARTO */}
@@ -419,7 +420,7 @@ const Hero = () => {
               handleSearch();
             }
           }} disabled={isRecording || isProcessing || isInterpretingSearch} />
-              <VoiceButton isRecording={isRecording} isProcessing={isProcessing} audioLevel={audioLevel} onStart={handleStartVoiceRecording} onStop={handleStopVoiceRecording} onCancel={handleCancelVoiceRecording} size="icon" variant="outline" disabled={isInterpretingSearch} />
+              <VoiceButton isRecording={isRecording} isProcessing={isProcessing} audioLevel={audioLevel} realtimeTranscript={realtimeTranscript} onStart={handleStartVoiceRecording} onStop={handleStopVoiceRecording} onCancel={handleCancelVoiceRecording} size="icon" variant="outline" disabled={isInterpretingSearch} />
               <Button variant="hero" size="sm" onClick={() => handleSearch()} disabled={!searchQuery.trim() || isRecording || isProcessing || isInterpretingSearch} className="flex-shrink-0">
                 {isInterpretingSearch ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Buscar'}
               </Button>

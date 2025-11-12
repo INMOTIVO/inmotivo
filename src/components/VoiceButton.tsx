@@ -7,6 +7,7 @@ interface VoiceButtonProps {
   isRecording: boolean;
   isProcessing: boolean;
   audioLevel: number;
+  realtimeTranscript?: string;
   onStart: () => void;
   onStop: () => void;
   onCancel?: () => void;
@@ -20,6 +21,7 @@ const VoiceButton = ({
   isRecording,
   isProcessing,
   audioLevel,
+  realtimeTranscript = '',
   onStart,
   onStop,
   onCancel,
@@ -72,7 +74,18 @@ const VoiceButton = ({
   // Show compact recording bar if recording, otherwise show mic button
   if (isRecording) {
     return (
-      <div className="flex items-center gap-1.5 sm:gap-2 bg-primary/10 rounded-full px-2 sm:px-3 py-2 border border-primary/20 animate-in fade-in duration-200 w-full max-w-full min-w-0">
+      <div className="flex flex-col gap-2 w-full">
+        {/* Transcripción en tiempo real */}
+        {realtimeTranscript && (
+          <div className="bg-background/95 backdrop-blur-sm rounded-lg px-4 py-3 border border-border animate-in fade-in duration-200">
+            <p className="text-sm text-foreground leading-relaxed">
+              {realtimeTranscript}
+            </p>
+          </div>
+        )}
+        
+        {/* Barra de grabación */}
+        <div className="flex items-center gap-1.5 sm:gap-2 bg-primary/10 rounded-full px-2 sm:px-3 py-2 border border-primary/20 animate-in fade-in duration-200 w-full max-w-full min-w-0">
         {/* Cancel Button */}
         <button
           onClick={handleCancel}
@@ -127,6 +140,7 @@ const VoiceButton = ({
         >
           <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary-foreground" />
         </button>
+        </div>
       </div>
     );
   }
