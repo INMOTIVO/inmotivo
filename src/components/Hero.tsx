@@ -50,6 +50,7 @@ const Hero = () => {
     isRecording,
     isProcessing,
     audioLevel,
+    partialText,
     startRecording,
     stopRecording,
     cancelRecording
@@ -364,16 +365,33 @@ const Hero = () => {
                     </div>
                   </div>
 
-                  {/* Descripción - SEGUNDO */}
-                  <div className="flex items-start gap-2 border border-border rounded-lg p-2">
-                    <Search className="h-4 w-4 text-muted-foreground mt-2 flex-shrink-0" />
-                    <Textarea placeholder="Describe la propiedad que buscas" className="border-0 focus-visible:ring-0 text-base md:text-sm leading-normal resize-none min-h-[44px] max-h-[96px] md:max-h-[120px] w-full overflow-y-auto" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onKeyDown={e => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSearch();
-                    }
-                  }} />
-                  </div>
+{/* Descripción - SEGUNDO */}
+<div className="flex items-start gap-2 border border-border rounded-lg p-2 relative">
+  {/* Ícono de búsqueda */}
+  <Search
+    className={cn(
+      "h-4 w-4 mt-2 flex-shrink-0 transition-colors",
+      isRecording ? "text-primary animate-pulse" : "text-muted-foreground"
+    )}
+  />
+
+  {/* Campo de texto con escritura en vivo */}
+  <Textarea
+    placeholder="Describe la propiedad que buscas"
+    className="border-0 focus-visible:ring-0 text-base md:text-sm leading-normal resize-none min-h-[44px] max-h-[96px] md:max-h-[120px] w-full overflow-y-auto"
+    value={isRecording ? partialText : searchQuery} // 👈 muestra palabras en tiempo real
+    onChange={(e) => setSearchQuery(e.target.value)}
+    onKeyDown={(e) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        handleSearch();
+      }
+    }}
+  />
+
+
+</div>
+
 
                   {/* Botón Buscar - TERCERO */}
                   <div className="flex items-center gap-2 w-full">
