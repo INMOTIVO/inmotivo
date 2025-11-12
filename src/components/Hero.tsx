@@ -21,7 +21,7 @@ const Hero = () => {
   const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [listingType, setListingType] = useState<"rent" | "sale">("rent");
-  const [location, setLocation] = useState("Medellín");
+  const [location, setLocation] = useState("");
   const [municipality, setMunicipality] = useState("");
   const [sector, setSector] = useState("");
   const [loadingLocation, setLoadingLocation] = useState(false);
@@ -83,8 +83,8 @@ const Hero = () => {
     const getCurrentLocation = () => {
       if (!navigator.geolocation) {
         toast.error("Geolocalización no disponible en tu navegador");
-        setMunicipality("Medellín");
-        setLocation("Medellín");
+        setMunicipality("");
+        setLocation("");
         return;
       }
       setLoadingLocation(true);
@@ -92,8 +92,8 @@ const Hero = () => {
       // Timeout para la detección de ubicación
       const timeoutId = setTimeout(() => {
         setLoadingLocation(false);
-        setMunicipality("Medellín");
-        setLocation("Medellín");
+        setMunicipality("");
+        setLocation("");
         toast.error("Tiempo agotado. Usando ubicación por defecto", {
           description: "Puedes cambiarla haciendo clic en tu ubicación"
         });
@@ -121,7 +121,7 @@ const Hero = () => {
           const address = data.address;
 
           // Extract municipality and sector
-          const municipalityName = address.city || address.town || address.municipality || address.county || "Medellín";
+          const municipalityName = address.city || address.town || address.municipality || address.county || "";
           const sectorName = address.suburb || address.neighbourhood || address.quarter || address.village || "";
           setMunicipality(municipalityName);
           setSector(sectorName);
@@ -129,11 +129,7 @@ const Hero = () => {
         } catch (error) {
           console.error("Error getting location:", error);
           // Usar ubicación por defecto en caso de error
-          setMunicipality("Medellín");
-          setLocation("Medellín");
-          toast.info("Usando ubicación por defecto: Medellín", {
-            description: "Puedes cambiarla haciendo clic en tu ubicación"
-          });
+
         } finally {
           setLoadingLocation(false);
         }
@@ -142,22 +138,7 @@ const Hero = () => {
         console.error("Geolocation error:", error);
         setLoadingLocation(false);
 
-        // Siempre establecer una ubicación por defecto
-        setMunicipality("Medellín");
-        setLocation("Medellín");
-        if (error.code === error.PERMISSION_DENIED) {
-          toast.error("Permiso de ubicación denegado", {
-            description: "Usando Medellín como ubicación por defecto"
-          });
-        } else if (error.code === error.TIMEOUT) {
-          toast.error("Tiempo agotado al obtener ubicación", {
-            description: "Usando Medellín como ubicación por defecto"
-          });
-        } else {
-          toast.error("Error al obtener ubicación", {
-            description: "Usando Medellín como ubicación por defecto"
-          });
-        }
+
       }, {
         enableHighAccuracy: true,
         timeout: 7000,
@@ -298,7 +279,7 @@ const Hero = () => {
         <div className="relative z-10 container mx-auto px-4 py-4 flex-1 flex items-center justify-center overflow-hidden">
           <SearchOptions 
             searchQuery={searchQuery} 
-            municipality={municipality || "Medellín"} 
+            municipality={municipality || ""} 
             sector={sector} 
             listingType={listingType}
             onSearchChange={newQuery => setSearchQuery(newQuery)} 
@@ -395,12 +376,29 @@ const Hero = () => {
 
                   {/* Botón Buscar - TERCERO */}
                   <div className="flex items-center gap-2 w-full">
-                    <Button variant="hero" size="lg" onClick={() => handleSearch()} disabled={!searchQuery.trim() || isRecording || isProcessing || isInterpretingSearch || loadingLocation} className="flex-1 min-w-[120px] text-base font-semibold">
-                      {isInterpretingSearch ? <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Procesando...
-                        </> : 'Buscar'}
-                    </Button>
+                  <Button
+                    variant="hero"
+                    size="lg"
+                    onClick={() => handleSearch()}
+                    disabled={
+                      !searchQuery.trim() ||
+                      isRecording ||
+                      isProcessing ||
+                      isInterpretingSearch ||
+                      loadingLocation
+                    }
+                    className="flex-1 min-w-[120px] text-base font-semibold transition-transform duration-150 ease-out hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    {isInterpretingSearch ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Procesando...
+                      </>
+                    ) : (
+                      "Buscar"
+                    )}
+                  </Button>
+
                     <VoiceButton isRecording={isRecording} isProcessing={isProcessing} audioLevel={audioLevel} onStart={handleStartVoiceRecording} onStop={handleStopVoiceRecording} onCancel={handleCancelVoiceRecording} disabled={loadingLocation || isInterpretingSearch} />
                   </div>
 
@@ -412,7 +410,7 @@ const Hero = () => {
                       </div> : <div className="flex items-center gap-1.5 justify-center">
                         <MapPin className="h-4 w-4 text-primary animate-bounce flex-shrink-0" />
                         <span className="text-sm font-medium">Tu ubicación:</span>
-                        {municipality && sector ? <span className="text-sm font-medium truncate">{municipality}, {sector}</span> : municipality ? <span className="text-sm font-medium truncate">{municipality}</span> : <span className="text-sm font-medium truncate">Medellín</span>}
+                        {municipality && sector ? <span className="text-sm font-medium truncate">{municipality}, {sector}</span> : municipality ? <span className="text-sm font-medium truncate">{municipality}</span> : <span className="text-sm font-medium truncate"></span>}
                       </div>}
                   </div>
                 </div>
@@ -473,34 +471,70 @@ const Hero = () => {
 
       {/* Location Confirmation Dialog */}
       <Dialog open={showLocationConfirmDialog} onOpenChange={setShowLocationConfirmDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader className="text-center">
-            <DialogTitle>Confirmar ubicación de búsqueda</DialogTitle>
-            <DialogDescription>
-              Estás usando tu ubicación en tiempo real para buscar propiedades.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="flex items-center gap-2 px-3 py-2 bg-primary/5 rounded-md border border-primary/20">
-              <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
-              <p className="text-xs text-muted-foreground">
-                <span className="text-foreground">{municipality}{sector && `, ${sector}`}</span>
-              </p>
-            </div>
-            
-            <div className="flex flex-col gap-3">
-              <Button onClick={handleContinueWithCurrentLocation} variant="default" className="w-full">
-                <MapPin className="mr-2 h-4 w-4" />
-                Continuar con mi ubicación actual
-              </Button>
-              
-              <Button onClick={handleChangeLocationForSearch} variant="outline" className="w-full">
-                <Search className="mr-2 h-4 w-4" />
-                Buscar en otra ubicación
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
+    <DialogContent
+      className="
+        w-[96vw]               /* ocupa casi todo el ancho en pantallas muy pequeñas */
+        max-w-[480px] sm:max-w-[600px] md:max-w-[720px] lg:max-w-[800px]
+        px-3 sm:px-6 md:px-8
+        py-3 sm:py-5
+        rounded-2xl
+        overflow-hidden
+      "
+    >
+      <DialogHeader className="text-center space-y-2">
+        <DialogTitle
+          className="
+            text-base [@media(max-width:340px)]:text-sm  /* más pequeño en pantallas menores a 340px */
+            sm:text-lg font-semibold leading-tight break-words
+          "
+        >
+          Confirmar ubicación de búsqueda
+        </DialogTitle>
+
+        <DialogDescription
+          className="
+            text-[11px] [@media(max-width:340px)]:text-[10px]  /* reduce fuente en pantallas muy angostas */
+            sm:text-sm md:text-base text-muted-foreground
+            leading-relaxed break-words text-balance
+            mx-auto max-w-[92%] sm:max-w-[85%]
+          "
+        >
+          Estás usando tu ubicación en tiempo real para buscar propiedades.
+        </DialogDescription>
+      </DialogHeader>
+
+      <div className="space-y-4 py-3">
+        <div className="flex items-center gap-2 px-2 sm:px-3 py-2 bg-primary/5 rounded-md border border-primary/20">
+          <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
+          <p className="text-[11px] sm:text-sm text-muted-foreground truncate">
+            <span className="text-foreground">
+              {municipality}
+              {sector && `, ${sector}`}
+            </span>
+          </p>
+        </div>
+
+        <div className="flex flex-col gap-2 sm:gap-3">
+          <Button
+            onClick={handleContinueWithCurrentLocation}
+            variant="default"
+            className="w-full text-[12px] sm:text-sm md:text-base py-2 sm:py-3"
+          >
+            <MapPin className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+            Continuar con mi ubicación actual
+          </Button>
+
+          <Button
+            onClick={handleChangeLocationForSearch}
+            variant="outline"
+            className="w-full text-[12px] sm:text-sm md:text-base py-2 sm:py-3"
+          >
+            <Search className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
+            Buscar en otra ubicación
+          </Button>
+        </div>
+      </div>
+    </DialogContent>
       </Dialog>
 
       {/* Location Selection Dialog */}

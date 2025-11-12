@@ -49,54 +49,63 @@ export const useInterpretSearch = () => {
     abortControllerRef.current = new AbortController();
     setIsProcessing(true);
 
-    try {
-      const { data, error } = await supabase.functions.invoke('interpret-search', {
-        body: { query: trimmedQuery }
+try {
+  // ⏳ Timeout máximo de 7 segundos
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 7000);
+
+  const { data, error } = await supabase.functions.invoke('interpret-search', {
+    body: { query: trimmedQuery },
+    signal: controller.signal, // 👈 Forzamos cancelación si tarda mucho
+  }).finally(() => clearTimeout(timeout));
+
+  if (error instanceof FunctionsHttpError) {
+    const errorData = await error.context.json();
+    if (errorData?.error === 'invalid_query') {
+      toast.error(errorData.message || 'Por favor describe mejor qué buscas', {
+        duration: 5000,
+        description: errorData.suggestion || "💡 Ejemplo: 'Apartamento de 2 habitaciones cerca del metro'",
       });
-
-      if (error instanceof FunctionsHttpError) {
-        const errorData = await error.context.json();
-        if (errorData?.error === 'invalid_query') {
-          toast.error(errorData.message || 'Por favor describe mejor qué buscas', {
-            duration: 5000,
-            description: errorData.suggestion || "💡 Ejemplo: 'Apartamento de 2 habitaciones cerca del metro'"
-          });
-          return null;
-        }
-      }
-
-      if (error) throw error;
-
-      // También manejar respuesta inválida con 200
-      if (data?.error === 'invalid_query') {
-        toast.error(data.message || 'Por favor describe mejor qué buscas', {
-          duration: 5000,
-          description: data.suggestion || "💡 Ejemplo: 'Apartamento de 2 habitaciones cerca del metro'"
-        });
-        return null;
-      }
-
-      const result: InterpretSearchResult = { filters: data?.filters || {} };
-      
-      // Guardar en caché
-      searchCache.set(trimmedQuery, {
-        data: result,
-        timestamp: Date.now()
-      });
-
-      return result;
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
-        console.log('Search cancelled');
-        return null;
-      }
-      console.error('Error interpreting search:', error);
-      toast.error('Error al procesar la búsqueda');
       return null;
-    } finally {
-      setIsProcessing(false);
-      abortControllerRef.current = null;
     }
+  }
+
+  if (error) throw error;
+  if (!data) {
+    toast.error('Sin respuesta del servidor. Intenta de nuevo.');
+    return null;
+  }
+
+  if (data?.error === 'invalid_query') {
+    toast.error(data.message || 'Por favor describe mejor qué buscas', {
+      duration: 5000,
+      description: data.suggestion || "💡 Ejemplo: 'Apartamento de 2 habitaciones cerca del metro'",
+    });
+    return null;
+  }
+
+  const result: InterpretSearchResult = { filters: data?.filters || {} };
+
+  searchCache.set(trimmedQuery, {
+    data: result,
+    timestamp: Date.now(),
+  });
+
+  return result;
+} catch (error: any) {
+  if (error.name === 'AbortError') {
+    toast.error('La búsqueda tardó demasiado (timeout)');
+    console.warn('🕒 Interpret-search abortado por timeout');
+    return null;
+  }
+  console.error('Error interpreting search:', error);
+  toast.error('Error al procesar la búsqueda');
+  return null;
+} finally {
+  setIsProcessing(false);
+  abortControllerRef.current = null;
+}
+
   }, []);
 
   return { interpretSearch, isProcessing };
