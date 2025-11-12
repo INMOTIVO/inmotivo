@@ -13,6 +13,7 @@ export const useVoiceRecording = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
   const [partialText, setPartialText] = useState(""); // 🔹 texto en vivo
+  const [micPermission, setMicPermission] = useState<'granted' | 'denied' | 'prompt'>('prompt');
 
   const recognitionRef = useRef<any>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -65,6 +66,28 @@ export const useVoiceRecording = () => {
     if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
     if (audioContextRef.current) audioContextRef.current.close();
     setAudioLevel(0);
+  }, []);
+
+  // 🎤 Verificar y solicitar permiso del micrófono
+  const requestMicrophonePermission = useCallback(async (): Promise<boolean> => {
+    try {
+      // Intentar obtener acceso al micrófono
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach(track => track.stop()); // Detener inmediatamente
+      setMicPermission('granted');
+      return true;
+    } catch (error: any) {
+      console.error('[Mic Permission] Error:', error);
+      if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+        setMicPermission('denied');
+        toast.error('Permiso de micrófono denegado', {
+          description: 'Por favor permite el acceso al micrófono en la configuración de tu navegador'
+        });
+      } else {
+        toast.error('No se pudo acceder al micrófono');
+      }
+      return false;
+    }
   }, []);
 
   // 🎤 INICIO DE GRABACIÓN CON TRANSCRIPCIÓN EN VIVO
@@ -195,6 +218,8 @@ export const useVoiceRecording = () => {
     isProcessing,
     audioLevel,
     partialText, // 🔹 texto que se actualiza en tiempo real
+    micPermission,
+    requestMicrophonePermission,
     startRecording,
     stopRecording,
     cancelRecording,

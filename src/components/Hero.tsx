@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Search, MapPin, Loader2, ArrowLeft, Check, ChevronsUpDown } from "lucide-react";
+import { Search, MapPin, Loader2, ArrowLeft, Check, ChevronsUpDown, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -41,6 +41,7 @@ const Hero = () => {
   const [pendingSearchQuery, setPendingSearchQuery] = useState("");
   const [useGPSForSearch, setUseGPSForSearch] = useState(false);
   const [extractedFilters, setExtractedFilters] = useState<any>(null);
+  const [showMicPermissionDialog, setShowMicPermissionDialog] = useState(false);
   const isMobile = useIsMobile();
   const {
     interpretSearch,
@@ -51,6 +52,8 @@ const Hero = () => {
     isProcessing,
     audioLevel,
     partialText,
+    micPermission,
+    requestMicrophonePermission,
     startRecording,
     stopRecording,
     cancelRecording
@@ -168,11 +171,39 @@ const Hero = () => {
     getCurrentLocation();
   }, []);
   const handleStartVoiceRecording = async () => {
+    // Si el permiso no ha sido otorgado, mostrar diálogo
+    if (micPermission === 'prompt') {
+      setShowMicPermissionDialog(true);
+      return;
+    }
+
+    if (micPermission === 'denied') {
+      toast.error('Permiso de micrófono denegado', {
+        description: 'Por favor permite el acceso al micrófono en la configuración de tu navegador'
+      });
+      return;
+    }
+
     try {
       await startRecording();
     } catch (error: any) {
       console.error('Error starting voice recording:', error);
       toast.error('Error al iniciar grabación');
+    }
+  };
+
+  const handleGrantMicPermission = async () => {
+    const granted = await requestMicrophonePermission();
+    setShowMicPermissionDialog(false);
+    
+    if (granted) {
+      // Iniciar grabación inmediatamente después de otorgar permiso
+      try {
+        await startRecording();
+      } catch (error: any) {
+        console.error('Error starting voice recording:', error);
+        toast.error('Error al iniciar grabación');
+      }
     }
   };
 
@@ -499,6 +530,31 @@ const Hero = () => {
                 Buscar en otra ubicación
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Microphone Permission Dialog */}
+      <Dialog open={showMicPermissionDialog} onOpenChange={setShowMicPermissionDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Mic className="h-5 w-5 text-primary" />
+              Permiso para usar el micrófono
+            </DialogTitle>
+            <DialogDescription className="text-left space-y-2 pt-2">
+              <p>Para buscar propiedades usando tu voz, necesitamos acceso al micrófono.</p>
+              <p className="text-sm">Tu voz no será almacenada ni compartida. Solo se usa para transcribir tu búsqueda.</p>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-3 pt-4">
+            <Button onClick={handleGrantMicPermission} variant="default" className="w-full">
+              <Mic className="mr-2 h-4 w-4" />
+              Permitir acceso al micrófono
+            </Button>
+            <Button onClick={() => setShowMicPermissionDialog(false)} variant="outline" className="w-full">
+              Cancelar
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
