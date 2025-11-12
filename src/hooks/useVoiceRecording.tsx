@@ -12,14 +12,67 @@ declare global {
 export const useVoiceRecording = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [audioLevel] = useState(0);
+  const [audioLevel, setAudioLevel] = useState(0);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
 
   const resolveRef = useRef<((value: string) => void) | null>(null);
   const rejectRef = useRef<((reason?: any) => void) | null>(null);
+
+  // Función para analizar el nivel de audio en tiempo real
+  const startAudioLevelMonitoring = useCallback((stream: MediaStream) => {
+    try {
+      const audioContext = new AudioContext();
+      const analyser = audioContext.createAnalyser();
+      const microphone = audioContext.createMediaStreamSource(stream);
+      
+      analyser.fftSize = 256;
+      analyser.smoothingTimeConstant = 0.3; // Reducido para más sensibilidad (antes 0.8)
+      microphone.connect(analyser);
+      
+      audioContextRef.current = audioContext;
+      analyserRef.current = analyser;
+      
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      
+      const updateLevel = () => {
+        if (!analyserRef.current) return;
+        
+        analyser.getByteFrequencyData(dataArray);
+        
+        // Calcular el promedio del nivel de audio
+        const average = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+        
+        // Normalizar a 0-1 y amplificar la sensibilidad
+        const normalized = Math.min(1, (average / 128) * 2); // Amplificación 2x
+        
+        setAudioLevel(normalized);
+        animationFrameRef.current = requestAnimationFrame(updateLevel);
+      };
+      
+      updateLevel();
+    } catch (error) {
+      console.error('[Audio Level] Error al iniciar monitoreo:', error);
+    }
+  }, []);
+
+  const stopAudioLevelMonitoring = useCallback(() => {
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+    analyserRef.current = null;
+    setAudioLevel(0);
+  }, []);
 
   const startRecording = useCallback(async () => {
     try {
@@ -34,6 +87,9 @@ export const useVoiceRecording = () => {
       });
       
       streamRef.current = stream;
+      
+      // Iniciar monitoreo de nivel de audio
+      startAudioLevelMonitoring(stream);
       
       let mimeType = 'audio/webm;codecs=opus';
       if (!MediaRecorder.isTypeSupported(mimeType)) {
@@ -54,6 +110,7 @@ export const useVoiceRecording = () => {
       mr.onstop = async () => {
         console.log('[Voz Manual] Grabación detenida, procesando...');
         setIsRecording(false);
+        stopAudioLevelMonitoring();
 
         if (audioChunksRef.current.length === 0) {
           console.error('[Voz Manual] Sin chunks de audio');
@@ -147,6 +204,8 @@ export const useVoiceRecording = () => {
   const cancelRecording = useCallback(() => {
     console.log('[Voz Manual] Cancelando grabación...');
     
+    stopAudioLevelMonitoring();
+    
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
       try {
         mediaRecorderRef.current.stop();
@@ -169,7 +228,7 @@ export const useVoiceRecording = () => {
     
     resolveRef.current = null;
     rejectRef.current = null;
-  }, []);
+  }, [stopAudioLevelMonitoring]);
 
   const recordOnce = useCallback(async (): Promise<string> => {
     const SR: any = (window.SpeechRecognition || window.webkitSpeechRecognition);
