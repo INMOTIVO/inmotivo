@@ -86,20 +86,26 @@ const VoiceButton = ({
         <div className="flex-1 flex items-center gap-[2px] sm:gap-0.5 justify-center h-8 px-1 min-w-0 overflow-hidden">
           {waveBars.map((_, i) => {
             // Create natural-looking wave with multiple frequencies and random variations
-            const time = recordingTime * 175; // Velocidad 5x aumentada para efecto tipo WhatsApp/Instagram
+            const time = recordingTime * 175;
             const baseWave = Math.sin((time + i * 1.1) * 2.2);
             const secondWave = Math.sin((time + i * 0.5) * 3.5) * 0.7;
             const thirdWave = Math.sin((time * 1.2 + i * 1.6) * 4.2) * 0.4;
             const randomNoise = Math.sin((time * 2.0 + i * 0.9) * 5) * 0.25;
             const combined = (baseWave + secondWave + thirdWave + randomNoise) / 2.35;
-            const height = combined * 12 + 16;
+            
+            // Modulate wave height by actual audio level (0-1)
+            // When audioLevel is low (silence), waves are small
+            // When audioLevel is high (noise), waves are tall
+            const baseHeight = combined * 12 + 16;
+            const audioMultiplier = Math.max(0.2, audioLevel); // Minimum 0.2 to keep some animation visible
+            const height = baseHeight * audioMultiplier;
             
             return (
               <div
                 key={i}
-                className="w-[2px] sm:w-0.5 bg-primary rounded-full transition-all duration-50 ease-linear flex-shrink-0"
+                className="w-[2px] sm:w-0.5 bg-primary rounded-full transition-all duration-100 ease-out flex-shrink-0"
                 style={{
-                  height: `${Math.max(6, Math.min(30, height))}px`,
+                  height: `${Math.max(4, Math.min(30, height))}px`,
                 }}
               />
             );
