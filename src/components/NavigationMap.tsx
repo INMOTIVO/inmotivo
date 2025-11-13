@@ -677,37 +677,32 @@ const NavigationMap = ({
               {directions ? (
                 transportMode === "walking" ? (
                   // 👣 HUELLAS EN MODO CAMINAR
-                  <svg 
-                    width="48" 
-                    height="48" 
-                    viewBox="0 0 24 24" 
-                    style={{
-                      transform: `rotate(${heading}deg)`,
-                      transition: "transform 0.3s",
-                      position: "relative",
-                      zIndex: 10,
-                      filter: "drop-shadow(0 8px 16px rgba(30,58,138,0.6))",
-                    }}
-                  >
-                    {/* Huella izquierda */}
-                    <path 
-                      d="M7 4C6 6 5 7 5 9c0 1 1 2 2 2s2-1 2-2c0-2-1-3-2-5z" 
-                      fill="#1d4ed8"
-                    />
-                    
-                    {/* Huella derecha */}
-                    <path 
-                      d="M17 4c-1 2-2 3-2 5 0 1 1 2 2 2s2-1 2-2c0-2-1-3-2-5z" 
-                      fill="#1d4ed8"
-                    />
-
-                    {/* Puntos de apoyo */}
-                    <circle cx="7" cy="13" r="2" fill="#1d4ed8"/>
-                    <circle cx="17" cy="13" r="2" fill="#1d4ed8"/>
+                  // 🟢 FLECHA EN MODO CARRO
+                  <svg width="42" height="42" viewBox="0 0 24 24" fill="none" style={{
+                    filter: 'drop-shadow(0 8px 20px rgba(34, 197, 94, 0.7))',
+                    position: 'relative',
+                    zIndex: 10,
+                    transform: `rotate(${heading}deg)`,
+                    transition: 'transform 0.3s ease-out'
+                  }}>
+                    <path d="M12 2L4 20L12 16L20 20L12 2Z" fill="rgba(0,0,0,0.2)" transform="translate(0, 1)" />
+                    <path d="M12 2L4 20L12 16L20 20L12 2Z" fill="url(#arrowGradient)" stroke="white" strokeWidth="2" strokeLinejoin="round" />
+                    <path d="M12 2L12 14" stroke="rgba(255,255,255,0.4)" strokeWidth="2" strokeLinecap="round" />
+                    <circle cx="12" cy="12" r="8" fill="none" stroke="#22c55e" strokeWidth="1.5" opacity="0.4">
+                      <animate attributeName="r" values="8;12;8" dur="2s" repeatCount="indefinite" />
+                      <animate attributeName="opacity" values="0.4;0;0.4" dur="2s" repeatCount="indefinite" />
+                    </circle>
+                    <defs>
+                      <linearGradient id="arrowGradient" x1="12" y1="2" x2="12" y2="20" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stopColor="#4ade80" />
+                        <stop offset="50%" stopColor="#22c55e" />
+                        <stop offset="100%" stopColor="#16a34a" />
+                      </linearGradient>
+                    </defs>
                   </svg>
                 ) : (
                   // 🟢 FLECHA EN MODO CARRO
-                  <svg width="56" height="56" viewBox="0 0 24 24" fill="none" style={{
+                  <svg width="42" height="42" viewBox="0 0 24 24" fill="none" style={{
                     filter: 'drop-shadow(0 8px 20px rgba(34, 197, 94, 0.7))',
                     position: 'relative',
                     zIndex: 10,
@@ -1069,144 +1064,129 @@ const NavigationMap = ({
 
       {/* Barra de control inferior - ocupa todo el ancho */}
       {userLocation && (
-        <div className="absolute bottom-4 left-0 right-0 z-[1000] px-4">
+        <div className="absolute bottom-3 left-0 right-0 z-[1000] flex justify-center px-4">
+
           <div
-            className={`
-              w-full max-w-xl mx-auto 
+            className="
+              w-full max-w-md
               rounded-3xl shadow-xl 
-              backdrop-blur-xl
+              bg-white/85 backdrop-blur-xl 
+              border border-gray-200
               transition-all duration-300
-              ${isDirectNavigation ? 'bg-white/80 border border-blue-300/50' : 'bg-white/70 border border-gray-300/40'}
-            `}
+              p-4 space-y-4
+            "
           >
-            <div className="px-5 py-4 space-y-4">
 
-              {/* ====== MODO DE TRANSPORTE ====== */}
-              <div className="flex items-center justify-center gap-4">
-                
-                {/* 🚗 CAR */}
+            {/* ====== FILA SUPERIOR ====== */}
+            <div className="flex items-center justify-between">
+
+              {/* Transporte */}
+              <div className="flex gap-2">
+
+                {/* Car */}
                 <button
-                  onClick={() => setTransportMode("driving")}
+                  onClick={() => setTransportMode('driving')}
                   className={`
-                    h-12 w-12 flex items-center justify-center rounded-full
-                    transition-all duration-200 shadow-sm
-                    ${transportMode === "driving"
-                      ? "bg-blue-600 text-white scale-110 shadow-md"
-                      : "bg-white text-blue-600 border border-blue-300/40 hover:bg-blue-100"
+                    h-10 w-10 rounded-full flex items-center justify-center
+                    transition-all shadow-sm
+                    ${transportMode === 'driving'
+                      ? 'bg-blue-600 text-white scale-110'
+                      : 'bg-white text-blue-600 border border-blue-300'
                     }
                   `}
                 >
-                  <Car className="h-6 w-6" />
+                  <Car className="h-5 w-5" />
                 </button>
 
-                {/* 🚶 WALK */}
+                {/* Walk */}
                 <button
-                  onClick={() => setTransportMode("walking")}
+                  onClick={() => setTransportMode('walking')}
                   className={`
-                    h-12 w-12 flex items-center justify-center rounded-full
-                    transition-all duration-200 shadow-sm
-                    ${transportMode === "walking"
-                      ? "bg-green-600 text-white scale-110 shadow-md"
-                      : "bg-white text-green-600 border border-green-300/40 hover:bg-green-100"
+                    h-10 w-10 rounded-full flex items-center justify-center
+                    transition-all shadow-sm
+                    ${transportMode === 'walking'
+                      ? 'bg-green-600 text-white scale-110'
+                      : 'bg-white text-green-600 border border-green-300'
                     }
                   `}
                 >
-                  <Footprints className="h-6 w-6" />
+                  <Footprints className="h-5 w-5" />
                 </button>
-
 
               </div>
 
+              {/* Botón Detener */}
+              <button
+                onClick={handleToggleNavigation}
+                className={`
+                  px-4 py-2 rounded-xl text-white font-semibold shadow-md
+                  text-sm
+                  ${isPaused
+                    ? 'bg-green-600 hover:bg-green-700'
+                    : 'bg-red-500 hover:bg-red-600'
+                  }
+                `}
+              >
+                {isPaused ? 'Reanudar' : 'Detener'}
+              </button>
 
-              {/* ====== TARJETA DE TIEMPO (ESTILO GOOGLE MAPS) ====== */}
-              {isDirectNavigation && directions && (
-                <div className="flex items-center justify-between p-3 rounded-xl bg-white/90 border border-gray-200 shadow-sm">
-                  
-                  <div className="flex items-center gap-3 min-w-0">
-                    <Navigation className="h-5 w-5 text-blue-600" />
-
-                    <div className="flex flex-col min-w-0">
-                      <span className="text-sm font-semibold text-gray-900 truncate">
-                        {directions.routes[0].legs[0].duration?.text} · {directions.routes[0].legs[0].distance?.text}
-                      </span>
-
-                      <span className="text-xs text-gray-500 truncate max-w-[200px]">
-                        {searchCriteria}
-                      </span>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={onStopNavigation}
-                    className="h-7 w-7 flex items-center justify-center rounded-full hover:bg-red-100 text-red-500 transition"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-
-                </div>
-              )}
-
-
-              {/* ====== MODO GPS NORMAL ====== */}
-              {!isDirectNavigation && (
-                <div className="space-y-4">
-
-                  {/* Botón Pausar / Reanudar */}
-                  <button
-                    onClick={handleToggleNavigation}
-                    className={`
-                      w-full py-3 rounded-xl text-white font-semibold shadow-md
-                      transition-all duration-200
-                      ${isPaused
-                        ? "bg-green-600 hover:bg-green-700"
-                        : "bg-red-500 hover:bg-red-600"
-                      }
-                    `}
-                  >
-                    {isPaused ? "Reanudar Navegación" : "Detener"}
-                  </button>
-
-                  {/* Card del radio */}
-                  <div className="bg-white/70 border border-gray-300/40 rounded-xl p-4 shadow-sm">
-                    <div className="flex justify-between text-xs mb-2">
-                      <span className="text-gray-600">Radio de búsqueda</span>
-                      <span className="font-bold text-gray-900">
-                        {searchRadius >= 1000
-                          ? `${(searchRadius / 1000).toFixed(1)} km`
-                          : `${searchRadius} m`}
-                      </span>
-                    </div>
-
-                    {/* Slider ultrafino estilo iOS */}
-                    <Slider
-                      value={[searchRadius]}
-                      min={100}
-                      max={2000}
-                      step={50}
-                      onValueChange={(v) => handleManualRadiusChange(v[0])}
-                      className="h-1"
-                    />
-                  </div>
-
-                  {/* Buscar */}
-                  <div
-                    onClick={() => { setEditSearchQuery(searchCriteria); setIsEditDialogOpen(true); }}
-                    className="flex items-center justify-between p-3 rounded-xl bg-white border border-green-500/40 shadow-sm hover:bg-green-50 cursor-pointer transition"
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <Search className="h-4 w-4 text-green-600" />
-                      <p className="text-sm font-medium truncate">
-                        {searchCriteria || "Propiedades cerca"}
-                      </p>
-                    </div>
-                    <Edit2 className="h-4 w-4 text-gray-500" />
-                  </div>
-                </div>
-              )}
             </div>
+
+
+
+            {/* ====== RADIO DE BÚSQUEDA (simple y pequeño) ====== */}
+            <div className="bg-white/80 border border-gray-300/40 rounded-xl p-3 shadow-sm">
+              
+              <div className="flex justify-between text-xs mb-1">
+                <span className="text-gray-600 font-medium">Radio</span>
+
+                <span className="font-semibold text-gray-900">
+                  {searchRadius >= 1000
+                    ? `${(searchRadius / 1000).toFixed(1)} km`
+                    : `${searchRadius} m`}
+                </span>
+              </div>
+
+              <Slider
+                value={[searchRadius]}
+                min={100}
+                max={2000}
+                step={50}
+                onValueChange={(v) => handleManualRadiusChange(v[0])}
+              />
+            </div>
+
+
+
+            {/* ====== BÚSQUEDA ====== */}
+            <div
+              onClick={() => { 
+                setEditSearchQuery(searchCriteria);
+                setIsEditDialogOpen(true); 
+              }}
+              className="
+                flex items-center justify-between 
+                p-3 rounded-xl bg-white 
+                border border-green-500/40 shadow-sm 
+                hover:bg-green-50 cursor-pointer transition
+              "
+            >
+
+              <div className="flex items-center gap-2 min-w-0">
+                <Search className="h-4 w-4 text-green-600" />
+                <p className="text-sm font-medium truncate">
+                  {searchCriteria || 'Propiedades cerca'}
+                </p>
+              </div>
+
+              <Edit2 className="h-4 w-4 text-gray-500" />
+            </div>
+
           </div>
+
         </div>
       )}
+
 
 
       {/* Dialog para editar búsqueda */}
