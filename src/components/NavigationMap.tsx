@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { X, Navigation, Edit2, MapPin, Car, Search } from 'lucide-react';
+import { X, Navigation, Edit2, MapPin, Car, Search, PersonStanding, Footprints } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { playNotificationSound } from '@/utils/notificationSound';
@@ -19,6 +19,8 @@ import { getCachedNearbyProperties, fetchRouteProperties, encodePolylineToGeoJSO
 import { calculateScore } from '@/utils/mapHelpers';
 import { showPropertyAlert, requestNotificationPermission } from '@/utils/notificationManager';
 import { debounce } from '@/utils/mapHelpers';
+
+
 interface NavigationMapProps {
   destination: [number, number];
   filters: any;
@@ -26,6 +28,23 @@ interface NavigationMapProps {
   searchCriteria?: string;
   isDirectNavigation?: boolean; // When true, shows only route to destination
 }
+const dynamicRadiusGrowth = (
+  distanceMovedMeters: number,
+  currentRadius: number
+): number => {
+
+  // si no te moviste → no hacer nada
+  if (distanceMovedMeters < 5) return currentRadius;
+
+  // escala de crecimiento: 1 metro de movimiento → +2 metros de radio
+  const newRadius = currentRadius + distanceMovedMeters * 2;
+
+  // límite entre 200 y 2000 metros
+  return Math.min(Math.max(newRadius, 200), 2000);
+};
+
+
+
 const NavigationMap = ({
   destination,
   filters,
@@ -34,11 +53,23 @@ const NavigationMap = ({
   isDirectNavigation = false
 }: NavigationMapProps) => {
   const navigate = useNavigate();
+  const [transportMode, setTransportMode] = useState<'driving' | 'walking'>('driving');
   const mapRef = useRef<google.maps.Map | null>(null);
   const [userLocation, setUserLocation] = useState<{
     lat: number;
     lng: number;
   } | null>(null);
+  
+  const [mapType, setMapType] = useState<google.maps.MapTypeId>(
+    google.maps.MapTypeId.ROADMAP
+  );
+
+  const [showLayersMenu, setShowLayersMenu] = useState(false);
+
+  const trafficLayerRef = useRef<google.maps.TrafficLayer | null>(null);
+
+
+
   const [heading, setHeading] = useState<number>(0);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editSearchQuery, setEditSearchQuery] = useState(searchCriteria);
@@ -230,6 +261,8 @@ const NavigationMap = ({
     const UPDATE_INTERVAL = isVehicleMode ? 3000 : 8000; // Reducir frecuencia significativamente
     
     watchId = navigator.geolocation.watchPosition(position => {
+      
+      
       if (isPaused) return;
       const now = Date.now();
       if (now - lastUpdate < UPDATE_INTERVAL) return;
@@ -328,7 +361,23 @@ const NavigationMap = ({
       
       previousLocation.current = { lat: newLocation.lat, lng: newLocation.lng, time: now };
       setUserLocation(newLocation);
-      
+
+      // ===============================
+      // 🔥 RADIO DINÁMICO MIENTRAS TE MUEVES
+      // ===============================
+      if (previousLocation.current) {
+        const moved = calculateDistance(
+          previousLocation.current.lat,
+          previousLocation.current.lng,
+          newLocation.lat,
+          newLocation.lng
+        ) * 1000; // km → metros
+
+        const updatedRadius = dynamicRadiusGrowth(moved, searchRadius);
+        setSearchRadius(updatedRadius);
+      }
+
+      updateDynamicRadius(newLocation)
       // Usar heading del GPS si está disponible, sino usar el calculado
       if (position.coords.heading !== null && position.coords.heading >= 0) {
         const gpsHeading = position.coords.heading;
@@ -338,26 +387,43 @@ const NavigationMap = ({
         setHeading(smoothHeading.current);
       }
       
-        if (mapRef.current) {
-          // Pan suave - Solo actualizar si hay cambio significativo (>10 metros en móvil)
-          const lastPos = mapRef.current.getCenter();
-          if (lastPos) {
-            const dist = calculateDistance(lastPos.lat(), lastPos.lng(), newLocation.lat, newLocation.lng);
-            if (dist > 0.01) { // ~10 metros
-              mapRef.current.panTo(newLocation);
-            }
-          }
-          
-          // Simplificar rotación - solo en modo vehículo y velocidad alta
-          if (!isPaused && isVehicleMode && speed > 15) {
-            mapRef.current.setHeading(smoothHeading.current);
-            mapRef.current.setTilt(45);
-          } else if (!isVehicleMode && mapRef.current.getHeading() !== 0) {
-            // Vista normal fuera de modo vehículo (solo si cambió)
-            mapRef.current.setHeading(0);
-            mapRef.current.setTilt(0);
-          }
-        }
+    // CONTROL TOTAL DEL MAPA (modo Waze real)
+    if (mapRef.current) {
+
+      // 1. Seguir SIEMPRE la ubicación del usuario (pan + snap)
+      const lastPos = mapRef.current.getCenter();
+      const dist = lastPos
+        ? calculateDistance(lastPos.lat(), lastPos.lng(), newLocation.lat, newLocation.lng)
+        : 0;
+
+      // Si hay un cambio mayor a ~3 metros, mover suavemente
+      if (dist > 0.003) {
+        mapRef.current.panTo(newLocation);
+      } else {
+        mapRef.current.setCenter(newLocation);
+      }
+
+      // 2. Rotar el mapa según heading suavizado
+      if (!isPaused) {
+        mapRef.current.setHeading(smoothHeading.current);
+
+        // Zoom dinámico:
+        // - Si vas rápido → más lejos
+        // - Si vas lento → más cerca
+        if (currentSpeed > 35) mapRef.current.setTilt(60);
+        else if (currentSpeed > 15) mapRef.current.setTilt(50);
+        else mapRef.current.setTilt(40);
+      }
+
+      // 3. Si está pausado → volver al modo normal
+      if (isPaused) {
+        mapRef.current.setHeading(0);
+        mapRef.current.setTilt(0);
+      }
+    }
+
+
+
     }, error => {
       console.error('Geolocation error:', error);
       if (error.code === 1) {
@@ -376,6 +442,43 @@ const NavigationMap = ({
     };
   }, [isPaused, isVehicleMode, collectedProperties.length, heading]);
   
+  const updateDynamicRadius = async (newLocation: { lat: number; lng: number }) => {
+    try {
+      const geocoder = new google.maps.Geocoder();
+
+      const results = await new Promise<google.maps.GeocoderResult[]>((resolve, reject) => {
+        geocoder.geocode({ location: newLocation }, (res, status) => {
+          if (status === "OK" && res) resolve(res);
+          else reject(status);
+        });
+      });
+
+      if (!results || !results[0]) return;
+
+      const viewport = results[0].geometry.viewport;
+      if (!viewport) return;
+
+      const ne = viewport.getNorthEast();
+      const sw = viewport.getSouthWest();
+
+      // Cálculo del tamaño del sector (diagonal del viewport)
+      const width = calculateDistance(ne.lat(), sw.lng(), ne.lat(), ne.lng());  // km
+      const height = calculateDistance(ne.lat(), ne.lng(), sw.lat(), ne.lng()); // km
+
+      const diagonalKm = Math.sqrt(width * width + height * height);
+
+      // Radio = mitad del tamaño del sector
+      const radiusMeters = (diagonalKm * 1000) / 2;
+
+      // Límite mínimo/máximo
+      const bounded = Math.max(150, Math.min(radiusMeters, 4000));
+
+      setSearchRadius(bounded);
+    } catch (error) {
+      console.error("Error actualizando radio dinámico:", error);
+    }
+  };
+
   // Función para calcular distancia entre dos puntos (Haversine)
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
     const R = 6371; // Radio de la Tierra en km
@@ -392,32 +495,27 @@ const NavigationMap = ({
   // Calculate directions - Optimizado para actualizar menos frecuentemente
   useEffect(() => {
     if (!userLocation || !isLoaded || isPaused) return;
-    
-    // Solo recalcular si nos movimos más de 50 metros
-    const shouldRecalculate = !directions || (previousLocation.current && 
-      calculateDistance(
-        previousLocation.current.lat,
-        previousLocation.current.lng,
-        userLocation.lat,
-        userLocation.lng
-      ) > 0.05);
-    
-    if (!shouldRecalculate) return;
-    
+
     const directionsService = new google.maps.DirectionsService();
+
     directionsService.route({
       origin: userLocation,
       destination: {
         lat: destination[0],
         lng: destination[1]
       },
-      travelMode: google.maps.TravelMode.DRIVING
+      travelMode:
+        transportMode === "walking"
+          ? google.maps.TravelMode.WALKING
+          : google.maps.TravelMode.DRIVING
     }, (result, status) => {
       if (status === google.maps.DirectionsStatus.OK && result) {
         setDirections(result);
       }
     });
-  }, [userLocation, destination, isPaused, isLoaded]);
+  }, [userLocation, destination, isPaused, isLoaded, transportMode]);
+
+
 
   // Request notification permission on mount
   useEffect(() => {
@@ -514,7 +612,8 @@ const NavigationMap = ({
       lng: -75.5658
     }} zoom={mapZoom} onLoad={map => {
       mapRef.current = map;
-      
+      trafficLayerRef.current = new google.maps.TrafficLayer();
+
       // In direct navigation mode, fit bounds to show entire route
       if (isDirectNavigation && directions && userLocation) {
         const bounds = new google.maps.LatLngBounds();
@@ -523,7 +622,8 @@ const NavigationMap = ({
         map.fitBounds(bounds, { top: 100, right: 50, bottom: 250, left: 50 });
       }
     }} onZoomChanged={handleZoomChanged} options={{
-      zoomControl: true,
+      mapTypeId: mapType,
+      zoomControl: false,
       streetViewControl: false,
       mapTypeControl: false,
       fullscreenControl: false,
@@ -566,68 +666,78 @@ const NavigationMap = ({
                 animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite 0.5s'
               }} />
                   
-                  {directions ?
-              // Navigation arrow when actively navigating - rota según la dirección de movimiento
-              <svg width="56" height="56" viewBox="0 0 24 24" fill="none" style={{
-                filter: 'drop-shadow(0 8px 20px rgba(34, 197, 94, 0.7))',
-                position: 'relative',
-                zIndex: 10,
-                transform: `rotate(${heading}deg)`,
-                transition: 'transform 0.3s ease-out'
-              }}>
-                      {/* Arrow shadow */}
-                      <path d="M12 2L4 20L12 16L20 20L12 2Z" fill="rgba(0,0,0,0.2)" transform="translate(0, 1)" />
-                      
-                      {/* Main arrow body */}
-                      <path d="M12 2L4 20L12 16L20 20L12 2Z" fill="url(#arrowGradient)" stroke="white" strokeWidth="2" strokeLinejoin="round" />
-                      
-                      {/* Arrow highlight */}
-                      <path d="M12 2L12 14" stroke="rgba(255,255,255,0.4)" strokeWidth="2" strokeLinecap="round" />
-                      
-                      {/* Pulse effect */}
-                      <circle cx="12" cy="12" r="8" fill="none" stroke="#22c55e" strokeWidth="1.5" opacity="0.4">
-                        <animate attributeName="r" values="8;12;8" dur="2s" repeatCount="indefinite" />
-                        <animate attributeName="opacity" values="0.4;0;0.4" dur="2s" repeatCount="indefinite" />
-                      </circle>
-                      
-                      <defs>
-                        <linearGradient id="arrowGradient" x1="12" y1="2" x2="12" y2="20" gradientUnits="userSpaceOnUse">
-                          <stop offset="0%" stopColor="#4ade80" />
-                          <stop offset="50%" stopColor="#22c55e" />
-                          <stop offset="100%" stopColor="#16a34a" />
-                        </linearGradient>
-                      </defs>
-                    </svg> :
-              // Location pin when not navigating
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style={{
-                filter: 'drop-shadow(0 8px 16px rgba(34, 197, 94, 0.6))',
-                position: 'relative',
-                zIndex: 10
-              }}>
-                      {/* Outer glow */}
-                      <circle cx="12" cy="10" r="7" fill="url(#glow)" opacity="0.4" />
-                      
-                      {/* Main pin shape */}
-                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="url(#gradient)" stroke="white" strokeWidth="1.5" />
-                      
-                      {/* Inner dot with pulse */}
-                      <circle cx="12" cy="9" r="3" fill="white">
-                        <animate attributeName="r" values="3;3.5;3" dur="1.5s" repeatCount="indefinite" />
-                        <animate attributeName="opacity" values="1;0.8;1" dur="1.5s" repeatCount="indefinite" />
-                      </circle>
-                      
-                      {/* Gradients */}
-                      <defs>
-                        <linearGradient id="gradient" x1="12" y1="2" x2="12" y2="22" gradientUnits="userSpaceOnUse">
-                          <stop offset="0%" stopColor="#4ade80" />
-                          <stop offset="100%" stopColor="#22c55e" />
-                        </linearGradient>
-                        <radialGradient id="glow" cx="12" cy="10" r="7" gradientUnits="userSpaceOnUse">
-                          <stop offset="0%" stopColor="#4ade80" stopOpacity="0.8" />
-                          <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
-                        </radialGradient>
-                      </defs>
-                    </svg>}
+              {directions ? (
+                transportMode === "walking" ? (
+                  // 👣 HUELLAS EN MODO CAMINAR
+                  <svg 
+                    width="48" 
+                    height="48" 
+                    viewBox="0 0 24 24" 
+                    style={{
+                      transform: `rotate(${heading}deg)`,
+                      transition: "transform 0.3s",
+                      position: "relative",
+                      zIndex: 10,
+                      filter: "drop-shadow(0 8px 16px rgba(30,58,138,0.6))",
+                    }}
+                  >
+                    {/* Huella izquierda */}
+                    <path 
+                      d="M7 4C6 6 5 7 5 9c0 1 1 2 2 2s2-1 2-2c0-2-1-3-2-5z" 
+                      fill="#1d4ed8"
+                    />
+                    
+                    {/* Huella derecha */}
+                    <path 
+                      d="M17 4c-1 2-2 3-2 5 0 1 1 2 2 2s2-1 2-2c0-2-1-3-2-5z" 
+                      fill="#1d4ed8"
+                    />
+
+                    {/* Puntos de apoyo */}
+                    <circle cx="7" cy="13" r="2" fill="#1d4ed8"/>
+                    <circle cx="17" cy="13" r="2" fill="#1d4ed8"/>
+                  </svg>
+                ) : (
+                  // 🟢 FLECHA EN MODO CARRO
+                  <svg width="56" height="56" viewBox="0 0 24 24" fill="none" style={{
+                    filter: 'drop-shadow(0 8px 20px rgba(34, 197, 94, 0.7))',
+                    position: 'relative',
+                    zIndex: 10,
+                    transform: `rotate(${heading}deg)`,
+                    transition: 'transform 0.3s ease-out'
+                  }}>
+                    <path d="M12 2L4 20L12 16L20 20L12 2Z" fill="rgba(0,0,0,0.2)" transform="translate(0, 1)" />
+                    <path d="M12 2L4 20L12 16L20 20L12 2Z" fill="url(#arrowGradient)" stroke="white" strokeWidth="2" strokeLinejoin="round" />
+                    <path d="M12 2L12 14" stroke="rgba(255,255,255,0.4)" strokeWidth="2" strokeLinecap="round" />
+                    <circle cx="12" cy="12" r="8" fill="none" stroke="#22c55e" strokeWidth="1.5" opacity="0.4">
+                      <animate attributeName="r" values="8;12;8" dur="2s" repeatCount="indefinite" />
+                      <animate attributeName="opacity" values="0.4;0;0.4" dur="2s" repeatCount="indefinite" />
+                    </circle>
+                    <defs>
+                      <linearGradient id="arrowGradient" x1="12" y1="2" x2="12" y2="20" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stopColor="#4ade80" />
+                        <stop offset="50%" stopColor="#22c55e" />
+                        <stop offset="100%" stopColor="#16a34a" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                )
+              ) : (
+                // 📍 PIN CUANDO NO HAY NAVEGACIÓN
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style={{
+                  filter: 'drop-shadow(0 8px 16px rgba(34, 197, 94, 0.6))',
+                  position: 'relative',
+                  zIndex: 10
+                }}>
+                  <circle cx="12" cy="10" r="7" fill="url(#glow)" opacity="0.4" />
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="url(#gradient)" stroke="white" strokeWidth="1.5" />
+                  <circle cx="12" cy="9" r="3" fill="white">
+                    <animate attributeName="r" values="3;3.5;3" dur="1.5s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="1;0.8;1" dur="1.5s" repeatCount="indefinite" />
+                  </circle>
+                </svg>
+              )}
+
                   <div style={{
                 width: '16px',
                 height: '16px',
@@ -667,17 +777,39 @@ const NavigationMap = ({
 
         {/* Directions renderer for direct navigation */}
         {isDirectNavigation && directions && (
-          <DirectionsRenderer
-            directions={directions}
-            options={{
-              suppressMarkers: true, // We'll use custom markers
-              polylineOptions: {
-                strokeColor: '#3b82f6',
-                strokeWeight: 6,
-                strokeOpacity: 0.8,
-              },
-            }}
-          />
+        <DirectionsRenderer
+          directions={directions}
+          options={{
+            suppressMarkers: true,
+            polylineOptions:
+              transportMode === "walking"
+                ? {
+                    strokeColor: "#16a34a",
+                    strokeWeight: 5,
+                    strokeOpacity: 0,
+                    icons: [
+                      {
+                        icon: {
+                          path: google.maps.SymbolPath.CIRCLE,
+                          scale: 4,
+                          fillColor: "#16a34a",
+                          fillOpacity: 1,
+                          strokeOpacity: 0,
+                        },
+                        offset: "0",
+                        repeat: "12px",
+                      },
+                    ],
+                  }
+                : {
+                    strokeColor: "#3b82f6",
+                    strokeWeight: 6,
+                    strokeOpacity: 0.9,
+                  },
+          }}
+        />
+
+
         )}
         
         {/* Destination marker in direct navigation mode */}
@@ -709,10 +841,10 @@ const NavigationMap = ({
           // Crear SVG con círculo verde titilante
           const svgMarker = `
             <svg width="56" height="72" viewBox="0 0 32 48" xmlns="http://www.w3.org/2000/svg">
-              <!-- Sombra del pin -->
+      
               <ellipse cx="16" cy="46" rx="8" ry="2" fill="rgba(0,0,0,0.3)"/>
               
-              <!-- Pin principal con gradiente -->
+        
               <defs>
                 <linearGradient id="pinGrad" x1="0%" y1="0%" x2="0%" y2="100%">
                   <stop offset="0%" style="stop-color:#22c55e;stop-opacity:1" />
@@ -728,23 +860,22 @@ const NavigationMap = ({
                     stroke="#ffffff" 
                     stroke-width="2.5"
                     filter="url(#shadow)"/>
-              
-              <!-- Círculo interior blanco -->
+
               <circle cx="16" cy="14" r="9" fill="white" opacity="0.98"/>
               
-              <!-- Círculo verde que titila -->
+
               <circle cx="16" cy="14" r="5" fill="#22c55e">
                 <animate attributeName="r" values="5;7;5" dur="1.5s" repeatCount="indefinite"/>
                 <animate attributeName="opacity" values="1;0.6;1" dur="1.5s" repeatCount="indefinite"/>
               </circle>
               
-              <!-- Anillo exterior del círculo titilante -->
+
               <circle cx="16" cy="14" r="5" fill="none" stroke="#22c55e" stroke-width="1.5">
                 <animate attributeName="r" values="5;8;5" dur="1.5s" repeatCount="indefinite"/>
                 <animate attributeName="opacity" values="0.8;0;0.8" dur="1.5s" repeatCount="indefinite"/>
               </circle>
               
-              <!-- Etiqueta de precio con sombra -->
+
               <rect x="2" y="27" width="28" height="13" rx="6.5" 
                     fill="#ffffff" 
                     stroke="#16a34a" 
@@ -779,106 +910,296 @@ const NavigationMap = ({
         })}
       </GoogleMap>
       
+      {/* === ZOOM CONTROL FIJO DENTRO DEL MAPA === */}
+      <div
+        className="
+          absolute 
+          z-[1200]
+          top-[calc(env(safe-area-inset-top)+72px)]
+          right-4
+          flex flex-col gap-2
+          pointer-events-auto
+        "
+      >
+        {/* + */}
+        <button
+          onClick={() => mapRef.current?.setZoom(mapRef.current.getZoom() + 1)}
+          className="
+            h-12 w-12 
+            bg-white rounded-xl border border-gray-200
+            shadow-[0_2px_10px_rgba(0,0,0,0.15)]
+            flex items-center justify-center 
+            text-gray-700 text-xl font-bold
+            active:scale-95 transition
+          "
+        >
+          +
+        </button>
+
+        {/* − */}
+        <button
+          onClick={() => mapRef.current?.setZoom(mapRef.current.getZoom() - 1)}
+          className="
+            h-12 w-12 
+            bg-white rounded-xl border border-gray-200
+            shadow-[0_2px_10px_rgba(0,0,0,0.15)]
+            flex items-center justify-center 
+            text-gray-700 text-2xl font-bold
+            active:scale-95 transition
+          "
+        >
+          −
+        </button>
+
+        {/* === BOTÓN DE CAPAS (debajo del menos) === */}
+        <button
+          onClick={() => setShowLayersMenu(!showLayersMenu)}
+          className="
+            h-12 w-12 mt-1
+            rounded-xl 
+            bg-white 
+            shadow-xl
+            border border-gray-200 
+            flex items-center justify-center
+            active:scale-95 transition
+          "
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="none" stroke="#374151" strokeWidth="2">
+            <path d="m12 3 8 4-8 4-8-4z"/>
+            <path d="m4 12 8 4 8-4"/>
+            <path d="m4 17 8 4 8-4"/>
+          </svg>
+        </button>
+
+{/* === MENÚ === */}
+{showLayersMenu && (
+  <div
+    className="
+      absolute right-14 top-[88px]
+      w-52 bg-white 
+      rounded-2xl p-3 
+      shadow-2xl border border-gray-200
+      backdrop-blur-md
+      animate-in fade-in zoom-in duration-150
+      z-[2001]
+    "
+  >
+    {/* MAPA ESTÁNDAR */}
+    <button
+      onClick={() => {
+        setMapType(google.maps.MapTypeId.ROADMAP);
+        setShowLayersMenu(false);
+      }}
+      className={`
+        flex items-center gap-3 p-2 mb-2 rounded-xl w-full transition
+        ${mapType === google.maps.MapTypeId.ROADMAP
+          ? "bg-blue-50 border border-blue-300 shadow-md"
+          : "hover:bg-gray-100"
+        }
+      `}
+    >
+      <img
+        src="/src/assets/ESTANDAR.png"
+        className="
+          h-10 w-10 
+          rounded-xl 
+          object-cover 
+          border border-gray-300
+          shadow-sm
+        "
+      />
+      <span
+        className={`
+          font-medium
+          ${mapType === google.maps.MapTypeId.ROADMAP ? "text-blue-700" : "text-gray-700"}
+        `}
+      >
+        Estándar
+      </span>
+    </button>
+
+    {/* SATÉLITE */}
+    <button
+      onClick={() => {
+        setMapType(google.maps.MapTypeId.HYBRID);
+        setShowLayersMenu(false);
+      }}
+      className={`
+        flex items-center gap-3 p-2 rounded-xl w-full transition
+        ${mapType === google.maps.MapTypeId.HYBRID
+          ? "bg-blue-50 border border-blue-300 shadow-md"
+          : "hover:bg-gray-100"
+        }
+      `}
+    >
+      <img
+        src="/src/assets/SATELITE.png"
+        className="
+          h-10 w-10 
+          rounded-xl 
+          object-cover 
+          border border-gray-300
+          shadow-sm
+        "
+      />
+      <span
+        className={`
+          font-medium
+          ${mapType === google.maps.MapTypeId.HYBRID ? "text-blue-700" : "text-gray-700"}
+        `}
+      >
+        Satélite
+      </span>
+    </button>
+  </div>
+)}
+
+      </div>
+
+
+
+
       {/* Barra de control inferior - ocupa todo el ancho */}
-      {userLocation && <div className="absolute bottom-0 left-0 right-0 z-[1000]">
-          <Card className={`rounded-none border-x-0 border-b-0 border-t-4 ${isDirectNavigation ? 'border-t-blue-500' : 'border-t-yellow-500'} backdrop-blur-md shadow-2xl ${!isPaused ? 'bg-background/30' : 'bg-background/95'}`}>
-            <div className="container mx-auto px-6 py-4">
-              {isDirectNavigation ? (
-                // Direct navigation UI - shows route info
-                <div className="space-y-3">
-                  {/* Route Info Card */}
-                  {directions && (
-                    <div className="bg-background/80 rounded-xl p-4 border-2 border-blue-500/50 shadow-lg">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <Navigation className="h-5 w-5 text-blue-500" />
-                          <h3 className="font-bold text-lg">Navegando a tu destino</h3>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={onStopNavigation}
-                          className="text-destructive hover:bg-destructive/10"
-                        >
-                          <X className="h-5 w-5" />
-                        </Button>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-background/50 rounded-lg p-3 border border-border/50">
-                          <p className="text-xs text-muted-foreground mb-1">Distancia</p>
-                          <p className="text-xl font-bold text-primary">
-                            {directions.routes[0].legs[0].distance?.text || 'Calculando...'}
-                          </p>
-                        </div>
-                        <div className="bg-background/50 rounded-lg p-3 border border-border/50">
-                          <p className="text-xs text-muted-foreground mb-1">Tiempo estimado</p>
-                          <p className="text-xl font-bold text-primary">
-                            {directions.routes[0].legs[0].duration?.text || 'Calculando...'}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="mt-3 flex items-start gap-2 text-sm">
-                        <MapPin className="h-4 w-4 text-blue-500 flex-shrink-0 mt-0.5" />
-                        <p className="text-foreground/80 line-clamp-2">
-                          {searchCriteria || 'Destino'}
-                        </p>
-                      </div>
+      {userLocation && (
+        <div className="absolute bottom-4 left-0 right-0 z-[1000] px-4">
+          <div
+            className={`
+              w-full max-w-xl mx-auto 
+              rounded-3xl shadow-xl 
+              backdrop-blur-xl
+              transition-all duration-300
+              ${isDirectNavigation ? 'bg-white/80 border border-blue-300/50' : 'bg-white/70 border border-gray-300/40'}
+            `}
+          >
+            <div className="px-5 py-4 space-y-4">
+
+              {/* ====== MODO DE TRANSPORTE ====== */}
+              <div className="flex items-center justify-center gap-4">
+                
+                {/* 🚗 CAR */}
+                <button
+                  onClick={() => setTransportMode("driving")}
+                  className={`
+                    h-12 w-12 flex items-center justify-center rounded-full
+                    transition-all duration-200 shadow-sm
+                    ${transportMode === "driving"
+                      ? "bg-blue-600 text-white scale-110 shadow-md"
+                      : "bg-white text-blue-600 border border-blue-300/40 hover:bg-blue-100"
+                    }
+                  `}
+                >
+                  <Car className="h-6 w-6" />
+                </button>
+
+                {/* 🚶 WALK */}
+                <button
+                  onClick={() => setTransportMode("walking")}
+                  className={`
+                    h-12 w-12 flex items-center justify-center rounded-full
+                    transition-all duration-200 shadow-sm
+                    ${transportMode === "walking"
+                      ? "bg-green-600 text-white scale-110 shadow-md"
+                      : "bg-white text-green-600 border border-green-300/40 hover:bg-green-100"
+                    }
+                  `}
+                >
+                  <Footprints className="h-6 w-6" />
+                </button>
+
+
+              </div>
+
+
+              {/* ====== TARJETA DE TIEMPO (ESTILO GOOGLE MAPS) ====== */}
+              {isDirectNavigation && directions && (
+                <div className="flex items-center justify-between p-3 rounded-xl bg-white/90 border border-gray-200 shadow-sm">
+                  
+                  <div className="flex items-center gap-3 min-w-0">
+                    <Navigation className="h-5 w-5 text-blue-600" />
+
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-sm font-semibold text-gray-900 truncate">
+                        {directions.routes[0].legs[0].duration?.text} · {directions.routes[0].legs[0].distance?.text}
+                      </span>
+
+                      <span className="text-xs text-gray-500 truncate max-w-[200px]">
+                        {searchCriteria}
+                      </span>
                     </div>
-                  )}
+                  </div>
+
+                  <button
+                    onClick={onStopNavigation}
+                    className="h-7 w-7 flex items-center justify-center rounded-full hover:bg-red-100 text-red-500 transition"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+
                 </div>
-              ) : (
-                // GPS navigation UI - original controls
-                <div className="flex items-center gap-3">
-                  {/* Botón Ir/Detener */}
-                  <Button onClick={handleToggleNavigation} variant={isPaused ? "default" : "destructive"} size="lg" className={`shrink-0 px-6 py-6 h-auto ${isPaused ? 'bg-green-600 hover:bg-green-700' : ''}`}>
-                    {isPaused ? <>
-                        <Navigation className="h-6 w-6" />
-                      </> : <>
-                        <X className="h-6 w-6" />
-                      </>}
-                  </Button>
+              )}
 
-                  <div className="flex-1 min-w-0">
-                    {/* Radio y propiedades */}
-                    <div className="bg-background/50 rounded-lg p-3 mb-3 border border-border/50">
-                      <div className="flex-1 space-y-1">
-                        <div className="flex items-center justify-between text-xs mb-2">
-                          <span className="text-muted-foreground font-medium">Radio de Búsqueda</span>
-                          <span className="font-bold text-primary">
-                            {searchRadius >= 1000 ? `${(searchRadius / 1000).toFixed(1)} km` : `${searchRadius} m`}
-                          </span>
-                        </div>
-                        <Slider value={[searchRadius]} onValueChange={value => handleManualRadiusChange(value[0])} min={100} max={1000} step={50} className="w-full" />
-                      </div>
+
+              {/* ====== MODO GPS NORMAL ====== */}
+              {!isDirectNavigation && (
+                <div className="space-y-4">
+
+                  {/* Botón Pausar / Reanudar */}
+                  <button
+                    onClick={handleToggleNavigation}
+                    className={`
+                      w-full py-3 rounded-xl text-white font-semibold shadow-md
+                      transition-all duration-200
+                      ${isPaused
+                        ? "bg-green-600 hover:bg-green-700"
+                        : "bg-red-500 hover:bg-red-600"
+                      }
+                    `}
+                  >
+                    {isPaused ? "Reanudar Navegación" : "Detener"}
+                  </button>
+
+                  {/* Card del radio */}
+                  <div className="bg-white/70 border border-gray-300/40 rounded-xl p-4 shadow-sm">
+                    <div className="flex justify-between text-xs mb-2">
+                      <span className="text-gray-600">Radio de búsqueda</span>
+                      <span className="font-bold text-gray-900">
+                        {searchRadius >= 1000
+                          ? `${(searchRadius / 1000).toFixed(1)} km`
+                          : `${searchRadius} m`}
+                      </span>
                     </div>
 
-                    {/* Separador visual */}
-                    <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent mb-3" />
+                    {/* Slider ultrafino estilo iOS */}
+                    <Slider
+                      value={[searchRadius]}
+                      min={100}
+                      max={2000}
+                      step={50}
+                      onValueChange={(v) => handleManualRadiusChange(v[0])}
+                      className="h-1"
+                    />
+                  </div>
 
-                    {/* Información de búsqueda */}
-                    <div 
-                      className="flex items-center justify-between gap-2 border-2 border-green-500 rounded-lg p-2.5 cursor-pointer hover:bg-accent/10 transition-colors shadow-sm"
-                      onClick={() => {
-                        setEditSearchQuery(searchCriteria);
-                        setIsEditDialogOpen(true);
-                      }}
-                    >
-                      <div className="flex-1 min-w-0 flex items-center gap-2">
-                        <Search className="h-4 w-4 text-primary flex-shrink-0" />
-                        <p className="text-sm font-medium leading-tight line-clamp-1">
-                          {searchCriteria || 'Propiedades cerca'}
-                        </p>
-                      </div>
-                      <Edit2 className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                  {/* Buscar */}
+                  <div
+                    onClick={() => { setEditSearchQuery(searchCriteria); setIsEditDialogOpen(true); }}
+                    className="flex items-center justify-between p-3 rounded-xl bg-white border border-green-500/40 shadow-sm hover:bg-green-50 cursor-pointer transition"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Search className="h-4 w-4 text-green-600" />
+                      <p className="text-sm font-medium truncate">
+                        {searchCriteria || "Propiedades cerca"}
+                      </p>
                     </div>
+                    <Edit2 className="h-4 w-4 text-gray-500" />
                   </div>
                 </div>
               )}
             </div>
-          </Card>
-        </div>}
+          </div>
+        </div>
+      )}
+
 
       {/* Dialog para editar búsqueda */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
