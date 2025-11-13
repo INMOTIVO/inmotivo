@@ -117,7 +117,9 @@ const PropertiesCatalog = () => {
       // Filter by location name if provided (and no GPS coordinates)
       if (filters.location && !userLat && !userLng) {
         const locationLower = filters.location.toLowerCase();
-        query = query.or(`city.ilike.%${locationLower}%,neighborhood.ilike.%${locationLower}%`);
+        // Extract the first meaningful word (usually the city name)
+        const cityName = locationLower.split(/[\s,]+/)[0]; // Split by spaces or commas and get first word
+        query = query.or(`city.ilike.%${cityName}%,neighborhood.ilike.%${locationLower}%`);
       }
 
       const { data, error } = await query.order('created_at', { ascending: false });
