@@ -60,9 +60,7 @@ const NavigationMap = ({
     lng: number;
   } | null>(null);
   
-  const [mapType, setMapType] = useState<google.maps.MapTypeId>(
-    google.maps.MapTypeId.ROADMAP
-  );
+  const [mapType, setMapType] = useState<'roadmap' | 'satellite'>('roadmap');
 
   const [showLayersMenu, setShowLayersMenu] = useState(false);
 
@@ -161,6 +159,18 @@ const NavigationMap = ({
   const {
     isLoaded
   } = useGoogleMapsLoader();
+
+  // Don't render until Google Maps is loaded
+  if (!isLoaded) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Cargando mapa...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Convertir zoom a radio de búsqueda
   const zoomToRadius = (zoom: number): number => {
@@ -622,7 +632,7 @@ const NavigationMap = ({
         map.fitBounds(bounds, { top: 100, right: 50, bottom: 250, left: 50 });
       }
     }} onZoomChanged={handleZoomChanged} options={{
-      mapTypeId: mapType,
+      mapTypeId: mapType === 'satellite' ? google.maps.MapTypeId.HYBRID : google.maps.MapTypeId.ROADMAP,
       zoomControl: false,
       streetViewControl: false,
       mapTypeControl: false,
@@ -987,12 +997,12 @@ const NavigationMap = ({
     {/* MAPA ESTÁNDAR */}
     <button
       onClick={() => {
-        setMapType(google.maps.MapTypeId.ROADMAP);
+        setMapType('roadmap');
         setShowLayersMenu(false);
       }}
       className={`
         flex items-center gap-3 p-2 mb-2 rounded-xl w-full transition
-        ${mapType === google.maps.MapTypeId.ROADMAP
+        ${mapType === 'roadmap'
           ? "bg-blue-50 border border-blue-300 shadow-md"
           : "hover:bg-gray-100"
         }
@@ -1011,7 +1021,7 @@ const NavigationMap = ({
       <span
         className={`
           font-medium
-          ${mapType === google.maps.MapTypeId.ROADMAP ? "text-blue-700" : "text-gray-700"}
+          ${mapType === 'roadmap' ? "text-blue-700" : "text-gray-700"}
         `}
       >
         Estándar
@@ -1021,12 +1031,12 @@ const NavigationMap = ({
     {/* SATÉLITE */}
     <button
       onClick={() => {
-        setMapType(google.maps.MapTypeId.HYBRID);
+        setMapType('satellite');
         setShowLayersMenu(false);
       }}
       className={`
         flex items-center gap-3 p-2 rounded-xl w-full transition
-        ${mapType === google.maps.MapTypeId.HYBRID
+        ${mapType === 'satellite'
           ? "bg-blue-50 border border-blue-300 shadow-md"
           : "hover:bg-gray-100"
         }
@@ -1045,7 +1055,7 @@ const NavigationMap = ({
       <span
         className={`
           font-medium
-          ${mapType === google.maps.MapTypeId.HYBRID ? "text-blue-700" : "text-gray-700"}
+          ${mapType === 'satellite' ? "text-blue-700" : "text-gray-700"}
         `}
       >
         Satélite
