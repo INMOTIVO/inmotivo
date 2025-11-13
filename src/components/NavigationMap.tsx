@@ -52,6 +52,9 @@ const NavigationMap = ({
   searchCriteria = '',
   isDirectNavigation = false
 }: NavigationMapProps) => {
+  // Load Google Maps first (must be before any other hooks)
+  const { isLoaded } = useGoogleMapsLoader();
+  
   const navigate = useNavigate();
   const [transportMode, setTransportMode] = useState<'driving' | 'walking'>('driving');
   const mapRef = useRef<google.maps.Map | null>(null);
@@ -156,21 +159,6 @@ const NavigationMap = ({
 
     return icons[propertyType?.toLowerCase()] || icons['default'];
   };
-  const {
-    isLoaded
-  } = useGoogleMapsLoader();
-
-  // Don't render until Google Maps is loaded
-  if (!isLoaded) {
-    return (
-      <div className="w-full h-full flex items-center justify-center bg-background">
-        <div className="text-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground">Cargando mapa...</p>
-        </div>
-      </div>
-    );
-  }
 
   // Convertir zoom a radio de búsqueda
   const zoomToRadius = (zoom: number): number => {
@@ -610,9 +598,19 @@ const NavigationMap = ({
     });
     setIsEditDialogOpen(false);
   };
+  
+  // Show loading state while Google Maps API loads
   if (!isLoaded) {
-    return <div className="w-full h-full flex items-center justify-center">Cargando mapa...</div>;
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-background">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Cargando mapa...</p>
+        </div>
+      </div>
+    );
   }
+  
   return <div className="relative w-full h-full">
       <GoogleMap mapContainerStyle={{
       width: '100%',
