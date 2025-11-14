@@ -65,6 +65,7 @@ const NavigationMap = ({
   
   const [mapType, setMapType] = useState<'roadmap' | 'satellite'>('roadmap');
 
+
   const [showLayersMenu, setShowLayersMenu] = useState(false);
 
   const trafficLayerRef = useRef<google.maps.TrafficLayer | null>(null);
@@ -82,7 +83,12 @@ const NavigationMap = ({
   const isManualRadiusChange = useRef(false);
   const lastHeadingUpdate = useRef<number>(0);
   const smoothHeading = useRef<number>(0);
-  
+  const leg = useMemo(() => {
+    if (!directions?.routes?.length) return null;
+    return directions.routes[0].legs[0];
+  }, [directions]);
+
+
   // Estados para detección de velocidad y modo vehículo
   const [currentSpeed, setCurrentSpeed] = useState<number>(0);
   const [isVehicleMode, setIsVehicleMode] = useState(false);
@@ -260,7 +266,16 @@ const NavigationMap = ({
     
     watchId = navigator.geolocation.watchPosition(position => {
       
-      
+      // 🚫 Ignorar posiciones imprecisas
+      if (position.coords.accuracy > 25) {
+        console.warn(
+          "GPS ignorado por baja precisión:",
+          position.coords.accuracy,
+          "metros"
+        );
+        return;
+      }
+
       if (isPaused) return;
       const now = Date.now();
       if (now - lastUpdate < UPDATE_INTERVAL) return;
@@ -310,12 +325,12 @@ const NavigationMap = ({
           if (Math.abs(headingDiff) > 180) {
             // Manejo de cruce 0-360
             if (headingDiff > 0) {
-              smoothHeading.current += (headingDiff - 360) * 0.3;
+              smoothHeading.current += (headingDiff - 360) * 0.6;
             } else {
-              smoothHeading.current += (headingDiff + 360) * 0.3;
+              smoothHeading.current += (headingDiff + 360) * 0.6;
             }
           } else {
-            smoothHeading.current += headingDiff * 0.3;
+            smoothHeading.current += headingDiff * 0.6;
           }
           
           // Normalizar smooth heading
@@ -357,7 +372,21 @@ const NavigationMap = ({
         }
       }
       
-      previousLocation.current = { lat: newLocation.lat, lng: newLocation.lng, time: now };
+      // 🚫 Ignorar movimientos falsos menores a 3 metros
+      if (previousLocation.current) {
+        const dist = calculateDistance(
+          previousLocation.current.lat,
+          previousLocation.current.lng,
+          newLocation.lat,
+          newLocation.lng
+        ) * 1000;
+
+        if (dist < 3) {
+          console.warn("Movimiento ignorado (ruido del GPS):", dist, "m");
+          return;
+        }
+      }
+
       setUserLocation(newLocation);
 
       // ===============================
@@ -377,13 +406,17 @@ const NavigationMap = ({
 
       updateDynamicRadius(newLocation)
       // Usar heading del GPS si está disponible, sino usar el calculado
-      if (position.coords.heading !== null && position.coords.heading >= 0) {
-        const gpsHeading = position.coords.heading;
-        smoothHeading.current = gpsHeading;
-        setHeading(gpsHeading);
-      } else if (calculatedHeading !== heading) {
+      if (
+        position.coords.heading !== null &&
+        position.coords.speed > 1 &&   // solo si hay movimiento real
+        position.coords.accuracy < 25  // solo si el GPS está “bueno”
+      ) {
+        smoothHeading.current = position.coords.heading;
+        setHeading(position.coords.heading);
+      } else {
         setHeading(smoothHeading.current);
       }
+
       
     // CONTROL TOTAL DEL MAPA (modo Waze real)
     if (mapRef.current) {
@@ -419,6 +452,13 @@ const NavigationMap = ({
         mapRef.current.setTilt(0);
       }
     }
+    console.log({
+      lat: position.coords.latitude,
+      lng: position.coords.longitude,
+      accuracy: position.coords.accuracy,
+      heading: position.coords.heading,
+      speed: position.coords.speed
+    });
 
 
 
@@ -429,11 +469,13 @@ const NavigationMap = ({
           id: 'geo-error'
         });
       }
-    }, {
-      enableHighAccuracy: false, // Usar GPS menos preciso pero más rápido en móvil
-      maximumAge: 5000, // Permitir caché de 5 segundos
-      timeout: 15000 // Timeout más largo
-    });
+    }, 
+    {
+      enableHighAccuracy: true,
+      maximumAge: 0,
+      timeout: 5000
+    }
+    );
     
     return () => {
       if (watchId) navigator.geolocation.clearWatch(watchId);
@@ -442,7 +484,11 @@ const NavigationMap = ({
   
   const updateDynamicRadius = async (newLocation: { lat: number; lng: number }) => {
     try {
-      const geocoder = new google.maps.Geocoder();
+      // importar librería geocoding correctamente tipada
+      const geocoding = (await google.maps.importLibrary("geocoding")) as google.maps.GeocodingLibrary;
+      const geocoder = new geocoding.Geocoder();
+
+
 
       const results = await new Promise<google.maps.GeocoderResult[]>((resolve, reject) => {
         geocoder.geocode({ location: newLocation }, (res, status) => {
@@ -1114,6 +1160,14 @@ const NavigationMap = ({
                 </button>
 
               </div>
+              {/* DISTANCIA Y TIEMPO */}
+              {leg && (
+                <div className="bg-green-50 border border-green-200 rounded-xl p-3 text-center shadow-sm mb-2">
+                  <p className="text-sm font-semibold text-green-700">
+                    {leg.distance?.text || '--'} • {leg.duration?.text || '--'}
+                  </p>
+                </div>
+              )}
 
               {/* Botón Detener */}
               <button
