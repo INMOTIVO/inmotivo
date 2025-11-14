@@ -54,7 +54,7 @@ const PropertyDetail = () => {
           agency:agencies(name, phone, email)
         `)
         .eq("id", id)
-        .single();
+        .single() as any;
 
       if (error) throw error;
       return data;
