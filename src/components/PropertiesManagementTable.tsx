@@ -82,7 +82,7 @@ const PropertiesManagementTable = ({
       const { data, error } = await query;
 
       if (error) throw error;
-      setProperties(data || []);
+      setProperties((data || []) as any);
     } catch (error) {
       console.error('Error fetching properties:', error);
       toast.error('Error al cargar propiedades');
