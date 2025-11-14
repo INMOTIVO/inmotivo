@@ -25,7 +25,7 @@ import { toast } from 'sonner';
 interface Property {
   id: string;
   title: string;
-  property_code?: string;
+  property_code: string;
   price: number;
   currency: string;
   status: string;

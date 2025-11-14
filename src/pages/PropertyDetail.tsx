@@ -31,6 +31,7 @@ const PropertyDetail = () => {
           title,
           description,
           property_type,
+          property_code,
           address,
           neighborhood,
           city,
@@ -300,9 +301,9 @@ const PropertyDetail = () => {
                   {property.verified && (
                     <Badge variant="secondary" className="text-xs md:text-sm">Verificado</Badge>
                   )}
-                  {(property as any).property_code && (
+                  {property.property_code && (
                     <Badge variant="outline" className="font-mono text-xs md:text-sm">
-                      {(property as any).property_code}
+                      {property.property_code}
                     </Badge>
                   )}
                 </div>
