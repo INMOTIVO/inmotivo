@@ -260,6 +260,8 @@ const NavigationMap = ({
     
     watchId = navigator.geolocation.watchPosition(position => {
       
+      // Filtro 1: Ignorar lecturas imprecisas
+      if (position.coords.accuracy > 25) return;
       
       if (isPaused) return;
       const now = Date.now();
@@ -271,6 +273,18 @@ const NavigationMap = ({
         lat: position.coords.latitude,
         lng: position.coords.longitude
       };
+      
+      // Filtro 2: Ignorar saltos falsos menores a 3 metros
+      if (previousLocation.current) {
+        const moved = calculateDistance(
+          previousLocation.current.lat,
+          previousLocation.current.lng,
+          newLocation.lat,
+          newLocation.lng
+        ) * 1000;
+        
+        if (moved < 3) return;
+      }
       
       // Calcular velocidad y heading desde movimiento
       let speed = 0;
@@ -430,9 +444,9 @@ const NavigationMap = ({
         });
       }
     }, {
-      enableHighAccuracy: false, // Usar GPS menos preciso pero más rápido en móvil
-      maximumAge: 5000, // Permitir caché de 5 segundos
-      timeout: 15000 // Timeout más largo
+      enableHighAccuracy: true,
+      maximumAge: 0,
+      timeout: 5000
     });
     
     return () => {
