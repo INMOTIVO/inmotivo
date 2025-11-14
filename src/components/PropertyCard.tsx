@@ -19,9 +19,10 @@ interface PropertyCardProps {
   imageUrl: string;
   type: string;
   isFavorite: boolean;
+  propertyCode?: string;
 }
 
-const PropertyCard = ({ id, title, price, location, beds, baths, area, imageUrl, type, isFavorite }: PropertyCardProps) => {
+const PropertyCard = ({ id, title, price, location, beds, baths, area, imageUrl, type, isFavorite, propertyCode }: PropertyCardProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -81,6 +82,11 @@ const PropertyCard = ({ id, title, price, location, beds, baths, area, imageUrl,
         <Badge className="absolute top-3 left-3 bg-primary text-primary-foreground text-xs">
           {type}
         </Badge>
+        {propertyCode && (
+          <Badge className="absolute top-3 right-14 bg-secondary text-secondary-foreground text-xs font-mono">
+            {propertyCode}
+          </Badge>
+        )}
         <Button
           variant="ghost"
           size="icon"

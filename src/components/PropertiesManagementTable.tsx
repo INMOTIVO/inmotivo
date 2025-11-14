@@ -25,6 +25,7 @@ import { toast } from 'sonner';
 interface Property {
   id: string;
   title: string;
+  property_code: string;
   price: number;
   currency: string;
   status: string;
@@ -195,17 +196,18 @@ const PropertiesManagementTable = ({
           ) : (
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Título</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Ubicación</TableHead>
-                    <TableHead>Precio</TableHead>
-                    <TableHead>Estado</TableHead>
-                    {isAdmin && <TableHead>Propietario</TableHead>}
-                    <TableHead className="text-right">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Código</TableHead>
+                <TableHead>Título</TableHead>
+                <TableHead>Tipo</TableHead>
+                <TableHead>Ubicación</TableHead>
+                <TableHead>Precio</TableHead>
+                <TableHead>Estado</TableHead>
+                {isAdmin && <TableHead>Propietario</TableHead>}
+                <TableHead className="text-right">Acciones</TableHead>
+              </TableRow>
+            </TableHeader>
                 <TableBody>
                   {properties.map((property) => {
                     const priceFormatted = new Intl.NumberFormat('es-CO', {
@@ -216,6 +218,9 @@ const PropertiesManagementTable = ({
 
                     return (
                       <TableRow key={property.id}>
+                        <TableCell className="font-mono text-sm">
+                          {property.property_code}
+                        </TableCell>
                         <TableCell className="font-medium max-w-[200px] truncate">
                           {property.title}
                         </TableCell>
