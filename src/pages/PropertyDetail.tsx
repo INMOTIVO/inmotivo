@@ -31,6 +31,7 @@ const PropertyDetail = () => {
           title,
           description,
           property_type,
+          property_code,
           address,
           neighborhood,
           city,
@@ -299,6 +300,11 @@ const PropertyDetail = () => {
                   </Badge>
                   {property.verified && (
                     <Badge variant="secondary" className="text-xs md:text-sm">Verificado</Badge>
+                  )}
+                  {property.property_code && (
+                    <Badge variant="outline" className="font-mono text-xs md:text-sm">
+                      {property.property_code}
+                    </Badge>
                   )}
                 </div>
                 <h1 className="text-2xl md:text-4xl font-bold mb-3 md:mb-4">{property.title}</h1>
