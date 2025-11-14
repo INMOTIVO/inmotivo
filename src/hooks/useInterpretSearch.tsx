@@ -98,12 +98,60 @@ try {
     return null;
   }
 
-  const result: InterpretSearchResult = { filters: data?.filters || {} };
+  // --- Unificar ubicación desde cualquier lugar ---
+
+  const extractedLocation =
+    data?.location ||
+    data?.locationText ||
+    data?.parsed?.location ||
+    data?.filters?.location ||
+    null;
+
+  // --- Construir resultado completo ---
+  const result: InterpretSearchResult = {
+    ...data,
+    location: extractedLocation,
+    locationText: extractedLocation,
+    filters: {
+      ...(data?.filters || {}),
+      location: extractedLocation
+    }
+  };
+
 
   searchCache.set(trimmedQuery, {
     data: result,
     timestamp: Date.now(),
   });
+  // --- Normalizar ubicación detectada ---
+  if (extractedLocation) {
+    let loc = extractedLocation
+      .toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // quitar acentos
+      .trim();
+
+    // Lista rápida de departamentos
+    const departamentos = [
+      "antioquia", "cundinamarca", "santander", "nariño",
+      "tolima", "caldas", "boyaca", "valle del cauca"
+    ];
+
+    // Detectar frase con 2 niveles: "municipio departamento"
+    const parts = loc.split(" ");
+
+    // Si la frase incluye un departamento válido → quitar el departamento
+    const foundDept = departamentos.find(dep => loc.endsWith(dep));
+
+    if (foundDept) {
+      // quitar departamento
+      loc = loc.replace(foundDept, "").trim();
+    }
+
+    // Guardar siempre la ubicación limpia
+    result.location = loc;
+    result.locationText = loc;
+    result.filters.location = loc;
+  }
 
   return result;
 } catch (error: any) {

@@ -213,37 +213,39 @@ const Hero = () => {
   };
   const handleSearch = async (queryText?: string) => {
     const textToSearch = queryText || searchQuery;
+
     if (!textToSearch.trim()) {
       toast.error("Por favor describe qué buscas");
       return;
     }
 
-    // Interpretar la búsqueda ANTES de mostrar el modal
-    // Interpretar la búsqueda ANTES de mostrar el modal
+    // Interpretar búsqueda
     const result = await interpretSearch(textToSearch);
     if (!result) return;
 
     setExtractedFilters(result);
 
-    // --- detectar ubicación desde cualquier estructura ---
+    // Detectar ubicación desde cualquier parte
     const extractedLocation =
       result.location ||
       result?.filters?.location ||
       result?.parsed?.location ||
-      result?.locationText;
+      result?.locationText ||
+      null;
 
-    // 🟢 SI LA IA DETECTÓ UBICACIÓN → NO MOSTRAR MODAL
+    // 🟢 1. Si la IA detecta ubicación → NO mostrar modal
     if (extractedLocation) {
-      setUseGPSForSearch(false); // usar ubicación textual
+      setUseGPSForSearch(false); 
       setShowOptions(true);
       return;
     }
 
-    // 🔴 SI NO HUBO UBICACIÓN → MOSTRAR MODAL
+    // 🔴 2. Si la IA NO detectó ubicación → mostrar modal
     setPendingSearchQuery(textToSearch);
     setShowLocationConfirmDialog(true);
-
   };
+
+
 
 
   const handleContinueWithCurrentLocation = async () => {
@@ -341,7 +343,12 @@ const Hero = () => {
             onSearchChange={newQuery => setSearchQuery(newQuery)} 
             disableGPSNavigation={useCustomLocation} 
             useGPSForFixedView={useGPSForSearch} 
-            searchLocation={extractedFilters?.location} 
+            searchLocation={
+              useGPSForSearch
+                ? null        // cuando usa GPS → SearchOptions usa la posición real
+                : extractedFilters?.location
+}
+
           />
         </div>
       </section>;
