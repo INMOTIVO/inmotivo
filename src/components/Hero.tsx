@@ -206,6 +206,7 @@ const Hero = () => {
       }
     }
   };
+  
 
   const handleCancelVoiceRecording = () => {
     cancelRecording();
@@ -217,10 +218,34 @@ const Hero = () => {
       return;
     }
 
-    // Guardar la consulta y mostrar diálogo de confirmación
+    // Interpretar la búsqueda ANTES de mostrar el modal
+    // Interpretar la búsqueda ANTES de mostrar el modal
+    const result = await interpretSearch(textToSearch);
+    if (!result) return;
+
+    setExtractedFilters(result);
+
+    // --- detectar ubicación desde cualquier estructura ---
+    const extractedLocation =
+      result.location ||
+      result?.filters?.location ||
+      result?.parsed?.location ||
+      result?.locationText;
+
+    // 🟢 SI LA IA DETECTÓ UBICACIÓN → NO MOSTRAR MODAL
+    if (extractedLocation) {
+      setUseGPSForSearch(false); // usar ubicación textual
+      setShowOptions(true);
+      return;
+    }
+
+    // 🔴 SI NO HUBO UBICACIÓN → MOSTRAR MODAL
     setPendingSearchQuery(textToSearch);
     setShowLocationConfirmDialog(true);
+
   };
+
+
   const handleContinueWithCurrentLocation = async () => {
     setShowLocationConfirmDialog(false);
     setUseGPSForSearch(true); // Activar GPS para esta búsqueda

@@ -4,13 +4,27 @@ import { FunctionsHttpError } from '@supabase/supabase-js';
 import { toast } from 'sonner';
 
 interface InterpretSearchResult {
+  // ⬅️ Nuevos campos que pueden venir del backend
+  location?: string | null;
+  locationText?: string | null;
+
+  parsed?: {
+    location?: string | null;
+    [key: string]: any;
+  };
+
   filters: {
     radius?: number;
     minPrice?: number;
     maxPrice?: number;
     bedrooms?: number;
     propertyType?: string;
+    location?: string | null; // ⬅️ por si viene dentro de filters
+    [key: string]: any;
   };
+
+  // Permitir cualquier otra estructura sin marcar error
+  [key: string]: any;
 }
 
 interface CacheEntry {

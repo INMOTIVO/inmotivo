@@ -91,7 +91,10 @@ const NavigationMap = ({
   const previousLocation = useRef<{ lat: number; lng: number; time: number } | null>(null);
   const collectedPropertyIds = useRef<Set<string>>(new Set());
   const travelDistance = useRef<number>(0);
-  
+  const [routeDistance, setRouteDistance] = useState<string | null>(null);
+  const [routeDuration, setRouteDuration] = useState<string | null>(null);
+  const [searchCenter, setSearchCenter] = useState<{ lat: number; lng: number } | null>(null);
+
   // Memoizar funciones para evitar re-renders
   const handlePropertyClick = useCallback((propertyId: string) => {
     navigate(`/property/${propertyId}`);
@@ -170,6 +173,11 @@ const NavigationMap = ({
     if (zoom >= 15) return 750;
     return 1000;
   };
+  useEffect(() => {
+    if (userLocation && !searchCenter) {
+      setSearchCenter(userLocation);
+    }
+  }, [userLocation]);
 
   // Sincronizar radio con zoom cuando no sea cambio manual
   useEffect(() => {
@@ -189,6 +197,8 @@ const NavigationMap = ({
       }
     }
   };
+  const [isUserPanning, setIsUserPanning] = useState(false);
+  const userPanTimeout = useRef<any>(null);
 
   // Manejar cambios manuales en el radio
   const handleManualRadiusChange = (value: number) => {
@@ -202,6 +212,17 @@ const NavigationMap = ({
       mapRef.current.setZoom(targetZoom);
     }
   };
+  const formatPrice = (price: number) => {
+    if (!price) return "";
+
+    // Menos de 1 millón → K
+    if (price < 1_000_000) {
+      return `$${Math.round(price / 1000)}K`;
+    }
+
+    // 1 millón o más → M con 1 decimal
+    return `$${(price / 1_000_000).toFixed(1)}M`;
+  };
 
   // Fetch properties using new API - Optimizado con mejor caché
   // Skip property fetching when in direct navigation mode
@@ -209,31 +230,33 @@ const NavigationMap = ({
     data: propertiesGeoJSON,
     refetch: refetchProperties
   } = useQuery({
-    queryKey: ['navigation-properties', userLocation, searchRadius, filters],
+    queryKey: ['navigation-properties', searchCenter, searchRadius, filters],
     queryFn: async () => {
-      if (!userLocation || isDirectNavigation) return null; // Don't fetch in direct nav
-      
+      if (!searchCenter || isDirectNavigation) return null;
+
       try {
         const geojson = await getCachedNearbyProperties({
-          lat: userLocation.lat,
-          lon: userLocation.lng,
+          lat: searchCenter.lat,
+          lon: searchCenter.lng,
           radius: searchRadius,
           priceMax: filters.maxPrice,
           type: filters.propertyType || 'all',
           listingType: filters.listingType || 'rent'
         });
-        
+
         return geojson;
       } catch (error) {
         console.error('Error fetching nearby properties:', error);
-        return null; // No mostrar toast en cada error
+        return null;
       }
     },
-    enabled: !!userLocation && !isPaused && !isDirectNavigation,
+    enabled: !!searchCenter && !isPaused && !isDirectNavigation,
     refetchInterval: false,
-    staleTime: isVehicleMode ? 20000 : 60000, // Caché mucho más largo para móvil
-    gcTime: 600000 // Mantener en caché 10 minutos
+    staleTime: isVehicleMode ? 20000 : 60000,
+    gcTime: 600000
   });
+
+
 
   // Convert GeoJSON to properties array - Limitado para mejor rendimiento en móvil
   const properties = propertiesGeoJSON?.features
@@ -256,7 +279,8 @@ const NavigationMap = ({
   useEffect(() => {
     let watchId: number;
     let lastUpdate = 0;
-    const UPDATE_INTERVAL = isVehicleMode ? 3000 : 8000; // Reducir frecuencia significativamente
+    const UPDATE_INTERVAL = isVehicleMode ? 1200 : 2000;
+
     
     watchId = navigator.geolocation.watchPosition(position => {
       
@@ -375,15 +399,21 @@ const NavigationMap = ({
         setSearchRadius(updatedRadius);
       }
 
-      updateDynamicRadius(newLocation)
-      // Usar heading del GPS si está disponible, sino usar el calculado
-      if (position.coords.heading !== null && position.coords.heading >= 0) {
-        const gpsHeading = position.coords.heading;
-        smoothHeading.current = gpsHeading;
-        setHeading(gpsHeading);
-      } else if (calculatedHeading !== heading) {
-        setHeading(smoothHeading.current);
+      // Ajustar solo un poco el radio según movimiento, sin geocoder
+      const movedMeters = calculateDistance(
+        previousLocation.current.lat,
+        previousLocation.current.lng,
+        newLocation.lat,
+        newLocation.lng
+      ) * 1000;
+
+      if (movedMeters > 3) {
+        setSearchRadius((prev) => {
+          const next = prev + movedMeters * 1.5; // suave y liviano
+          return Math.min(Math.max(next, 150), 2000);
+        });
       }
+
       
     // CONTROL TOTAL DEL MAPA (modo Waze real)
     if (mapRef.current) {
@@ -395,11 +425,19 @@ const NavigationMap = ({
         : 0;
 
       // Si hay un cambio mayor a ~3 metros, mover suavemente
-      if (dist > 0.003) {
-        mapRef.current.panTo(newLocation);
-      } else {
-        mapRef.current.setCenter(newLocation);
+      if (!isUserPanning) {
+        const lastPos = mapRef.current.getCenter();
+        const dist = lastPos
+          ? calculateDistance(lastPos.lat(), lastPos.lng(), newLocation.lat, newLocation.lng)
+          : 0;
+
+        if (dist > 0.003) {
+          mapRef.current.panTo(newLocation);
+        } else {
+          mapRef.current.setCenter(newLocation);
+        }
       }
+
 
       // 2. Rotar el mapa según heading suavizado
       if (!isPaused) {
@@ -497,6 +535,8 @@ const NavigationMap = ({
     const directionsService = new google.maps.DirectionsService();
 
     directionsService.route({
+
+
       origin: userLocation,
       destination: {
         lat: destination[0],
@@ -509,6 +549,13 @@ const NavigationMap = ({
     }, (result, status) => {
       if (status === google.maps.DirectionsStatus.OK && result) {
         setDirections(result);
+      }
+
+      if (status === google.maps.DirectionsStatus.OK && result) {
+        const leg = result.routes[0].legs[0];
+        setDirections(result);
+        setRouteDistance(leg.distance?.text || null);
+        setRouteDuration(leg.duration?.text || null);
       }
     });
   }, [userLocation, destination, isPaused, isLoaded, transportMode]);
@@ -612,307 +659,412 @@ const NavigationMap = ({
   }
   
   return <div className="relative w-full h-full">
-      <GoogleMap mapContainerStyle={{
-      width: '100%',
-      height: '100%'
-    }} center={userLocation || {
-      lat: 6.2476,
-      lng: -75.5658
-    }} zoom={mapZoom} onLoad={map => {
+  <GoogleMap
+    mapContainerStyle={{
+      width: "100%",
+      height: "100%",
+    }}
+
+    center={
+      userLocation || {
+        lat: 6.2476,
+        lng: -75.5658,
+      }
+    }
+    onDragStart={() => {
+      setIsUserPanning(true);
+
+      // Pausar centrado por 6s después del último drag
+      if (userPanTimeout.current) clearTimeout(userPanTimeout.current);
+    }}
+
+    onDragEnd={() => {
+      // Esperar a que el usuario suelte → activar espera
+      userPanTimeout.current = setTimeout(() => {
+        setIsUserPanning(false); // volver a centrar
+      }, 6000);
+    }}
+
+    zoom={mapZoom}
+
+    onLoad={(map) => {
       mapRef.current = map;
       trafficLayerRef.current = new google.maps.TrafficLayer();
 
-      // In direct navigation mode, fit bounds to show entire route
+      // Ajustar ruta en modo navegación directa
       if (isDirectNavigation && directions && userLocation) {
         const bounds = new google.maps.LatLngBounds();
         bounds.extend(userLocation);
         bounds.extend({ lat: destination[0], lng: destination[1] });
         map.fitBounds(bounds, { top: 100, right: 50, bottom: 250, left: 50 });
       }
-    }} onZoomChanged={handleZoomChanged} options={{
-      mapTypeId: mapType === 'satellite' ? google.maps.MapTypeId.HYBRID : google.maps.MapTypeId.ROADMAP,
+    }}
+
+    onZoomChanged={handleZoomChanged}
+
+    // 🔥🔥🔥 ESTA ES LA CLAVE PARA MOSTRAR NUEVAS PROPIEDADES AL ARRASTRAR EL MAPA
+    onIdle={() => {
+      if (isVehicleMode) return; // No actualizar mientras conduces
+      if (!mapRef.current) return;
+
+      const c = mapRef.current.getCenter();
+      if (!c) return;
+
+      setSearchCenter({
+        lat: c.lat(),
+        lng: c.lng(),
+      });
+    }}
+
+    options={{
+      mapTypeId:
+        mapType === "satellite"
+          ? google.maps.MapTypeId.HYBRID
+          : google.maps.MapTypeId.ROADMAP,
       zoomControl: false,
       streetViewControl: false,
       mapTypeControl: false,
       fullscreenControl: false,
       rotateControl: false,
-      gestureHandling: 'greedy',
-      disableDefaultUI: true, // Menos UI = mejor rendimiento
-      clickableIcons: false, // Menos interactividad = mejor rendimiento
-      keyboardShortcuts: false
-    }}>
-        {/* User location marker with animation */}
-        {userLocation && <>
-            <OverlayView position={userLocation} mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}>
-              <div style={{
-            position: 'relative',
-            transform: 'translate(-50%, -100%)'
-          }}>
-                <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              position: 'relative'
-            }}>
-                  {/* Pulse rings */}
-                  <div style={{
-                position: 'absolute',
-                width: '60px',
-                height: '60px',
-                top: '-10px',
-                borderRadius: '50%',
-                background: 'rgba(34, 197, 94, 0.3)',
-                animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
-              }} />
-                  <div style={{
-                position: 'absolute',
-                width: '50px',
-                height: '50px',
-                top: '-5px',
-                borderRadius: '50%',
-                background: 'rgba(34, 197, 94, 0.4)',
-                animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite 0.5s'
-              }} />
-                  
+      gestureHandling: "greedy",
+      disableDefaultUI: true,
+      clickableIcons: false,
+      keyboardShortcuts: false,
+    }}
+  >
+    {/* ======================= */}
+    {/* USER LOCATION MARKER    */}
+    {/* ======================= */}
+    {userLocation && (
+      <>
+        <OverlayView
+          position={userLocation}
+          mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+        >
+          <div
+            style={{
+              position: "relative",
+              transform: "translate(-50%, -100%)",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                position: "relative",
+              }}
+            >
+              {/* Pulse rings */}
+              <div
+                style={{
+                  position: "absolute",
+                  width: "60px",
+                  height: "60px",
+                  top: "-10px",
+                  borderRadius: "50%",
+                  background: "rgba(34, 197, 94, 0.3)",
+                  animation:
+                    "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  width: "50px",
+                  height: "50px",
+                  top: "-5px",
+                  borderRadius: "50%",
+                  background: "rgba(34, 197, 94, 0.4)",
+                  animation:
+                    "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite 0.5s",
+                }}
+              />
+
+              {/* 🔵 Flecha / Pin según modo */}
               {directions ? (
                 transportMode === "walking" ? (
-                  // 👣 HUELLAS EN MODO CAMINAR
-                  // 🟢 FLECHA EN MODO CARRO
-                  <svg width="42" height="42" viewBox="0 0 24 24" fill="none" style={{
-                    filter: 'drop-shadow(0 8px 20px rgba(34, 197, 94, 0.7))',
-                    position: 'relative',
-                    zIndex: 10,
-                    transform: `rotate(${heading}deg)`,
-                    transition: 'transform 0.3s ease-out'
-                  }}>
-                    <path d="M12 2L4 20L12 16L20 20L12 2Z" fill="rgba(0,0,0,0.2)" transform="translate(0, 1)" />
-                    <path d="M12 2L4 20L12 16L20 20L12 2Z" fill="url(#arrowGradient)" stroke="white" strokeWidth="2" strokeLinejoin="round" />
-                    <path d="M12 2L12 14" stroke="rgba(255,255,255,0.4)" strokeWidth="2" strokeLinecap="round" />
-                    <circle cx="12" cy="12" r="8" fill="none" stroke="#22c55e" strokeWidth="1.5" opacity="0.4">
-                      <animate attributeName="r" values="8;12;8" dur="2s" repeatCount="indefinite" />
-                      <animate attributeName="opacity" values="0.4;0;0.4" dur="2s" repeatCount="indefinite" />
-                    </circle>
-                    <defs>
-                      <linearGradient id="arrowGradient" x1="12" y1="2" x2="12" y2="20" gradientUnits="userSpaceOnUse">
-                        <stop offset="0%" stopColor="#4ade80" />
-                        <stop offset="50%" stopColor="#22c55e" />
-                        <stop offset="100%" stopColor="#16a34a" />
-                      </linearGradient>
-                    </defs>
+                  // 👣 Huellas caminando
+                  <svg
+                    width="42"
+                    height="42"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    style={{
+                      filter:
+                        "drop-shadow(0 8px 20px rgba(34, 197, 94, 0.7))",
+                      position: "relative",
+                      zIndex: 10,
+                      transform: `rotate(${heading}deg)`,
+                      transition: "transform 0.3s ease-out",
+                    }}
+                  >
+                    <path
+                      d="M12 2L4 20L12 16L20 20L12 2Z"
+                      fill="rgba(0,0,0,0.2)"
+                      transform="translate(0, 1)"
+                    />
+                    <path
+                      d="M12 2L4 20L12 16L20 20L12 2Z"
+                      fill="url(#arrowGradient)"
+                      stroke="white"
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 ) : (
-                  // 🟢 FLECHA EN MODO CARRO
-                  <svg width="42" height="42" viewBox="0 0 24 24" fill="none" style={{
-                    filter: 'drop-shadow(0 8px 20px rgba(34, 197, 94, 0.7))',
-                    position: 'relative',
-                    zIndex: 10,
-                    transform: `rotate(${heading}deg)`,
-                    transition: 'transform 0.3s ease-out'
-                  }}>
-                    <path d="M12 2L4 20L12 16L20 20L12 2Z" fill="rgba(0,0,0,0.2)" transform="translate(0, 1)" />
-                    <path d="M12 2L4 20L12 16L20 20L12 2Z" fill="url(#arrowGradient)" stroke="white" strokeWidth="2" strokeLinejoin="round" />
-                    <path d="M12 2L12 14" stroke="rgba(255,255,255,0.4)" strokeWidth="2" strokeLinecap="round" />
-                    <circle cx="12" cy="12" r="8" fill="none" stroke="#22c55e" strokeWidth="1.5" opacity="0.4">
-                      <animate attributeName="r" values="8;12;8" dur="2s" repeatCount="indefinite" />
-                      <animate attributeName="opacity" values="0.4;0;0.4" dur="2s" repeatCount="indefinite" />
-                    </circle>
-                    <defs>
-                      <linearGradient id="arrowGradient" x1="12" y1="2" x2="12" y2="20" gradientUnits="userSpaceOnUse">
-                        <stop offset="0%" stopColor="#4ade80" />
-                        <stop offset="50%" stopColor="#22c55e" />
-                        <stop offset="100%" stopColor="#16a34a" />
-                      </linearGradient>
-                    </defs>
+                  // 🚗 Flecha en modo carro
+                  <svg
+                    width="42"
+                    height="42"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    style={{
+                      filter:
+                        "drop-shadow(0 8px 20px rgba(34, 197, 94, 0.7))",
+                      position: "relative",
+                      zIndex: 10,
+                      transform: `rotate(${heading}deg)`,
+                      transition: "transform 0.3s ease-out",
+                    }}
+                  >
+                    <path
+                      d="M12 2L4 20L12 16L20 20L12 2Z"
+                      fill="rgba(0,0,0,0.2)"
+                      transform="translate(0, 1)"
+                    />
+                    <path
+                      d="M12 2L4 20L12 16L20 20L12 2Z"
+                      fill="url(#arrowGradient)"
+                      stroke="white"
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 )
               ) : (
-                // 📍 PIN CUANDO NO HAY NAVEGACIÓN
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style={{
-                  filter: 'drop-shadow(0 8px 16px rgba(34, 197, 94, 0.6))',
-                  position: 'relative',
-                  zIndex: 10
-                }}>
-                  <circle cx="12" cy="10" r="7" fill="url(#glow)" opacity="0.4" />
-                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="url(#gradient)" stroke="white" strokeWidth="1.5" />
-                  <circle cx="12" cy="9" r="3" fill="white">
-                    <animate attributeName="r" values="3;3.5;3" dur="1.5s" repeatCount="indefinite" />
-                    <animate attributeName="opacity" values="1;0.8;1" dur="1.5s" repeatCount="indefinite" />
-                  </circle>
+                // 📍 Pin cuando NO hay navegación
+                <svg
+                  width="48"
+                  height="48"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  style={{
+                    filter:
+                      "drop-shadow(0 8px 16px rgba(34, 197, 94, 0.6))",
+                    position: "relative",
+                    zIndex: 10,
+                  }}
+                >
+                  <circle
+                    cx="12"
+                    cy="10"
+                    r="7"
+                    fill="url(#glow)"
+                    opacity="0.4"
+                  />
+                  <path
+                    d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"
+                    fill="url(#gradient)"
+                    stroke="white"
+                    strokeWidth="1.5"
+                  />
                 </svg>
               )}
 
-                  <div style={{
-                width: '16px',
-                height: '16px',
-                background: 'linear-gradient(135deg, #8b5cf6, #a78bfa)',
-                borderRadius: '50%',
-                border: '3px solid white',
-                boxShadow: '0 0 20px rgba(139, 92, 246, 0.6)',
-                animation: 'pulse 2s ease-in-out infinite'
-              }}></div>
-                </div>
-                <style>{`
-                  @keyframes bounce {
-                    0%, 100% { transform: translateY(0px); }
-                    50% { transform: translateY(-4px); }
-                  }
-                  @keyframes pulse {
-                    0%, 100% { transform: scale(1); opacity: 1; }
-                    50% { transform: scale(1.2); opacity: 0.8; }
-                  }
-                `}</style>
-              </div>
-            </OverlayView>
+              {/* Punto centro */}
+              <div
+                style={{
+                  width: "16px",
+                  height: "16px",
+                  background:
+                    "linear-gradient(135deg, #8b5cf6, #a78bfa)",
+                  borderRadius: "50%",
+                  border: "3px solid white",
+                  boxShadow: "0 0 20px rgba(139, 92, 246, 0.6)",
+                  animation: "pulse 2s ease-in-out infinite",
+                }}
+              />
+            </div>
 
-            {/* Search radius circle - only in GPS mode */}
-            {!isDirectNavigation && (
-              <Circle center={userLocation} radius={searchRadius} options={{
-                strokeColor: '#8b5cf6',
-                strokeOpacity: 1,
-                strokeWeight: 3,
-                fillColor: '#a78bfa',
-                fillOpacity: 0.15
-              }} />
-            )}
-          </>}
+            <style>{`
+              @keyframes pulse {
+                0%, 100% { transform: scale(1); opacity: 1; }
+                50% { transform: scale(1.2); opacity: 0.8; }
+              }
+            `}</style>
+          </div>
+        </OverlayView>
 
-
-
-        {/* Directions renderer for direct navigation */}
-        {isDirectNavigation && directions && (
-        <DirectionsRenderer
-          directions={directions}
-          options={{
-            suppressMarkers: true,
-            polylineOptions:
-              transportMode === "walking"
-                ? {
-                    strokeColor: "#16a34a",
-                    strokeWeight: 5,
-                    strokeOpacity: 0,
-                    icons: [
-                      {
-                        icon: {
-                          path: google.maps.SymbolPath.CIRCLE,
-                          scale: 4,
-                          fillColor: "#16a34a",
-                          fillOpacity: 1,
-                          strokeOpacity: 0,
-                        },
-                        offset: "0",
-                        repeat: "12px",
-                      },
-                    ],
-                  }
-                : {
-                    strokeColor: "#3b82f6",
-                    strokeWeight: 6,
-                    strokeOpacity: 0.9,
-                  },
-          }}
-        />
-
-
-        )}
-        
-        {/* Destination marker in direct navigation mode */}
-        {isDirectNavigation && (
-          <Marker
-            position={{ lat: destination[0], lng: destination[1] }}
-            icon={{
-              path: google.maps.SymbolPath.CIRCLE,
-              fillColor: '#ef4444',
-              fillOpacity: 1,
-              strokeColor: '#ffffff',
+        {/* Circulo del radio */}
+        {!isDirectNavigation && (
+          <Circle
+            center={userLocation}
+            radius={searchRadius}
+            options={{
+              strokeColor: "#8b5cf6",
+              strokeOpacity: 1,
               strokeWeight: 3,
-              scale: 12,
-            }}
-            label={{
-              text: searchCriteria || 'Destino',
-              color: '#ffffff',
-              fontSize: '12px',
-              fontWeight: 'bold',
-              className: 'bg-red-500 px-2 py-1 rounded shadow-lg'
+              fillColor: "#a78bfa",
+              fillOpacity: 0.15,
             }}
           />
         )}
+      </>
+    )}
 
-        {/* Property markers - Only in GPS navigation mode */}
-        {!isPaused && !isDirectNavigation && properties?.map(property => {
-          if (!property.latitude || !property.longitude) return null;
-          
-          // Crear SVG con círculo verde titilante
-          const svgMarker = `
-            <svg width="56" height="72" viewBox="0 0 32 48" xmlns="http://www.w3.org/2000/svg">
-      
-              <ellipse cx="16" cy="46" rx="8" ry="2" fill="rgba(0,0,0,0.3)"/>
-              
-        
-              <defs>
-                <linearGradient id="pinGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" style="stop-color:#22c55e;stop-opacity:1" />
-                  <stop offset="100%" style="stop-color:#16a34a;stop-opacity:1" />
-                </linearGradient>
-                <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
-                  <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.4"/>
-                </filter>
-              </defs>
-              
-              <path d="M16 0C7.163 0 0 7.163 0 16c0 12 16 24 16 24s16-12 16-24C32 7.163 24.837 0 16 0z" 
-                    fill="url(#pinGrad)" 
-                    stroke="#ffffff" 
-                    stroke-width="2.5"
-                    filter="url(#shadow)"/>
+    {/* ======================= */}
+    {/* DIRECCIONES */}
+    {/* ======================= */}
+    {isDirectNavigation && directions && (
+      <DirectionsRenderer
+        directions={directions}
+        options={{
+          suppressMarkers: true,
+          polylineOptions:
+            transportMode === "walking"
+              ? {
+                  strokeColor: "#16a34a",
+                  strokeWeight: 5,
+                  strokeOpacity: 0,
+                  icons: [
+                    {
+                      icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        scale: 4,
+                        fillColor: "#16a34a",
+                        fillOpacity: 1,
+                        strokeOpacity: 0,
+                      },
+                      offset: "0",
+                      repeat: "12px",
+                    },
+                  ],
+                }
+              : {
+                  strokeColor: "#3b82f6",
+                  strokeWeight: 6,
+                  strokeOpacity: 0.9,
+                },
+        }}
+      />
+    )}
 
-              <circle cx="16" cy="14" r="9" fill="white" opacity="0.98"/>
-              
+    {/* ======================= */}
+    {/* MARCADOR DESTINO */}
+    {/* ======================= */}
+    {isDirectNavigation && (
+      <Marker
+        position={{ lat: destination[0], lng: destination[1] }}
+        icon={{
+          path: google.maps.SymbolPath.CIRCLE,
+          fillColor: "#ef4444",
+          fillOpacity: 1,
+          strokeColor: "#ffffff",
+          strokeWeight: 3,
+          scale: 12,
+        }}
+        label={{
+          text: searchCriteria || "Destino",
+          color: "#ffffff",
+          fontSize: "12px",
+          fontWeight: "bold",
+          className: "bg-red-500 px-2 py-1 rounded shadow-lg",
+        }}
+      />
+    )}
 
-              <circle cx="16" cy="14" r="5" fill="#22c55e">
-                <animate attributeName="r" values="5;7;5" dur="1.5s" repeatCount="indefinite"/>
-                <animate attributeName="opacity" values="1;0.6;1" dur="1.5s" repeatCount="indefinite"/>
-              </circle>
-              
+    {/* ======================= */}
+    {/* PROPIEDADES */}
+    {/* ======================= */}
+    {!isPaused &&
+      !isDirectNavigation &&
+      properties?.map((property) => {
+        if (!property.latitude || !property.longitude) return null;
 
-              <circle cx="16" cy="14" r="5" fill="none" stroke="#22c55e" stroke-width="1.5">
-                <animate attributeName="r" values="5;8;5" dur="1.5s" repeatCount="indefinite"/>
-                <animate attributeName="opacity" values="0.8;0;0.8" dur="1.5s" repeatCount="indefinite"/>
-              </circle>
-              
+        const image = property.images?.[0]
+          ? property.images[0]
+          : "https://placehold.co/100x100?text=Sin+foto";
 
-              <rect x="2" y="27" width="28" height="13" rx="6.5" 
-                    fill="#ffffff" 
-                    stroke="#16a34a" 
-                    stroke-width="2"
-                    filter="url(#shadow)"/>
-              <text x="16" y="36" 
-                    font-size="8" 
-                    font-weight="900" 
-                    fill="#16a34a" 
-                    text-anchor="middle" 
-                    font-family="system-ui, -apple-system, sans-serif">
-                $${Math.round(property.price / 1000000)}M
-              </text>
-            </svg>
-          `;
-          
-          const icon = {
-            url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svgMarker)}`,
-            scaledSize: new google.maps.Size(48, 64),
-            anchor: new google.maps.Point(24, 64)
-          };
-          
-          return <Marker 
+        const price = formatPrice(property.price);
+
+        return (
+          <OverlayView
             key={property.id}
             position={{
               lat: property.latitude,
-              lng: property.longitude
+              lng: property.longitude,
             }}
-            onClick={() => handlePropertyClick(property.id)}
-            icon={icon}
-          />;
-        })}
-      </GoogleMap>
-      
+            mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+          >
+            <div
+              onClick={() => handlePropertyClick(property.id)}
+              style={{
+                transform: "translate(-50%, -100%)",
+                cursor: "pointer",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "2px",
+              }}
+            >
+              {/* Precio */}
+              <div
+                style={{
+                  background: "white",
+                  padding: "2px 6px",
+                  borderRadius: "8px",
+                  fontSize: "11px",
+                  fontWeight: "700",
+                  color: "#16a34a",
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.2)",
+                  marginBottom: "2px",
+                }}
+              >
+                {price}
+              </div>
+
+              {/* Imagen */}
+              <div
+                style={{
+                  width: "48px",
+                  height: "48px",
+                  borderRadius: "10px",
+                  overflow: "hidden",
+                  border: "2px solid white",
+                  background: "#eee",
+                  boxShadow: "0 3px 8px rgba(0,0,0,0.30)",
+                }}
+              >
+                <img
+                  src={image}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                  }}
+                />
+              </div>
+
+              {/* Pin */}
+              <div
+                style={{
+                  width: 0,
+                  height: 0,
+                  borderLeft: "6px solid transparent",
+                  borderRight: "6px solid transparent",
+                  borderTop: "10px solid #16a34a",
+                  filter:
+                    "drop-shadow(0 1px 3px rgba(0,0,0,0.3))",
+                  marginTop: "-4px",
+                }}
+              />
+            </div>
+          </OverlayView>
+        );
+      })}
+  </GoogleMap>
+
       {/* === ZOOM CONTROL FIJO DENTRO DEL MAPA === */}
       <div
         className="
@@ -1064,82 +1216,88 @@ const NavigationMap = ({
 
       {/* Barra de control inferior - ocupa todo el ancho */}
       {userLocation && (
-        <div className="absolute bottom-3 left-0 right-0 z-[1000] flex justify-center px-4">
+        <div className="absolute bottom-3 left-0 right-0 z-[1000] flex justify-center px-3">
 
           <div
             className="
               w-full max-w-md
-              rounded-3xl shadow-xl 
-              bg-white/85 backdrop-blur-xl 
+              rounded-2xl shadow-lg 
+              bg-white/90 backdrop-blur-md 
               border border-gray-200
-              transition-all duration-300
-              p-4 space-y-4
+              p-3
+              space-y-3
             "
+            style={{ minHeight: "auto" }}
           >
 
-            {/* ====== FILA SUPERIOR ====== */}
+            {/* === PRIMERA FILA: botones + info de ruta + detener === */}
             <div className="flex items-center justify-between">
 
               {/* Transporte */}
-              <div className="flex gap-2">
-
-                {/* Car */}
+              <div className="flex gap-1.5">
                 <button
                   onClick={() => setTransportMode('driving')}
                   className={`
-                    h-10 w-10 rounded-full flex items-center justify-center
-                    transition-all shadow-sm
+                    h-8 w-8 rounded-full flex items-center justify-center text-xs shadow
                     ${transportMode === 'driving'
-                      ? 'bg-blue-600 text-white scale-110'
-                      : 'bg-white text-blue-600 border border-blue-300'
-                    }
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-white text-blue-600 border'}
                   `}
                 >
-                  <Car className="h-5 w-5" />
+                  <Car className="h-4 w-4" />
                 </button>
 
-                {/* Walk */}
                 <button
                   onClick={() => setTransportMode('walking')}
                   className={`
-                    h-10 w-10 rounded-full flex items-center justify-center
-                    transition-all shadow-sm
+                    h-8 w-8 rounded-full flex items-center justify-center text-xs shadow
                     ${transportMode === 'walking'
-                      ? 'bg-green-600 text-white scale-110'
-                      : 'bg-white text-green-600 border border-green-300'
-                    }
+                      ? 'bg-green-600 text-white'
+                      : 'bg-white text-green-600 border'}
                   `}
                 >
-                  <Footprints className="h-5 w-5" />
+                  <Footprints className="h-4 w-4" />
                 </button>
-
               </div>
 
-              {/* Botón Detener */}
+              {/* Info ruta compacta */}
+              {routeDistance && routeDuration && (
+                <div
+                  className="
+                    px-2.5 py-1
+                    rounded-full
+                    bg-white border shadow-sm
+                    text-[11px] font-semibold
+                    flex items-center gap-2
+                  "
+                >
+                  <span className="flex items-center gap-1 text-blue-600">
+                     {routeDuration}
+                  </span>
+                  <span className="text-gray-300">•</span>
+                  <span className="flex items-center gap-1 text-green-600">
+                     {routeDistance}
+                  </span>
+                </div>
+              )}
+
+              {/* Botón detener */}
               <button
                 onClick={handleToggleNavigation}
                 className={`
-                  px-4 py-2 rounded-xl text-white font-semibold shadow-md
-                  text-sm
-                  ${isPaused
-                    ? 'bg-green-600 hover:bg-green-700'
-                    : 'bg-red-500 hover:bg-red-600'
-                  }
+                  px-3 py-1.5 rounded-lg text-[12px] text-white font-semibold shadow
+                  ${isPaused ? 'bg-green-600' : 'bg-red-500'}
                 `}
               >
                 {isPaused ? 'Reanudar' : 'Detener'}
               </button>
-
             </div>
 
 
-
-            {/* ====== RADIO DE BÚSQUEDA (simple y pequeño) ====== */}
-            <div className="bg-white/80 border border-gray-300/40 rounded-xl p-3 shadow-sm">
-              
-              <div className="flex justify-between text-xs mb-1">
-                <span className="text-gray-600 font-medium">Radio</span>
-
+            {/* === RADIO compactado === */}
+            <div className="bg-white/70 border rounded-lg p-2 shadow-sm">
+              <div className="flex justify-between text-[11px] mb-0.5">
+                <span className="text-gray-600">Radio</span>
                 <span className="font-semibold text-gray-900">
                   {searchRadius >= 1000
                     ? `${(searchRadius / 1000).toFixed(1)} km`
@@ -1157,35 +1315,32 @@ const NavigationMap = ({
             </div>
 
 
-
-            {/* ====== BÚSQUEDA ====== */}
+            {/* === BUSCAR === */}
             <div
               onClick={() => { 
                 setEditSearchQuery(searchCriteria);
-                setIsEditDialogOpen(true); 
+                setIsEditDialogOpen(true);
               }}
               className="
                 flex items-center justify-between 
-                p-3 rounded-xl bg-white 
-                border border-green-500/40 shadow-sm 
-                hover:bg-green-50 cursor-pointer transition
+                p-2 rounded-lg bg-white 
+                border shadow-sm hover:bg-gray-50 cursor-pointer transition
               "
             >
-
               <div className="flex items-center gap-2 min-w-0">
                 <Search className="h-4 w-4 text-green-600" />
-                <p className="text-sm font-medium truncate">
+                <p className="text-xs font-medium truncate">
                   {searchCriteria || 'Propiedades cerca'}
                 </p>
               </div>
-
               <Edit2 className="h-4 w-4 text-gray-500" />
             </div>
 
           </div>
-
         </div>
       )}
+
+
 
 
 
