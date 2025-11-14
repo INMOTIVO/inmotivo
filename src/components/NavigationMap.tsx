@@ -19,6 +19,8 @@ import { getCachedNearbyProperties, fetchRouteProperties, encodePolylineToGeoJSO
 import { calculateScore } from '@/utils/mapHelpers';
 import { showPropertyAlert, requestNotificationPermission } from '@/utils/notificationManager';
 import { debounce } from '@/utils/mapHelpers';
+import estandarImage from '@/assets/ESTANDAR.png';
+import sateliteImage from '@/assets/SATELITE.png';
 
 
 interface NavigationMapProps {
@@ -266,8 +268,8 @@ const NavigationMap = ({
     
     watchId = navigator.geolocation.watchPosition(position => {
       
-      // 🚫 Ignorar posiciones imprecisas
-      if (position.coords.accuracy > 25) {
+      // 🚫 Ignorar posiciones imprecisas (umbral más estricto para mejor precisión)
+      if (position.coords.accuracy > 15) {
         console.warn(
           "GPS ignorado por baja precisión:",
           position.coords.accuracy,
@@ -473,7 +475,7 @@ const NavigationMap = ({
     {
       enableHighAccuracy: true,
       maximumAge: 0,
-      timeout: 5000
+      timeout: 10000 // Tiempo aumentado para mejor precisión GPS
     }
     );
     
@@ -1048,7 +1050,8 @@ const NavigationMap = ({
       `}
     >
       <img
-        src="/src/assets/ESTANDAR.png"
+        src={estandarImage}
+        alt="Mapa estándar"
         className="
           h-10 w-10 
           rounded-xl 
@@ -1082,7 +1085,8 @@ const NavigationMap = ({
       `}
     >
       <img
-        src="/src/assets/SATELITE.png"
+        src={sateliteImage}
+        alt="Mapa satélite"
         className="
           h-10 w-10 
           rounded-xl 

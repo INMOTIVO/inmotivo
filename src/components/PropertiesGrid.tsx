@@ -115,7 +115,7 @@ const PropertiesGrid = () => {
             const defaultImage = defaultImages[property.property_type] || defaultImages.apartment;
             const isFavorite = favorites?.includes(property.id) || false;
             return <CarouselItem key={property.id} className="pl-2 md:pl-4 basis-full md:basis-1/2 lg:basis-1/3">
-                    <PropertyCard id={property.id} title={property.title} price={`$${property.price.toLocaleString()}`} location={`${property.neighborhood}, ${property.city}`} beds={property.bedrooms} baths={property.bathrooms} area={`${property.area_m2} m²`} imageUrl={images[0] || defaultImage} type={propertyTypes[property.property_type] || property.property_type} isFavorite={isFavorite} propertyCode={property.property_code} />
+                    <PropertyCard id={property.id} title={property.title} price={`$${property.price.toLocaleString()}`} location={`${property.neighborhood}, ${property.city}`} beds={property.bedrooms} baths={property.bathrooms} area={`${property.area_m2} m²`} imageUrl={images[0] || defaultImage} type={propertyTypes[property.property_type] || property.property_type} isFavorite={isFavorite} propertyCode={(property as any).property_code} />
                   </CarouselItem>;
           })}
             </CarouselContent>
