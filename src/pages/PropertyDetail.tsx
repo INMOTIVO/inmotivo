@@ -27,29 +27,7 @@ const PropertyDetail = () => {
       const { data, error } = await supabase
         .from("properties")
         .select(`
-          id,
-          title,
-          description,
-          property_type,
-          property_code,
-          address,
-          neighborhood,
-          city,
-          price,
-          currency,
-          bedrooms,
-          bathrooms,
-          area_m2,
-          floor,
-          parking_spaces,
-          furnished,
-          pets_allowed,
-          images,
-          amenities,
-          verified,
-          status,
-          latitude,
-          longitude,
+          *,
           owner:profiles(full_name, phone),
           agency:agencies(name, phone, email)
         `)
@@ -301,11 +279,11 @@ const PropertyDetail = () => {
                   {property.verified && (
                     <Badge variant="secondary" className="text-xs md:text-sm">Verificado</Badge>
                   )}
-                  {property.property_code && (
-                    <Badge variant="outline" className="font-mono text-xs md:text-sm">
-                      {property.property_code}
-                    </Badge>
-                  )}
+                {(property as any).property_code && (
+                  <Badge variant="outline" className="font-mono text-xs md:text-sm">
+                    {(property as any).property_code}
+                  </Badge>
+                )}
                 </div>
                 <h1 className="text-2xl md:text-4xl font-bold mb-3 md:mb-4">{property.title}</h1>
                 <div className="flex items-center text-muted-foreground mb-4 text-sm md:text-base">
