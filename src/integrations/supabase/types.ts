@@ -348,6 +348,7 @@ export type Database = {
           parking_spaces: number | null
           pets_allowed: boolean | null
           price: number
+          property_code: string
           property_type: string
           status: string | null
           title: string
@@ -378,6 +379,7 @@ export type Database = {
           parking_spaces?: number | null
           pets_allowed?: boolean | null
           price: number
+          property_code: string
           property_type: string
           status?: string | null
           title: string
@@ -408,6 +410,7 @@ export type Database = {
           parking_spaces?: number | null
           pets_allowed?: boolean | null
           price?: number
+          property_code?: string
           property_type?: string
           status?: string | null
           title?: string
@@ -558,6 +561,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_property_code: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
