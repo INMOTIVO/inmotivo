@@ -39,7 +39,7 @@ const PropertiesGrid = () => {
       const {
         data,
         error
-      } = await supabase.from("properties").select("*").eq("status", "available").lte("price", 25000000).limit(12) as any;
+      } = await supabase.from("properties").select("*").eq("status", "available").lte("price", 25000000).limit(12);
       if (error) throw error;
       if (userLocation && data) {
         const propertiesWithDistance = data.map(property => {

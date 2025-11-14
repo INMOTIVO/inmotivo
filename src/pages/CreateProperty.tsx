@@ -316,7 +316,10 @@ const CreateProperty = () => {
     const addressParts = [formData.address, formData.neighborhood, formData.city, 'Colombia'].filter(Boolean);
     const fullAddress = addressParts.join(', ');
     try {
-      const geocoder = new google.maps.Geocoder();
+      // Cargar librería geocoding de Google Maps (nuevo sistema 2024)
+      const geocoding = (await google.maps.importLibrary("geocoding")) as google.maps.GeocodingLibrary;
+      const geocoder = new geocoding.Geocoder();
+
       geocoder.geocode({
         address: fullAddress,
         componentRestrictions: {

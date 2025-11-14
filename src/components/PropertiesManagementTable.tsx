@@ -67,7 +67,7 @@ const PropertiesManagementTable = ({
       let query = supabase.from('properties').select(`
         *,
         profiles!properties_owner_id_fkey(full_name)
-      `) as any;
+      `);
 
       if (!isAdmin && userId) {
         query = query.eq('owner_id', userId);
