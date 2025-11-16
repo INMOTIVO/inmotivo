@@ -283,12 +283,12 @@ const Hero = () => {
           {/* Gradiente animado del borde - responsive */}
           <div className="absolute -inset-1 bg-gradient-to-r from-primary via-blue-500 to-primary md:rounded-full rounded-2xl blur-sm opacity-75 animate-pulse" />
           
-          <div className="relative bg-white md:rounded-full rounded-2xl shadow-2xl p-3 md:p-2 flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-0">
+          <div className="relative bg-white md:rounded-full rounded-2xl shadow-2xl p-3 md:p-2 flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-2">
             {/* Fila 1 Mobile: Qué + Micrófono */}
             <div className="flex items-center gap-2 md:flex-1 md:border-r border-gray-200">
               {/* Sección QUÉ */}
               <div className="flex-1 flex items-center gap-2 px-3 py-2">
-                <div className="flex flex-col w-full">
+                <div className="flex flex-col justify-center w-full">
                   <label className="text-xs font-semibold text-gray-700 mb-1">Qué</label>
                   <Textarea
                     ref={textareaRef}
@@ -321,10 +321,10 @@ const Hero = () => {
             </div>
 
             {/* Separador vertical solo desktop */}
-            <div className="hidden md:block h-12 w-px bg-gray-200" />
+            <div className="hidden md:block h-12 w-px bg-gray-200 mx-2" />
 
             {/* BOTÓN MICRÓFONO solo desktop */}
-            <div className="hidden md:flex px-2">
+            <div className="hidden md:flex items-center justify-center px-2">
               <VoiceButton
                 isRecording={isRecording}
                 isProcessing={isProcessing}
@@ -339,13 +339,13 @@ const Hero = () => {
             <div className="md:hidden h-px w-full bg-gray-200" />
 
             {/* Separador vertical solo desktop */}
-            <div className="hidden md:block h-12 w-px bg-gray-200" />
+            <div className="hidden md:block h-12 w-px bg-gray-200 mx-2" />
 
             {/* Fila 2 Mobile: Dónde + Buscar */}
             <div className="flex items-center gap-2 md:flex-1">
               {/* Sección DÓNDE */}
-              <div className="flex-1 flex items-center gap-2 px-3 py-2 md:border-r border-gray-200 relative location-suggestions-container">
-                <div className="flex flex-col w-full">
+              <div className="flex-1 flex items-center gap-2 px-3 py-2 relative location-suggestions-container">
+                <div className="flex flex-col justify-center w-full">
                   <label className="text-xs font-semibold text-gray-700 mb-1">Dónde</label>
                   <Input
                     placeholder="¿En dónde?"
@@ -394,23 +394,20 @@ const Hero = () => {
                 )}
               </div>
 
-              {/* BOTÓN BUSCAR */}
+              {/* Separador vertical solo desktop */}
+              <div className="hidden md:block h-12 w-px bg-gray-200 mx-2" />
+
+              {/* BOTÓN BUSCAR - CIRCULAR CON SOLO ÍCONO */}
               <Button 
                 onClick={handleSearch}
                 disabled={!searchQuery.trim() || isInterpretingSearch || isProcessing}
-                className="md:rounded-full rounded-xl px-6 md:px-8 py-5 md:py-6 h-auto font-semibold whitespace-nowrap shrink-0"
-                size="lg"
+                className="rounded-full w-14 h-14 p-0 flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow shrink-0"
+                size="icon"
               >
                 {isInterpretingSearch ? (
-                  <>
-                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                    Buscando...
-                  </>
+                  <Loader2 className="h-5 w-5 animate-spin" />
                 ) : (
-                  <>
-                    <Search className="h-5 w-5 mr-2" />
-                    Buscar
-                  </>
+                  <Search className="h-5 w-5" />
                 )}
               </Button>
             </div>
