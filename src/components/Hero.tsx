@@ -1,171 +1,87 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { Search, MapPin, Loader2, ArrowLeft, Check, ChevronsUpDown, Mic } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { Search, MapPin, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import heroImage from "@/assets/hero-medellin.jpg";
 import { toast } from "sonner";
-import SearchOptions from './SearchOptions';
-import { useIsMobile } from "@/hooks/use-mobile";
-import { useVoiceRecording } from "@/hooks/useVoiceRecording";
 import { useInterpretSearch } from "@/hooks/useInterpretSearch";
 import VoiceButton from './VoiceButton';
-import { getDepartments, getMunicipalitiesByDepartment, getNeighborhoodsByMunicipality } from '@/data/colombiaLocations';
 import { cn } from "@/lib/utils";
 import { useGooglePlacesAutocomplete } from "@/hooks/useGooglePlacesAutocomplete";
 import { useGoogleMapsLoader } from "@/hooks/useGoogleMapsLoader";
+import { useVoiceRecording } from "@/hooks/useVoiceRecording";
 
 const Hero = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [listingType, setListingType] = useState<"rent" | "sale">("rent");
   const [location, setLocation] = useState("");
-  const [municipality, setMunicipality] = useState("");
-  const [sector, setSector] = useState("");
   const [loadingLocation, setLoadingLocation] = useState(false);
-  const [showOptions, setShowOptions] = useState(false);
-  const [showFixedSearch, setShowFixedSearch] = useState(false);
-  const [showLocationDialog, setShowLocationDialog] = useState(false);
-  const [useCustomLocation, setUseCustomLocation] = useState(false);
-  const [customDepartment, setCustomDepartment] = useState("");
-  const [customMunicipality, setCustomMunicipality] = useState("");
-  const [customNeighborhood, setCustomNeighborhood] = useState("");
-  const [availableMunicipalities, setAvailableMunicipalities] = useState<string[]>([]);
-  const [availableNeighborhoods, setAvailableNeighborhoods] = useState<string[]>([]);
-  const [openDept, setOpenDept] = useState(false);
-  const [openMuni, setOpenMuni] = useState(false);
-  const [openNeigh, setOpenNeigh] = useState(false);
-  const [showLocationConfirmDialog, setShowLocationConfirmDialog] = useState(false);
-  const [pendingSearchQuery, setPendingSearchQuery] = useState("");
-  const [useGPSForSearch, setUseGPSForSearch] = useState(false);
-  const [extractedFilters, setExtractedFilters] = useState<any>(null);
-  const [showMicPermissionDialog, setShowMicPermissionDialog] = useState(false);
   
-  // Estados para el nuevo campo "Dónde"
+  // Estados para el campo "Dónde"
   const [searchWhere, setSearchWhere] = useState("");
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<{lat: number, lng: number, address: string} | null>(null);
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
   
-  const isMobile = useIsMobile();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
   const { isLoaded: mapsLoaded } = useGoogleMapsLoader();
   const { predictions, getPredictions } = useGooglePlacesAutocomplete();
-  const {
-    interpretSearch,
-    isProcessing: isInterpretingSearch
-  } = useInterpretSearch();
+  const { interpretSearch, isProcessing: isInterpretingSearch } = useInterpretSearch();
   const {
     isRecording,
     isProcessing,
     audioLevel,
     partialText,
-    micPermission,
-    requestMicrophonePermission,
     startRecording,
     stopRecording,
     cancelRecording
   } = useVoiceRecording();
 
-  // Check if we should show options from URL params
-  useEffect(() => {
-    const query = searchParams.get('query');
-    const shouldShowOptions = searchParams.get('showOptions') === 'true';
-    if (query && shouldShowOptions) {
-      setSearchQuery(query);
-      setShowOptions(true);
-    }
-  }, [searchParams]);
+  // Auto-adjust textarea height
+  const handleSearchInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setSearchQuery(e.target.value);
+    const textarea = e.target;
+    textarea.style.height = 'auto';
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 80)}px`;
+  };
 
-  // Detect scroll to show/hide fixed search bar on mobile
+  // Detectar ubicación automáticamente
   useEffect(() => {
-    if (!isMobile) return;
-    const handleScroll = () => {
-      const scrollPosition = window.scrollY;
-      const heroHeight = window.innerHeight * 0.6; // Show after scrolling 60% of hero
-
-      setShowFixedSearch(scrollPosition > heroHeight);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [isMobile]);
-  useEffect(() => {
-    // Get user's current location on component mount
-    const getCurrentLocation = () => {
-      if (!navigator.geolocation) {
-        toast.error("Geolocalización no disponible en tu navegador");
-        setMunicipality("");
-        setLocation("");
-        return;
-      }
+    if (navigator.geolocation) {
       setLoadingLocation(true);
+      const timeoutId = setTimeout(() => setLoadingLocation(false), 7000);
 
-      // Timeout para la detección de ubicación
-      const timeoutId = setTimeout(() => {
-        setLoadingLocation(false);
-        setMunicipality("");
-        setLocation("");
-        toast.error("Tiempo agotado. Usando ubicación por defecto", {
-          description: "Puedes cambiarla haciendo clic en tu ubicación"
-        });
-      }, 8000); // 8 segundos timeout
-
-      navigator.geolocation.getCurrentPosition(async position => {
+      navigator.geolocation.getCurrentPosition(async (position) => {
         clearTimeout(timeoutId);
-        const {
-          latitude,
-          longitude
-        } = position.coords;
-        
-        // Guardar también las coordenadas del usuario para el campo "Dónde"
-        setUserLocation({ lat: latitude, lng: longitude });
-        
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        setUserLocation({ lat, lng });
+
         try {
-          // Use Nominatim API with timeout
-          const controller = new AbortController();
-          const fetchTimeout = setTimeout(() => controller.abort(), 5000);
-          const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`, {
-            headers: {
-              'Accept-Language': 'es'
-            },
-            signal: controller.signal
-          });
-          clearTimeout(fetchTimeout);
-          if (!response.ok) throw new Error("Error al obtener la ubicación");
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=es`
+          );
           const data = await response.json();
           const address = data.address;
-
-          // Extract municipality and sector
-          const municipalityName = address.city || address.town || address.municipality || address.county || "";
-          const sectorName = address.suburb || address.neighbourhood || address.quarter || address.village || "";
-          setMunicipality(municipalityName);
-          setSector(sectorName);
+          const municipalityName = address.city || address.town || address.municipality || "";
+          const sectorName = address.suburb || address.neighbourhood || "";
           setLocation(sectorName ? `${municipalityName}, ${sectorName}` : municipalityName);
         } catch (error) {
           console.error("Error getting location:", error);
-          // Usar ubicación por defecto en caso de error
-
         } finally {
           setLoadingLocation(false);
         }
-      }, error => {
+      }, () => {
         clearTimeout(timeoutId);
-        console.error("Geolocation error:", error);
         setLoadingLocation(false);
-      }, {
-        enableHighAccuracy: true,
-        timeout: 7000,
-        // 7 segundos para GPS
-        maximumAge: 0
       });
-    };
-    getCurrentLocation();
+    }
   }, []);
-  
+
   // Cerrar sugerencias al hacer clic fuera
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -174,265 +90,30 @@ const Hero = () => {
         setShowLocationSuggestions(false);
       }
     };
-    
     if (showLocationSuggestions) {
       document.addEventListener('mousedown', handleClickOutside);
     }
-    
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showLocationSuggestions]);
-  const handleStartVoiceRecording = async () => {
-    // Si el permiso no ha sido otorgado, mostrar diálogo
-    if (micPermission === 'prompt') {
-      setShowMicPermissionDialog(true);
-      return;
+
+  // Actualizar sugerencias cuando cambie searchWhere
+  useEffect(() => {
+    if (mapsLoaded && searchWhere.trim()) {
+      getPredictions(searchWhere);
     }
+  }, [searchWhere, mapsLoaded, getPredictions]);
 
-    if (micPermission === 'denied') {
-      toast.error('Permiso de micrófono denegado', {
-        description: 'Por favor permite el acceso al micrófono en la configuración de tu navegador'
-      });
-      return;
-    }
-
-    try {
-      await startRecording();
-    } catch (error: any) {
-      console.error('Error starting voice recording:', error);
-      toast.error('Error al iniciar grabación');
-    }
-  };
-
-  const handleGrantMicPermission = async () => {
-    const granted = await requestMicrophonePermission();
-    setShowMicPermissionDialog(false);
-    
-    if (granted) {
-      // Iniciar grabación inmediatamente después de otorgar permiso
-      try {
-        await startRecording();
-      } catch (error: any) {
-        console.error('Error starting voice recording:', error);
-        toast.error('Error al iniciar grabación');
-      }
-    }
-  };
-
-  const handleStopVoiceRecording = async () => {
-    try {
-      const transcript = await stopRecording();
-      console.log('[Voz] Transcripción:', transcript);
-      
-      if (transcript && transcript.trim().length > 0) {
-        setSearchQuery(transcript);
-        toast.success('Listo');
-      } else {
-        toast.error('No se detectó audio');
-      }
-    } catch (error: any) {
-      console.error('[Voz] Error:', error);
-      if (error.message !== 'Cancelled by user' && error.message !== 'No hay grabación activa') {
-        toast.error('Intenta de nuevo');
-      }
-    }
-  };
-  
-
-  const handleCancelVoiceRecording = () => {
-    cancelRecording();
-  };
-  const handleSearch = async (queryText?: string) => {
-    const textToSearch = queryText || searchQuery;
-
-    if (!textToSearch.trim()) {
-      toast.error("Por favor describe qué buscas");
-      return;
-    }
-    
-    // Si hay texto en "Dónde" pero no hay coordenadas seleccionadas, geocodificar primero
-    if (searchWhere.trim() && !selectedLocation && mapsLoaded) {
-      await handleGeocodeAddress(searchWhere);
-    }
-
-    // Interpretar búsqueda
-    const result = await interpretSearch(textToSearch);
-    if (!result) return;
-
-    setExtractedFilters(result);
-
-    // Detectar ubicación desde cualquier parte
-    const extractedLocation =
-      result.location ||
-      result?.filters?.location ||
-      result?.parsed?.location ||
-      result?.locationText ||
-      null;
-
-    // 🟢 1. Si la IA detecta ubicación O hay ubicación seleccionada en "Dónde" → NO mostrar modal
-    if (extractedLocation || selectedLocation) {
-      setUseGPSForSearch(false); 
-      
-      // Agregar las coordenadas a la URL si existen
-      const params = new URLSearchParams({
-        query: textToSearch,
-        listingType: listingType,
-      });
-      
-      if (selectedLocation) {
-        params.append('lat', selectedLocation.lat.toString());
-        params.append('lng', selectedLocation.lng.toString());
-        params.append('location', selectedLocation.address);
-      }
-      
-      // Si hay ubicación seleccionada, navegar directamente al catálogo
-      if (selectedLocation) {
-        navigate(`/catalogo?${params.toString()}`);
-        return;
-      }
-      
-      setShowOptions(true);
-      return;
-    }
-
-    // 🔴 2. Si la IA NO detectó ubicación Y no hay ubicación en "Dónde" → mostrar modal
-    setPendingSearchQuery(textToSearch);
-    setShowLocationConfirmDialog(true);
-  };
-
-
-
-
-  const handleContinueWithCurrentLocation = async () => {
-    setShowLocationConfirmDialog(false);
-    setUseGPSForSearch(true); // Activar GPS para esta búsqueda
-
-    // Usar el hook optimizado con caché
-    const result = await interpretSearch(pendingSearchQuery);
-    if (!result) return; // El hook ya maneja los errores
-
-    // Guardar los filtros extraídos
-    setExtractedFilters(result);
-
-    // Mostrar opciones de búsqueda
-    setShowOptions(true);
-  };
-  const handleChangeLocationForSearch = () => {
-    setShowLocationConfirmDialog(false);
-    setUseGPSForSearch(false); // Desactivar GPS, buscar por texto
-
-    // Interpretar la búsqueda para extraer ubicación
-    const interpretAndShow = async () => {
-      const result = await interpretSearch(pendingSearchQuery);
-      if (!result) return;
-      setExtractedFilters(result);
-      setShowLocationDialog(true);
-    };
-    interpretAndShow();
-  };
-  const handleContinueCurrentLocation = () => {
-    setUseCustomLocation(false);
-    setShowLocationDialog(false);
-    toast.success("Usando tu ubicación actual");
-  };
-  const handleDepartmentChange = (value: string) => {
-    setCustomDepartment(value);
-    setCustomMunicipality("");
-    setCustomNeighborhood("");
-    const municipalities = getMunicipalitiesByDepartment(value);
-    setAvailableMunicipalities(municipalities);
-    setAvailableNeighborhoods([]);
-  };
-  const handleMunicipalityChange = (value: string) => {
-    setCustomMunicipality(value);
-    setCustomNeighborhood("");
-    const neighborhoods = getNeighborhoodsByMunicipality(customDepartment, value);
-    setAvailableNeighborhoods(neighborhoods);
-  };
-  const handleUseCustomLocation = async () => {
-    if (!customDepartment.trim()) {
-      toast.error("El departamento es obligatorio");
-      return;
-    }
-    if (!customMunicipality.trim()) {
-      toast.error("El municipio es obligatorio");
-      return;
-    }
-    setUseCustomLocation(true);
-    const fullLocation = customNeighborhood.trim() ? `${customMunicipality}, ${customNeighborhood}` : customMunicipality;
-    setMunicipality(customMunicipality);
-    setSector(customNeighborhood);
-    setShowLocationDialog(false);
-    toast.success(`Buscando en: ${customDepartment}, ${fullLocation}`);
-
-    // Si hay una búsqueda pendiente, ejecutarla con la nueva ubicación
-    if (pendingSearchQuery.trim()) {
-      const result = await interpretSearch(pendingSearchQuery);
-      if (result) {
-        setShowOptions(true);
-      }
-    }
-  };
-  
-  // ======= NUEVAS FUNCIONES PARA EL CAMPO "DÓNDE" =======
-  
-  // Debounce para las búsquedas de autocompletado
-  let whereDebounceTimer: NodeJS.Timeout;
-  
   const handleWhereInputChange = (value: string) => {
     setSearchWhere(value);
-    setSelectedLocation(null); // Limpiar selección previa
-    
-    if (!value.trim()) {
-      setShowLocationSuggestions(false);
-      return;
-    }
-    
-    // Debounce de 300ms
-    clearTimeout(whereDebounceTimer);
-    whereDebounceTimer = setTimeout(() => {
-      if (mapsLoaded) {
-        getPredictions(value);
-        setShowLocationSuggestions(true);
-      }
-    }, 300);
-  };
-  
-  const handleUseCurrentLocation = () => {
-    if (!userLocation) {
-      // Intentar obtener la ubicación actual
-      if (!navigator.geolocation) {
-        toast.error("Geolocalización no disponible");
-        return;
-      }
-      
-      setLoadingLocation(true);
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setUserLocation({ lat: latitude, lng: longitude });
-          setSelectedLocation({
-            lat: latitude,
-            lng: longitude,
-            address: "Tu ubicación actual"
-          });
-          setSearchWhere("Tu ubicación actual");
-          setShowLocationSuggestions(false);
-          setLoadingLocation(false);
-          toast.success("Ubicación actual detectada");
-        },
-        (error) => {
-          console.error("Error getting location:", error);
-          setLoadingLocation(false);
-          toast.error("No se pudo obtener tu ubicación. Verifica los permisos.");
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0
-        }
-      );
+    if (value.trim()) {
+      setShowLocationSuggestions(true);
     } else {
-      // Ya tenemos la ubicación guardada
+      setShowLocationSuggestions(false);
+    }
+  };
+
+  const handleUseCurrentLocation = () => {
+    if (userLocation) {
       setSelectedLocation({
         lat: userLocation.lat,
         lng: userLocation.lng,
@@ -440,583 +121,309 @@ const Hero = () => {
       });
       setSearchWhere("Tu ubicación actual");
       setShowLocationSuggestions(false);
-      toast.success("Ubicación actual seleccionada");
+    } else {
+      navigator.geolocation.getCurrentPosition((position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        setUserLocation({ lat, lng });
+        setSelectedLocation({ lat, lng, address: "Tu ubicación actual" });
+        setSearchWhere("Tu ubicación actual");
+        setShowLocationSuggestions(false);
+      }, () => {
+        toast.error("No se pudo obtener tu ubicación");
+      });
     }
   };
-  
-  const handleSelectSuggestion = async (suggestion: any) => {
-    if (!mapsLoaded || !window.google?.maps?.places) {
-      toast.error("Google Maps aún está cargando");
+
+  const handleSelectSuggestion = (suggestion: any) => {
+    if (!window.google?.maps) return;
+    const service = new window.google.maps.places.PlacesService(document.createElement('div'));
+    service.getDetails({ placeId: suggestion.place_id }, (place, status) => {
+      if (status === 'OK' && place?.geometry?.location) {
+        setSelectedLocation({
+          lat: place.geometry.location.lat(),
+          lng: place.geometry.location.lng(),
+          address: suggestion.description
+        });
+        setSearchWhere(suggestion.structured_formatting.main_text);
+        setShowLocationSuggestions(false);
+      }
+    });
+  };
+
+  const handleGeocodeAddress = async (address: string) => {
+    if (!window.google?.maps) return;
+    const geocoder = new window.google.maps.Geocoder();
+    geocoder.geocode({ address, componentRestrictions: { country: 'CO' } }, (results, status) => {
+      if (status === 'OK' && results?.[0]) {
+        const location = results[0].geometry.location;
+        setSelectedLocation({
+          lat: location.lat(),
+          lng: location.lng(),
+          address: results[0].formatted_address
+        });
+      }
+    });
+  };
+
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) {
+      toast.error("Por favor describe qué buscas");
       return;
     }
-    
+
     try {
-      // Crear un div temporal para el PlacesService
-      const service = new google.maps.places.PlacesService(document.createElement('div'));
-      
-      service.getDetails(
-        {
-          placeId: suggestion.place_id,
-          fields: ['geometry', 'formatted_address', 'name']
-        },
-        (place, status) => {
-          if (status === google.maps.places.PlacesServiceStatus.OK && place?.geometry?.location) {
-            const lat = place.geometry.location.lat();
-            const lng = place.geometry.location.lng();
-            const address = place.formatted_address || place.name || suggestion.description;
-            
-            setSelectedLocation({ lat, lng, address });
-            setSearchWhere(suggestion.structured_formatting.main_text);
-            setShowLocationSuggestions(false);
-            toast.success("Ubicación seleccionada");
-          } else {
-            toast.error("No se pudo obtener detalles del lugar");
-          }
-        }
-      );
-    } catch (error) {
-      console.error("Error selecting suggestion:", error);
-      toast.error("Error al seleccionar la ubicación");
-    }
-  };
-  
-  const handleGeocodeAddress = async (address: string) => {
-    if (!mapsLoaded || !window.google?.maps) return;
-    
-    try {
-      const geocoder = new google.maps.Geocoder();
-      
-      geocoder.geocode(
-        { 
-          address: address,
-          componentRestrictions: { country: 'CO' } // Colombia
-        },
-        (results, status) => {
-          if (status === google.maps.GeocoderStatus.OK && results && results[0]) {
-            const location = results[0].geometry.location;
-            const lat = location.lat();
-            const lng = location.lng();
-            const formattedAddress = results[0].formatted_address;
-            
-            setSelectedLocation({ lat, lng, address: formattedAddress });
-            toast.success("Ubicación encontrada");
-          } else {
-            toast.error("No se pudo encontrar la ubicación");
-          }
-        }
-      );
-    } catch (error) {
-      console.error("Error geocoding address:", error);
-      toast.error("Error al buscar la ubicación");
-    }
-  };
-  if (showOptions) {
-    return <section className="fixed inset-0 top-14 md:top-16 flex flex-col overflow-hidden z-50">
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-cover bg-center" style={{
-          backgroundImage: `url(${heroImage})`
-        }}>
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/50 via-primary/40 to-blue-600/50" />
-          </div>
-        </div>
+      const result = await interpretSearch(searchQuery);
+      if (!result) return;
 
-        <div className="relative z-10 container mx-auto px-4 pt-2">
-          <Button variant="default" size="icon" onClick={() => setShowOptions(false)} className="rounded-full w-12 h-12 shadow-xl bg-primary hover:bg-primary/90">
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-        </div>
-
-        <div className="relative z-10 container mx-auto px-4 py-4 flex-1 flex items-center justify-center overflow-hidden">
-          <SearchOptions 
-            searchQuery={searchQuery} 
-            municipality={municipality || ""} 
-            sector={sector} 
-            listingType={listingType}
-            onSearchChange={newQuery => setSearchQuery(newQuery)} 
-            disableGPSNavigation={useCustomLocation} 
-            useGPSForFixedView={useGPSForSearch} 
-            searchLocation={
-              useGPSForSearch
-                ? null        // cuando usa GPS → SearchOptions usa la posición real
-                : extractedFilters?.location
-}
-
-          />
-        </div>
-      </section>;
-  }
-  return <>
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Background image with gradient overlay */}
-        <div className="absolute inset-0 bg-cover bg-center" style={{
-        backgroundImage: `url(${heroImage})`
-      }}>
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/50 via-primary/40 to-blue-600/50" />
-        </div>
-        
-        {/* Content */}
-        <div className="relative z-10 container mx-auto px-4 py-8 md:py-20">
-          <div className="max-w-4xl mx-auto text-center space-y-8">
-            <div className="space-y-4 animate-fade-in -mt-8">
-              <h1 className="text-3xl sm:text-4xl md:text-7xl font-bold text-white leading-tight">
-                Encuentra tu <span className="text-primary-glow">lugar ideal</span> de manera <span className="text-accent">inteligente</span>
-              </h1>
-              <p className="text-base sm:text-lg md:text-2xl text-white/90 max-w-3xl mx-auto px-4">Descubre propiedades cerca a ti mientras recorres la ciudad.</p>
-            </div>
-
-            {/* Search bar */}
-            <div className="relative max-w-2xl mx-auto w-full px-4 sm:px-2">
-              {/* Animated border glow */}
-              <div className="absolute inset-0 rounded-xl md:rounded-2xl bg-gradient-to-r from-primary via-accent to-primary bg-[length:200%_100%] animate-[gradient-flow_3s_linear_infinite] opacity-75 blur-sm"></div>
-              
-              <div className="relative bg-white rounded-xl md:rounded-2xl shadow-2xl p-3 md:p-4">
-                <div className="space-y-2 md:space-y-3">
-                  {/* Listing Type Selector - PRIMERO */}
-                  <div className="flex items-center gap-2">
-                    <div className="inline-flex rounded-lg border border-border bg-muted p-1 w-full">
-                      <button
-                        type="button"
-                        onClick={() => setListingType("rent")}
-                        className={cn(
-                          "flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all border-2",
-                          listingType === "rent"
-                            ? "bg-background text-foreground shadow-sm border-yellow-400"
-                            : "text-muted-foreground hover:text-foreground border-transparent"
-                        )}
-                      >
-                        Arrendar
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setListingType("sale")}
-                        className={cn(
-                          "flex-1 rounded-md px-3 py-2 text-sm font-medium transition-all border-2",
-                          listingType === "sale"
-                            ? "bg-background text-foreground shadow-sm border-yellow-400"
-                            : "text-muted-foreground hover:text-foreground border-transparent"
-                        )}
-                      >
-                        Comprar
-                      </button>
-                    </div>
-                  </div>
-
-{/* Descripción - SEGUNDO */}
-<div className="flex items-start gap-2 border border-border rounded-lg p-2 relative">
-  {/* Ícono de búsqueda */}
-  <Search
-    className={cn(
-      "h-4 w-4 mt-2 flex-shrink-0 transition-colors",
-      isRecording ? "text-primary animate-pulse" : "text-muted-foreground"
-    )}
-  />
-
-  {/* Campo de texto con escritura en vivo */}
-  <Textarea
-    placeholder="Describe la propiedad que buscas"
-    className="border-0 focus-visible:ring-0 text-base md:text-sm leading-normal resize-none min-h-[44px] max-h-[96px] md:max-h-[120px] w-full overflow-y-auto"
-    value={isRecording ? partialText : searchQuery} // 👈 muestra palabras en tiempo real
-    onChange={(e) => setSearchQuery(e.target.value)}
-    onKeyDown={(e) => {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        handleSearch();
+      if (searchWhere.trim() && !selectedLocation) {
+        await handleGeocodeAddress(searchWhere);
       }
-    }}
-  />
 
+      const params = new URLSearchParams({
+        query: searchQuery,
+        listingType: listingType,
+      });
 
-</div>
+      if (selectedLocation) {
+        params.append('lat', selectedLocation.lat.toString());
+        params.append('lng', selectedLocation.lng.toString());
+        params.append('location', selectedLocation.address);
+      }
 
-                  {/* Campo "Dónde" - NUEVO */}
-                  <div className="relative location-suggestions-container">
-                    <div className="flex items-start gap-2 border border-border rounded-lg p-2">
-                      <MapPin className="h-4 w-4 mt-2 flex-shrink-0 text-muted-foreground" />
-                      <Input
-                        placeholder="¿En dónde?"
-                        className="border-0 focus-visible:ring-0 text-base md:text-sm"
-                        value={searchWhere}
-                        onChange={(e) => handleWhereInputChange(e.target.value)}
-                        onFocus={() => {
-                          if (searchWhere.trim() && predictions.length > 0) {
-                            setShowLocationSuggestions(true);
-                          }
-                        }}
-                      />
-                    </div>
+      if (result.filters) {
+        params.append('semanticFilters', JSON.stringify(result.filters));
+      }
 
-                    {/* Dropdown de sugerencias */}
-                    {showLocationSuggestions && (predictions.length > 0 || searchWhere.trim()) && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-border rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
-                        {/* Primera opción: Usar mi ubicación */}
-                        <div 
-                          onClick={handleUseCurrentLocation}
-                          className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer border-b transition-colors"
-                        >
-                          <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
-                          <div>
-                            <div className="font-medium">📍 Usar mi ubicación actual</div>
-                          </div>
-                        </div>
+      navigate(`/properties-catalog?${params.toString()}`);
+    } catch (error) {
+      console.error('Error en búsqueda:', error);
+      toast.error('Error al procesar la búsqueda');
+    }
+  };
 
-                        {/* Sugerencias de Google */}
-                        {predictions.length > 0 ? (
-                          predictions.map((suggestion) => (
-                            <div
-                              key={suggestion.place_id}
-                              onClick={() => handleSelectSuggestion(suggestion)}
-                              className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer transition-colors"
-                            >
-                              <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                              <div className="flex-1 min-w-0">
-                                <div className="font-medium truncate">{suggestion.structured_formatting.main_text}</div>
-                                <div className="text-sm text-muted-foreground truncate">
-                                  {suggestion.structured_formatting.secondary_text}
-                                </div>
-                              </div>
-                            </div>
-                          ))
-                        ) : searchWhere.trim() && (
-                          <div className="p-3 text-sm text-muted-foreground text-center">
-                            No se encontraron lugares
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
+  const handleStartRecording = async () => {
+    try {
+      await startRecording();
+    } catch (error: any) {
+      toast.error(error.message || 'Error al iniciar grabación');
+    }
+  };
 
+  const handleStopRecording = async () => {
+    try {
+      const transcribedText = await stopRecording();
+      if (transcribedText) {
+        setSearchQuery(transcribedText);
+        if (textareaRef.current) {
+          textareaRef.current.style.height = 'auto';
+          textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 80)}px`;
+        }
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Error al procesar audio');
+    }
+  };
 
-                  {/* Botón Buscar - TERCERO */}
-                  <div className="flex items-center gap-2 w-full">
-                  <Button
-                    variant="hero"
-                    size="lg"
-                    onClick={() => handleSearch()}
-                    disabled={
-                      !searchQuery.trim() ||
-                      isRecording ||
-                      isProcessing ||
-                      isInterpretingSearch ||
-                      loadingLocation
-                    }
-                    className="flex-1 min-w-[120px] text-base font-semibold transition-transform duration-150 ease-out hover:scale-[1.02] active:scale-[0.98]"
-                  >
-                    {isInterpretingSearch ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Procesando...
-                      </>
-                    ) : (
-                      "Buscar"
-                    )}
-                  </Button>
+  const handleCancelRecording = () => {
+    cancelRecording();
+  };
 
-                    <VoiceButton isRecording={isRecording} isProcessing={isProcessing} audioLevel={audioLevel} onStart={handleStartVoiceRecording} onStop={handleStopVoiceRecording} onCancel={handleCancelVoiceRecording} disabled={loadingLocation || isInterpretingSearch} />
-                  </div>
+  return (
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
+      {/* Fondo */}
+      <div className="absolute inset-0 w-full h-full">
+        <img src={heroImage} alt="Medellín cityscape" className="w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-black/40" />
+      </div>
 
-                  {/* Tu ubicación - CUARTO */}
-                  <div className="flex flex-col sm:flex-row items-center gap-2 pt-2 border-t">
-                    {loadingLocation ? <div className="flex items-center gap-2">
-                        <Loader2 className="h-4 w-4 text-muted-foreground animate-spin" />
-                        <span className="text-xs text-muted-foreground">Detectando ubicación...</span>
-                      </div> : <div className="flex items-center gap-1.5 justify-center">
-                        <MapPin className="h-4 w-4 text-primary animate-bounce flex-shrink-0" />
-                        <span className="text-sm font-medium">Tu ubicación:</span>
-                        {municipality && sector ? <span className="text-sm font-medium truncate">{municipality}, {sector}</span> : municipality ? <span className="text-sm font-medium truncate">{municipality}</span> : <span className="text-sm font-medium truncate"></span>}
-                      </div>}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Decorative gradient orbs */}
-        <div className="absolute top-20 left-10 w-48 h-48 md:w-72 md:h-72 bg-primary-glow/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-10 w-64 h-64 md:w-96 md:h-96 bg-blue-400/20 rounded-full blur-3xl" />
-      </section>
-
-      {/* Fixed search bar for mobile when scrolling */}
-      {isMobile && showFixedSearch && <div className="fixed bottom-6 left-0 right-0 z-50 bg-white shadow-2xl border-t border-border/50 animate-in slide-in-from-bottom-5 duration-300">
-          <div className="p-3 space-y-2">
-            <div className="flex items-center gap-2">
-              <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-              <Input placeholder="¿Qué buscas?" className="flex-1 border-input text-base leading-normal min-h-[44px] shadow-lg border-2" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onKeyDown={e => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              handleSearch();
-            }
-          }} disabled={isRecording || isProcessing || isInterpretingSearch} />
-              <VoiceButton isRecording={isRecording} isProcessing={isProcessing} audioLevel={audioLevel} onStart={handleStartVoiceRecording} onStop={handleStopVoiceRecording} onCancel={handleCancelVoiceRecording} size="icon" variant="outline" disabled={isInterpretingSearch} />
-              <Button variant="hero" size="sm" onClick={() => handleSearch()} disabled={!searchQuery.trim() || isRecording || isProcessing || isInterpretingSearch} className="flex-shrink-0">
-                {isInterpretingSearch ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Buscar'}
-              </Button>
-            </div>
-            <div className="inline-flex rounded-lg border border-border bg-muted p-1 w-full">
-              <button
-                type="button"
-                onClick={() => setListingType("rent")}
-                className={cn(
-                  "flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-all border-2",
-                  listingType === "rent"
-                    ? "bg-background text-foreground shadow-sm border-yellow-400"
-                    : "text-muted-foreground hover:text-foreground border-transparent"
-                )}
-              >
-                Arrendar
-              </button>
-              <button
-                type="button"
-                onClick={() => setListingType("sale")}
-                className={cn(
-                  "flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-all border-2",
-                  listingType === "sale"
-                    ? "bg-background text-foreground shadow-sm border-yellow-400"
-                    : "text-muted-foreground hover:text-foreground border-transparent"
-                )}
-              >
-                Comprar
-              </button>
-            </div>
-          </div>
-        </div>}
-
-      {/* Location Confirmation Dialog */}
-      <Dialog open={showLocationConfirmDialog} onOpenChange={setShowLocationConfirmDialog}>
-    <DialogContent
-      className="
-        w-[96vw]               /* ocupa casi todo el ancho en pantallas muy pequeñas */
-        max-w-[480px] sm:max-w-[600px] md:max-w-[720px] lg:max-w-[800px]
-        px-3 sm:px-6 md:px-8
-        py-3 sm:py-5
-        rounded-2xl
-        overflow-hidden
-      "
-    >
-      <DialogHeader className="text-center space-y-2">
-        <DialogTitle
-          className="
-            text-base [@media(max-width:340px)]:text-sm  /* más pequeño en pantallas menores a 340px */
-            sm:text-lg font-semibold leading-tight break-words
-          "
-        >
-          Confirmar ubicación de búsqueda
-        </DialogTitle>
-
-        <DialogDescription
-          className="
-            text-[11px] [@media(max-width:340px)]:text-[10px]  /* reduce fuente en pantallas muy angostas */
-            sm:text-sm md:text-base text-muted-foreground
-            leading-relaxed break-words text-balance
-            mx-auto max-w-[92%] sm:max-w-[85%]
-          "
-        >
-          Estás usando tu ubicación en tiempo real para buscar propiedades.
-        </DialogDescription>
-      </DialogHeader>
-
-      <div className="space-y-4 py-3">
-        <div className="flex items-center gap-2 px-2 sm:px-3 py-2 bg-primary/5 rounded-md border border-primary/20">
-          <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
-          <p className="text-[11px] sm:text-sm text-muted-foreground truncate">
-            <span className="text-foreground">
-              {municipality}
-              {sector && `, ${sector}`}
-            </span>
+      {/* Contenido */}
+      <div className="relative z-10 w-full max-w-5xl mx-auto px-4 py-20">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 drop-shadow-lg">
+            Encuentra tu lugar ideal
+          </h1>
+          <p className="text-lg md:text-xl text-white/90 drop-shadow-md">
+            Busca propiedades en arriendo o venta de forma inteligente
           </p>
         </div>
 
-        <div className="flex flex-col gap-2 sm:gap-3">
-          <Button
-            onClick={handleContinueWithCurrentLocation}
-            variant="default"
-            className="w-full text-[12px] sm:text-sm md:text-base py-2 sm:py-3"
-          >
-            <MapPin className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-            Continuar con mi ubicación actual
-          </Button>
-
-          <Button
-            onClick={handleChangeLocationForSearch}
-            variant="outline"
-            className="w-full text-[12px] sm:text-sm md:text-base py-2 sm:py-3"
-          >
-            <Search className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-            Buscar en otra ubicación
-          </Button>
+        {/* Tabs de Arrendar/Comprar - FUERA del contenedor */}
+        <div className="mb-4 flex justify-center">
+          <div className="inline-flex rounded-lg border border-border bg-white/90 backdrop-blur-sm p-1">
+            <button
+              type="button"
+              onClick={() => setListingType("rent")}
+              className={cn(
+                "rounded-md px-6 py-2 text-sm font-medium transition-all",
+                listingType === "rent"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              Arrendar
+            </button>
+            <button
+              type="button"
+              onClick={() => setListingType("sale")}
+              className={cn(
+                "rounded-md px-6 py-2 text-sm font-medium transition-all",
+                listingType === "sale"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              Comprar
+            </button>
+          </div>
         </div>
-      </div>
-    </DialogContent>
-      </Dialog>
 
-      {/* Microphone Permission Dialog */}
-      <Dialog open={showMicPermissionDialog} onOpenChange={setShowMicPermissionDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Mic className="h-5 w-5 text-primary" />
-              Permiso para usar el micrófono
-            </DialogTitle>
-            <DialogDescription className="text-left space-y-2 pt-2">
-              <p>Para buscar propiedades usando tu voz, necesitamos acceso al micrófono.</p>
-              <p className="text-sm">Tu voz no será almacenada ni compartida. Solo se usa para transcribir tu búsqueda.</p>
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-col gap-3 pt-4">
-            <Button onClick={handleGrantMicPermission} variant="default" className="w-full">
-              <Mic className="mr-2 h-4 w-4" />
-              Permitir acceso al micrófono
-            </Button>
-            <Button onClick={() => setShowMicPermissionDialog(false)} variant="outline" className="w-full">
-              Cancelar
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Location Selection Dialog */}
-      <Dialog open={showLocationDialog} onOpenChange={setShowLocationDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Selecciona tu ubicación</DialogTitle>
-            <DialogDescription>
-              Actualmente estamos usando tu ubicación en tiempo real para buscar inmuebles cerca de ti.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                Tu ubicación actual: <span className="font-medium text-foreground">{municipality}{sector && `, ${sector}`}</span>
-              </p>
+        {/* Contenedor Cápsula de Búsqueda */}
+        <div className="relative max-w-5xl mx-auto w-full px-4 sm:px-2">
+          {/* Gradiente animado del borde */}
+          <div className="absolute -inset-1 bg-gradient-to-r from-primary via-blue-500 to-primary rounded-full blur-sm opacity-75 animate-pulse" />
+          
+          <div className="relative bg-white rounded-full shadow-2xl p-2 flex flex-col md:flex-row items-stretch md:items-center gap-2 md:gap-0">
+            {/* Sección QUÉ */}
+            <div className="flex-1 flex items-center gap-2 px-4 py-3 md:border-r border-gray-200">
+              <div className="flex flex-col w-full">
+                <label className="text-xs font-semibold text-gray-700 mb-1">Qué</label>
+                <Textarea
+                  ref={textareaRef}
+                  placeholder="Describe la propiedad que buscas"
+                  className="border-0 focus-visible:ring-0 resize-none text-sm w-full p-0 min-h-[24px] max-h-[80px] overflow-y-auto"
+                  value={isRecording ? partialText : searchQuery}
+                  onChange={handleSearchInput}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSearch();
+                    }
+                  }}
+                  rows={1}
+                />
+              </div>
             </div>
-            
-            <div className="flex flex-col gap-3">
-              <Button onClick={handleContinueCurrentLocation} variant="default" className="w-full">
-                <MapPin className="mr-2 h-4 w-4" />
-                Continuar con ubicación actual
-              </Button>
-              
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">O</span>
-                </div>
+
+            {/* Separador vertical (oculto en mobile) */}
+            <div className="hidden md:block h-12 w-px bg-gray-200" />
+
+            {/* BOTÓN MICRÓFONO */}
+            <div className="hidden md:flex px-2">
+              <VoiceButton
+                isRecording={isRecording}
+                isProcessing={isProcessing}
+                audioLevel={audioLevel}
+                onStart={handleStartRecording}
+                onStop={handleStopRecording}
+                onCancel={handleCancelRecording}
+              />
+            </div>
+
+            {/* Separador vertical (oculto en mobile) */}
+            <div className="hidden md:block h-12 w-px bg-gray-200" />
+
+            {/* Sección DÓNDE */}
+            <div className="flex-1 flex items-center gap-2 px-4 py-3 md:border-r border-gray-200 relative location-suggestions-container">
+              <div className="flex flex-col w-full">
+                <label className="text-xs font-semibold text-gray-700 mb-1">Dónde</label>
+                <Input
+                  placeholder="¿En dónde?"
+                  className="border-0 focus-visible:ring-0 text-sm w-full p-0 h-6"
+                  value={searchWhere}
+                  onChange={(e) => handleWhereInputChange(e.target.value)}
+                  onFocus={() => setShowLocationSuggestions(searchWhere.trim().length > 0 && predictions.length > 0)}
+                />
               </div>
 
-              <div className="space-y-3">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">
-                    Departamento <span className="text-destructive">*</span>
-                  </label>
-                  <Popover open={openDept} onOpenChange={setOpenDept}>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" role="combobox" aria-expanded={openDept} className="w-full justify-between bg-background">
-                        {customDepartment || "Selecciona un departamento"}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0 bg-popover" align="start">
-                      <Command>
-                        <CommandInput placeholder="Buscar departamento..." />
-                        <CommandList>
-                          <CommandEmpty>No se encontró departamento.</CommandEmpty>
-                          <CommandGroup>
-                            {getDepartments().map(dept => <CommandItem key={dept} value={dept} onSelect={value => {
-                            handleDepartmentChange(value);
-                            setOpenDept(false);
-                          }}>
-                                <Check className={cn("mr-2 h-4 w-4", customDepartment === dept ? "opacity-100" : "opacity-0")} />
-                                {dept}
-                              </CommandItem>)}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </div>
+              {/* Dropdown de sugerencias */}
+              {showLocationSuggestions && (predictions.length > 0 || searchWhere.trim()) && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-200 z-[100] overflow-hidden max-h-80 overflow-y-auto">
+                  {/* Primera opción: Usar mi ubicación */}
+                  <div 
+                    onClick={handleUseCurrentLocation}
+                    className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer border-b transition-colors"
+                  >
+                    <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
+                    <div className="font-medium">📍 Usar mi ubicación actual</div>
+                  </div>
 
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">
-                    Municipio <span className="text-destructive">*</span>
-                  </label>
-                  <Popover open={openMuni} onOpenChange={setOpenMuni}>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" role="combobox" aria-expanded={openMuni} disabled={!customDepartment} className="w-full justify-between bg-background">
-                        {customMunicipality || (customDepartment ? "Selecciona un municipio" : "Primero selecciona un departamento")}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0 bg-popover" align="start">
-                      <Command>
-                        <CommandInput placeholder="Buscar municipio..." />
-                        <CommandList>
-                          <CommandEmpty>No se encontró municipio.</CommandEmpty>
-                          <CommandGroup>
-                            {availableMunicipalities.map(muni => <CommandItem key={muni} value={muni} onSelect={value => {
-                            handleMunicipalityChange(value);
-                            setOpenMuni(false);
-                          }}>
-                                <Check className={cn("mr-2 h-4 w-4", customMunicipality === muni ? "opacity-100" : "opacity-0")} />
-                                {muni}
-                              </CommandItem>)}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">
-                    Localidad o Barrio <span className="text-muted-foreground text-xs">(opcional)</span>
-                  </label>
-                  <Popover open={openNeigh} onOpenChange={setOpenNeigh}>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" role="combobox" aria-expanded={openNeigh} disabled={!customMunicipality} className="w-full justify-between bg-background">
-                        {customNeighborhood || (customMunicipality ? "Selecciona un barrio (opcional)" : "Primero selecciona un municipio")}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-full p-0 bg-popover" align="start">
-                      <Command>
-                        <CommandInput placeholder="Buscar barrio..." />
-                        <CommandList>
-                          <CommandEmpty>No se encontró barrio.</CommandEmpty>
-                          <CommandGroup>
-                            {availableNeighborhoods.map(neighborhood => <CommandItem key={neighborhood} value={neighborhood} onSelect={value => {
-                            setCustomNeighborhood(value);
-                            setOpenNeigh(false);
-                          }}>
-                                <Check className={cn("mr-2 h-4 w-4", customNeighborhood === neighborhood ? "opacity-100" : "opacity-0")} />
-                                {neighborhood}
-                              </CommandItem>)}
-                          </CommandGroup>
-                        </CommandList>
-                      </Command>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-
-                <Button 
-                  onClick={handleUseCustomLocation} 
-                  variant={customMunicipality ? "default" : "outline"} 
-                  className={cn(
-                    "w-full transition-all duration-300",
-                    customMunicipality && "border-2 border-yellow-400"
+                  {/* Sugerencias de Google */}
+                  {predictions.length > 0 ? (
+                    predictions.map((suggestion) => (
+                      <div
+                        key={suggestion.place_id}
+                        onClick={() => handleSelectSuggestion(suggestion)}
+                        className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer transition-colors"
+                      >
+                        <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium truncate">{suggestion.structured_formatting.main_text}</div>
+                          <div className="text-sm text-muted-foreground truncate">
+                            {suggestion.structured_formatting.secondary_text}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : searchWhere.trim() && (
+                    <div className="p-3 text-sm text-muted-foreground text-center">
+                      Escribe para buscar lugares
+                    </div>
                   )}
-                >
-                  Buscar en otra ubicación
-                </Button>
-                <p className="text-xs text-muted-foreground">
-                  * Si eliges buscar en otra ubicación, la navegación GPS estará deshabilitada y solo podrás ver propiedades en la dirección ingresada.
-                </p>
-              </div>
+                </div>
+              )}
+            </div>
+
+            {/* BOTÓN BUSCAR */}
+            <Button 
+              onClick={handleSearch}
+              disabled={!searchQuery.trim() || isInterpretingSearch || isProcessing}
+              className="rounded-full px-8 py-6 h-auto font-semibold whitespace-nowrap"
+              size="lg"
+            >
+              {isInterpretingSearch ? (
+                <>
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                  Buscando...
+                </>
+              ) : (
+                <>
+                  <Search className="h-5 w-5 mr-2" />
+                  Buscar
+                </>
+              )}
+            </Button>
+
+            {/* Botón de voz en mobile (debajo) */}
+            <div className="flex md:hidden justify-center mt-2">
+              <VoiceButton
+                isRecording={isRecording}
+                isProcessing={isProcessing}
+                audioLevel={audioLevel}
+                onStart={handleStartRecording}
+                onStop={handleStopRecording}
+                onCancel={handleCancelRecording}
+              />
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
-    </>;
+        </div>
+
+        {/* Tu ubicación actual */}
+        {location && !loadingLocation && (
+          <div className="mt-4 text-center text-white/80 text-sm">
+            Tu ubicación: <span className="font-medium">{location}</span>
+          </div>
+        )}
+
+        {loadingLocation && (
+          <div className="mt-4 text-center text-white/80 text-sm flex items-center justify-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Detectando ubicación...
+          </div>
+        )}
+      </div>
+    </section>
+  );
 };
+
 export default Hero;
