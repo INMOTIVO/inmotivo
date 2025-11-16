@@ -228,6 +228,34 @@ IMPORTANTE: Solo marca is_valid: true si es búsqueda inmobiliaria. Si preguntan
     // Remover is_valid antes de enviar filtros
     const { is_valid, ...filters } = result;
 
+    // Geocodificar location si existe
+    if (filters.location) {
+      try {
+        const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY");
+        if (!GOOGLE_MAPS_API_KEY) {
+          console.warn("GOOGLE_MAPS_API_KEY no configurado, no se puede geocodificar");
+        } else {
+          const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(filters.location + ', Colombia')}&key=${GOOGLE_MAPS_API_KEY}`;
+          
+          const geoResponse = await fetch(geocodeUrl);
+          const geoData = await geoResponse.json();
+          
+          if (geoData.status === 'OK' && geoData.results?.[0]) {
+            const location = geoData.results[0].geometry.location;
+            filters.searchLat = location.lat;
+            filters.searchLng = location.lng;
+            filters.radius = filters.radius || 12; // Default 12 km
+            console.log(`Geocoded "${filters.location}" → lat: ${location.lat}, lng: ${location.lng}`);
+          } else {
+            console.warn(`No se pudo geocodificar: ${filters.location}`, geoData.status);
+          }
+        }
+      } catch (geoError) {
+        console.error("Error geocodificando:", geoError);
+        // No bloquear la búsqueda si falla geocodificación
+      }
+    }
+
     return new Response(
       JSON.stringify({ filters }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }

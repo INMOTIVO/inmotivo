@@ -104,7 +104,7 @@ const PropertiesCatalog = () => {
 
   // Fetch properties based on semantic filters
   const { data: properties, isLoading: isLoadingProperties } = useQuery({
-    queryKey: ['catalog-properties', filters, userLat, userLng, radius, listingTypeParam],
+    queryKey: ['catalog-properties', filters.searchLat, filters.searchLng, filters.radius, userLat, userLng, radius, filters, listingTypeParam],
     queryFn: async () => {
       let query = supabase
         .from('properties')
@@ -173,23 +173,26 @@ const PropertiesCatalog = () => {
         filteredProperties.sort((a, b) => (b.area_m2 || 0) - (a.area_m2 || 0));
       }
 
-      // 7. Filtrado por distancia (si hay coordenadas)
-      if (userLat && userLng) {
-        const lat = parseFloat(userLat);
-        const lng = parseFloat(userLng);
-        const effectiveRadiusKm = radius ? parseFloat(radius) : 12;
+      // 7. Filtrado por distancia (SIEMPRE si hay coordenadas)
+      // Prioridad 1: coordenadas de búsqueda semántica (interpret-search)
+      // Prioridad 2: coordenadas del usuario (Donde estoy / selección manual)
+      const searchLat = filters.searchLat || (userLat ? parseFloat(userLat) : null);
+      const searchLng = filters.searchLng || (userLng ? parseFloat(userLng) : null);
+
+      if (searchLat && searchLng) {
+        const effectiveRadiusKm = filters.radius || (radius ? parseFloat(radius) : 12);
         const maxRadiusMeters = effectiveRadiusKm * 1000; // km a metros
 
         filteredProperties = filteredProperties.filter(prop => {
           if (!prop.latitude || !prop.longitude) return false;
-          const distance = calculateDistance(lat, lng, prop.latitude, prop.longitude);
+          const distance = calculateDistance(searchLat, searchLng, prop.latitude, prop.longitude);
           return distance <= maxRadiusMeters;
         });
 
         // Ordenar por distancia
         filteredProperties = filteredProperties.map(prop => ({
           ...prop,
-          distance: calculateDistance(lat, lng, prop.latitude!, prop.longitude!)
+          distance: calculateDistance(searchLat, searchLng, prop.latitude!, prop.longitude!)
         })).sort((a, b) => (a.distance || 0) - (b.distance || 0));
       }
 
@@ -302,14 +305,12 @@ const PropertiesCatalog = () => {
               Propiedades para <span className="text-primary">{listingTypeParam === 'rent' ? 'arrendar' : 'comprar'}</span>
               <br className="hidden sm:block" />
               <span className="sm:inline"> </span>que coinciden con tu búsqueda
-              {userLat && userLng && (
+              {(filters.searchLat || userLat) && (
                 <span className="block text-lg md:text-xl text-muted-foreground mt-2">
-                  a máximo {parseFloat(radius || '12')} km de tu ubicación
-                </span>
-              )}
-              {!userLat && !userLng && filters.location && (
-                <span className="block text-lg md:text-xl text-muted-foreground mt-2">
-                  en {filters.location}
+                  {filters.location 
+                    ? `en ${filters.location} (${filters.radius || parseFloat(radius || '12')} km de radio)`
+                    : `a máximo ${parseFloat(radius || '12')} km de tu ubicación`
+                  }
                 </span>
               )}
             </h1>
