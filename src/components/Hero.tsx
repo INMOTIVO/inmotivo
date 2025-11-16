@@ -195,7 +195,7 @@ const Hero = () => {
         params.append('semanticFilters', JSON.stringify(result.filters));
       }
 
-      navigate(`/properties-catalog?${params.toString()}`);
+      navigate(`/catalogo?${params.toString()}`);
     } catch (error) {
       console.error('Error en búsqueda:', error);
       toast.error('Error al procesar la búsqueda');
