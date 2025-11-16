@@ -37,8 +37,11 @@ const PropertiesCatalog = () => {
   const userLat = searchParams.get('lat');
   const userLng = searchParams.get('lng');
   const radius = searchParams.get('radius');
-  const [filters, setFilters] = useState<any>({});
-  const [isLoadingFilters, setIsLoadingFilters] = useState(true);
+  const semanticFiltersParam = searchParams.get('semanticFilters');
+  const [filters, setFilters] = useState<any>(
+    semanticFiltersParam ? JSON.parse(semanticFiltersParam) : {}
+  );
+  const [isLoadingFilters, setIsLoadingFilters] = useState(semanticFiltersParam ? false : true);
   const [isEditingQuery, setIsEditingQuery] = useState(false);
   const [editedQuery, setEditedQuery] = useState(queryParam || '');
 
@@ -98,7 +101,7 @@ const PropertiesCatalog = () => {
     enabled: !!user,
   });
 
-  // Fetch properties based on filters
+  // Fetch properties based on semantic filters
   const { data: properties, isLoading: isLoadingProperties } = useQuery({
     queryKey: ['catalog-properties', filters, userLat, userLng, radius, listingTypeParam],
     queryFn: async () => {
@@ -106,55 +109,92 @@ const PropertiesCatalog = () => {
         .from('properties')
         .select('*')
         .eq('status', 'available')
-        .eq('listing_type', listingTypeParam)
-        .lte('price', 25000000); // Max price 25M
+        .eq('listing_type', listingTypeParam);
 
-      if (filters.minPrice) query = query.gte('price', filters.minPrice);
-      if (filters.maxPrice) query = query.lte('price', Math.min(filters.maxPrice, 25000000));
-      if (filters.bedrooms) query = query.gte('bedrooms', filters.bedrooms);
-      if (filters.propertyType) query = query.eq('property_type', filters.propertyType);
-
-      // Filter by location name if provided (and no GPS coordinates)
-      if (filters.location && !userLat && !userLng) {
-        const locationLower = filters.location.toLowerCase();
-        // Extract the first meaningful word (usually the city name)
-        const cityName = locationLower.split(/[\s,]+/)[0]; // Split by spaces or commas and get first word
-        query = query.or(`city.ilike.%${cityName}%,neighborhood.ilike.%${locationLower}%`);
+      // 1. Filtrado por tipo (incluye tipos relacionados)
+      if (filters.tipo) {
+        const types = [filters.tipo, ...(filters.relatedTypes || [])];
+        query = query.in('property_type', types);
       }
 
-      const { data, error } = await query.order('created_at', { ascending: false });
+      // 2. Filtrado por habitaciones (flexible si flexibleBedrooms=true)
+      if (filters.habitaciones) {
+        if (filters.flexibleBedrooms) {
+          const min = Math.max(1, filters.habitaciones - 1);
+          const max = filters.habitaciones + 1;
+          query = query.gte('bedrooms', min).lte('bedrooms', max);
+        } else {
+          query = query.eq('bedrooms', filters.habitaciones);
+        }
+      }
+
+      // 3. Filtrado por precio según intención
+      if (filters.priceIntent === 'low') {
+        query = query.lte('price', 1500000);
+      } else if (filters.priceIntent === 'medium') {
+        query = query.gte('price', 1500000).lte('price', 3000000);
+      } else if (filters.priceIntent === 'high') {
+        query = query.gte('price', 3000000);
+      }
+
+      // Aplicar filtros de precio explícitos
+      if (filters.minPrice) {
+        query = query.gte('price', filters.minPrice);
+      }
+      if (filters.maxPrice) {
+        query = query.lte('price', filters.maxPrice);
+      }
+
+      // 4. Filtrado por ubicación
+      if (filters.location) {
+        query = query.ilike('city', `%${filters.location}%`);
+      }
+
+      const { data: allProperties, error } = await query;
       if (error) throw error;
       
-      // Filter by distance if GPS location parameters are provided
-      if (userLat && userLng && radius && data) {
+      let filteredProperties = allProperties || [];
+
+      // 5. Filtrado post-query por mustInclude (amenities, descripción)
+      if (filters.mustInclude && filters.mustInclude.length > 0) {
+        filteredProperties = filteredProperties.filter(prop => {
+          const description = (prop.description || '').toLowerCase();
+          const amenities = JSON.stringify(prop.amenities || []).toLowerCase();
+          const searchText = `${description} ${amenities}`;
+          
+          return filters.mustInclude.some((keyword: string) => 
+            searchText.includes(keyword.toLowerCase())
+          );
+        });
+      }
+
+      // 6. Ordenar por área si areaPriority=true
+      if (filters.areaPriority) {
+        filteredProperties.sort((a, b) => (b.area_m2 || 0) - (a.area_m2 || 0));
+      }
+
+      // 7. Filtrado por distancia (si hay coordenadas)
+      if (userLat && userLng) {
         const lat = parseFloat(userLat);
         const lng = parseFloat(userLng);
-        const maxRadius = parseFloat(radius);
-        
-        const filtered = data.filter(property => {
-          if (!property.latitude || !property.longitude) return false;
-          const distance = calculateDistance(
-            lat, 
-            lng, 
-            Number(property.latitude), 
-            Number(property.longitude)
-          );
+        const maxRadius = parseFloat(radius || '5') * 1000; // km a metros
+
+        filteredProperties = filteredProperties.filter(prop => {
+          if (!prop.latitude || !prop.longitude) return false;
+          const distance = calculateDistance(lat, lng, prop.latitude, prop.longitude);
           return distance <= maxRadius;
         });
-        
-        // Sort by distance (closest first)
-        filtered.sort((a, b) => {
-          const distA = calculateDistance(lat, lng, Number(a.latitude), Number(a.longitude));
-          const distB = calculateDistance(lat, lng, Number(b.latitude), Number(b.longitude));
-          return distA - distB;
-        });
-        
-        return filtered;
+
+        // Ordenar por distancia
+        filteredProperties = filteredProperties.map(prop => ({
+          ...prop,
+          distance: calculateDistance(lat, lng, prop.latitude!, prop.longitude!)
+        })).sort((a, b) => (a.distance || 0) - (b.distance || 0));
       }
-      
-      return data;
+
+      return filteredProperties;
     },
-    enabled: !isLoadingFilters,
+    enabled: !isLoadingFilters
   });
 
   const propertyTypes: Record<string, string> = {

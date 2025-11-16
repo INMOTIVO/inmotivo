@@ -30,11 +30,44 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `Extrae filtros de búsqueda inmobiliaria. 
+            content: `Eres un experto en búsqueda inmobiliaria con análisis semántico avanzado. Analiza el texto y extrae la INTENCIÓN SEMÁNTICA del usuario.
 
-VÁLIDO si contiene: apartamento, casa, local, bodega, oficina, habitación, alcoba, baño, sala, patio, balcón, arrendar, comprar, venta, barrio, zona.
+TIPOS VÁLIDOS: apartamento, casa, local, bodega, oficina, habitacion, estudio
 
-Extrae: ubicación, precio, habitaciones, tipo.`
+ANÁLISIS SEMÁNTICO AVANZADO:
+- Si dice "apartamento" → tipo: "apartamento", relatedTypes: ["apartaestudio", "loft", "duplex"]
+- Si dice "casa" → tipo: "casa", relatedTypes: ["townhouse", "casa-lote"]
+- Si dice "local comercial" → tipo: "local", relatedTypes: ["oficina", "local"]
+- Si menciona "2 habitaciones" o "2 alcobas" → habitaciones: 2, flexibleBedrooms: true (acepta 1-3)
+- Si dice "amplio", "grande", "espacioso" → areaPriority: true
+- Si dice "económico", "barato", "accesible" → priceIntent: "low"
+- Si dice "lujoso", "exclusivo", "premium" → priceIntent: "high"
+- Si dice "cerca de X" sin ubicación específica → nearbyAmbiguity: true
+- Si menciona "patio", "balcón", "parqueadero", "garaje", "terraza" → mustInclude: ["patio"]
+
+UBICACIÓN:
+- Extraer ciudad, barrio, sector (Medellín, Envigado, Sabaneta, Laureles, Poblado, etc.)
+- Si dice "Sabaneta" o "Envigado" → nearbyAmbiguity: true (incluir municipios vecinos)
+
+PRECIO EN PESOS COLOMBIANOS:
+- Económico (low): hasta 1,500,000
+- Promedio (medium): 1,500,000 - 3,000,000
+- Alto (high): más de 3,000,000
+
+EJEMPLOS:
+"apartamento de 2 habitaciones en sabaneta" →
+  tipo: "apartamento", habitaciones: 2, flexibleBedrooms: true, relatedTypes: ["apartaestudio", "loft"], location: "sabaneta"
+
+"casa amplia familiar cerca del parque envigado" →
+  tipo: "casa", areaPriority: true, nearbyAmbiguity: true, relatedTypes: ["townhouse", "casa-lote"], location: "envigado", mustInclude: ["parque"]
+
+"propiedad económica con patio" →
+  tipo: null, priceIntent: "low", mustInclude: ["patio"]
+
+"local comercial laureles" →
+  tipo: "local", relatedTypes: ["oficina"], location: "laureles"
+
+IMPORTANTE: Solo marca is_valid: true si es búsqueda inmobiliaria. Si preguntan por restaurantes, productos, etc., marca is_valid: false.`
           },
           {
             role: "user",
@@ -45,39 +78,66 @@ Extrae: ubicación, precio, habitaciones, tipo.`
           {
             type: "function",
             function: {
-              name: "extract_filters",
-              description: "Extrae los filtros de búsqueda de propiedades del texto del usuario",
+              name: "extract_semantic_intent",
+              description: "Extrae intención semántica avanzada de búsqueda inmobiliaria",
               parameters: {
                 type: "object",
                 properties: {
                   is_valid: {
                     type: "boolean",
-                    description: "true si busca inmuebles"
+                    description: "true si la consulta es sobre búsqueda de propiedades inmobiliarias"
+                  },
+                  tipo: {
+                    type: "string",
+                    enum: ["apartamento", "casa", "local", "bodega", "oficina", "habitacion", "estudio", null],
+                    description: "Tipo principal de propiedad"
+                  },
+                  habitaciones: {
+                    type: "number",
+                    description: "Número de habitaciones mencionadas"
+                  },
+                  relatedTypes: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "Tipos similares o relacionados (ej: apartamento → apartaestudio, loft)"
+                  },
+                  flexibleBedrooms: {
+                    type: "boolean",
+                    description: "true si acepta ±1 habitación del número mencionado"
+                  },
+                  areaPriority: {
+                    type: "boolean",
+                    description: "true si menciona 'amplio', 'grande', 'espacioso'"
+                  },
+                  priceIntent: {
+                    type: "string",
+                    enum: ["low", "medium", "high", null],
+                    description: "Intención de precio: económico=low, promedio=medium, lujoso=high"
+                  },
+                  nearbyAmbiguity: {
+                    type: "boolean",
+                    description: "true si dice 'cerca de' sin ubicación exacta"
+                  },
+                  mustInclude: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "Palabras clave obligatorias: patio, balcón, parqueadero, etc"
                   },
                   location: {
                     type: "string",
-                    description: "Ubicación"
-                  },
-                  radius: {
-                    type: "number",
-                    description: "Radio km (1-20)"
+                    description: "Ubicación mencionada (ciudad, barrio, zona)"
                   },
                   minPrice: {
                     type: "number",
-                    description: "Precio mín COP"
+                    description: "Precio mínimo en pesos colombianos"
                   },
                   maxPrice: {
                     type: "number",
-                    description: "Precio máx COP"
+                    description: "Precio máximo en pesos colombianos"
                   },
-                  bedrooms: {
+                  radius: {
                     type: "number",
-                    description: "Habitaciones mín"
-                  },
-                  propertyType: {
-                    type: "string",
-                    enum: ["all", "apartment", "house", "commercial", "warehouse", "studio", "room", "office"],
-                    description: "Tipo de propiedad"
+                    description: "Radio de búsqueda en kilómetros (por defecto 5)"
                   }
                 },
                 required: ["is_valid"],
@@ -86,7 +146,7 @@ Extrae: ubicación, precio, habitaciones, tipo.`
             }
           }
         ],
-        tool_choice: { type: "function", function: { name: "extract_filters" } }
+        tool_choice: { type: "function", function: { name: "extract_semantic_intent" } }
       }),
     });
 
