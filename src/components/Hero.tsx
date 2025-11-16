@@ -16,6 +16,9 @@ import { useInterpretSearch } from "@/hooks/useInterpretSearch";
 import VoiceButton from './VoiceButton';
 import { getDepartments, getMunicipalitiesByDepartment, getNeighborhoodsByMunicipality } from '@/data/colombiaLocations';
 import { cn } from "@/lib/utils";
+import { useGooglePlacesAutocomplete } from "@/hooks/useGooglePlacesAutocomplete";
+import { useGoogleMapsLoader } from "@/hooks/useGoogleMapsLoader";
+
 const Hero = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -42,7 +45,16 @@ const Hero = () => {
   const [useGPSForSearch, setUseGPSForSearch] = useState(false);
   const [extractedFilters, setExtractedFilters] = useState<any>(null);
   const [showMicPermissionDialog, setShowMicPermissionDialog] = useState(false);
+  
+  // Estados para el nuevo campo "Dónde"
+  const [searchWhere, setSearchWhere] = useState("");
+  const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<{lat: number, lng: number, address: string} | null>(null);
+  const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
+  
   const isMobile = useIsMobile();
+  const { isLoaded: mapsLoaded } = useGoogleMapsLoader();
+  const { predictions, getPredictions } = useGooglePlacesAutocomplete();
   const {
     interpretSearch,
     isProcessing: isInterpretingSearch
@@ -108,6 +120,10 @@ const Hero = () => {
           latitude,
           longitude
         } = position.coords;
+        
+        // Guardar también las coordenadas del usuario para el campo "Dónde"
+        setUserLocation({ lat: latitude, lng: longitude });
+        
         try {
           // Use Nominatim API with timeout
           const controller = new AbortController();
@@ -140,8 +156,6 @@ const Hero = () => {
         clearTimeout(timeoutId);
         console.error("Geolocation error:", error);
         setLoadingLocation(false);
-
-
       }, {
         enableHighAccuracy: true,
         timeout: 7000,
@@ -151,6 +165,22 @@ const Hero = () => {
     };
     getCurrentLocation();
   }, []);
+  
+  // Cerrar sugerencias al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.location-suggestions-container')) {
+        setShowLocationSuggestions(false);
+      }
+    };
+    
+    if (showLocationSuggestions) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showLocationSuggestions]);
   const handleStartVoiceRecording = async () => {
     // Si el permiso no ha sido otorgado, mostrar diálogo
     if (micPermission === 'prompt') {
@@ -218,6 +248,11 @@ const Hero = () => {
       toast.error("Por favor describe qué buscas");
       return;
     }
+    
+    // Si hay texto en "Dónde" pero no hay coordenadas seleccionadas, geocodificar primero
+    if (searchWhere.trim() && !selectedLocation && mapsLoaded) {
+      await handleGeocodeAddress(searchWhere);
+    }
 
     // Interpretar búsqueda
     const result = await interpretSearch(textToSearch);
@@ -233,14 +268,33 @@ const Hero = () => {
       result?.locationText ||
       null;
 
-    // 🟢 1. Si la IA detecta ubicación → NO mostrar modal
-    if (extractedLocation) {
+    // 🟢 1. Si la IA detecta ubicación O hay ubicación seleccionada en "Dónde" → NO mostrar modal
+    if (extractedLocation || selectedLocation) {
       setUseGPSForSearch(false); 
+      
+      // Agregar las coordenadas a la URL si existen
+      const params = new URLSearchParams({
+        query: textToSearch,
+        listingType: listingType,
+      });
+      
+      if (selectedLocation) {
+        params.append('lat', selectedLocation.lat.toString());
+        params.append('lng', selectedLocation.lng.toString());
+        params.append('location', selectedLocation.address);
+      }
+      
+      // Si hay ubicación seleccionada, navegar directamente al catálogo
+      if (selectedLocation) {
+        navigate(`/catalogo?${params.toString()}`);
+        return;
+      }
+      
       setShowOptions(true);
       return;
     }
 
-    // 🔴 2. Si la IA NO detectó ubicación → mostrar modal
+    // 🔴 2. Si la IA NO detectó ubicación Y no hay ubicación en "Dónde" → mostrar modal
     setPendingSearchQuery(textToSearch);
     setShowLocationConfirmDialog(true);
   };
@@ -316,6 +370,144 @@ const Hero = () => {
       if (result) {
         setShowOptions(true);
       }
+    }
+  };
+  
+  // ======= NUEVAS FUNCIONES PARA EL CAMPO "DÓNDE" =======
+  
+  // Debounce para las búsquedas de autocompletado
+  let whereDebounceTimer: NodeJS.Timeout;
+  
+  const handleWhereInputChange = (value: string) => {
+    setSearchWhere(value);
+    setSelectedLocation(null); // Limpiar selección previa
+    
+    if (!value.trim()) {
+      setShowLocationSuggestions(false);
+      return;
+    }
+    
+    // Debounce de 300ms
+    clearTimeout(whereDebounceTimer);
+    whereDebounceTimer = setTimeout(() => {
+      if (mapsLoaded) {
+        getPredictions(value);
+        setShowLocationSuggestions(true);
+      }
+    }, 300);
+  };
+  
+  const handleUseCurrentLocation = () => {
+    if (!userLocation) {
+      // Intentar obtener la ubicación actual
+      if (!navigator.geolocation) {
+        toast.error("Geolocalización no disponible");
+        return;
+      }
+      
+      setLoadingLocation(true);
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setUserLocation({ lat: latitude, lng: longitude });
+          setSelectedLocation({
+            lat: latitude,
+            lng: longitude,
+            address: "Tu ubicación actual"
+          });
+          setSearchWhere("Tu ubicación actual");
+          setShowLocationSuggestions(false);
+          setLoadingLocation(false);
+          toast.success("Ubicación actual detectada");
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          setLoadingLocation(false);
+          toast.error("No se pudo obtener tu ubicación. Verifica los permisos.");
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      );
+    } else {
+      // Ya tenemos la ubicación guardada
+      setSelectedLocation({
+        lat: userLocation.lat,
+        lng: userLocation.lng,
+        address: "Tu ubicación actual"
+      });
+      setSearchWhere("Tu ubicación actual");
+      setShowLocationSuggestions(false);
+      toast.success("Ubicación actual seleccionada");
+    }
+  };
+  
+  const handleSelectSuggestion = async (suggestion: any) => {
+    if (!mapsLoaded || !window.google?.maps?.places) {
+      toast.error("Google Maps aún está cargando");
+      return;
+    }
+    
+    try {
+      // Crear un div temporal para el PlacesService
+      const service = new google.maps.places.PlacesService(document.createElement('div'));
+      
+      service.getDetails(
+        {
+          placeId: suggestion.place_id,
+          fields: ['geometry', 'formatted_address', 'name']
+        },
+        (place, status) => {
+          if (status === google.maps.places.PlacesServiceStatus.OK && place?.geometry?.location) {
+            const lat = place.geometry.location.lat();
+            const lng = place.geometry.location.lng();
+            const address = place.formatted_address || place.name || suggestion.description;
+            
+            setSelectedLocation({ lat, lng, address });
+            setSearchWhere(suggestion.structured_formatting.main_text);
+            setShowLocationSuggestions(false);
+            toast.success("Ubicación seleccionada");
+          } else {
+            toast.error("No se pudo obtener detalles del lugar");
+          }
+        }
+      );
+    } catch (error) {
+      console.error("Error selecting suggestion:", error);
+      toast.error("Error al seleccionar la ubicación");
+    }
+  };
+  
+  const handleGeocodeAddress = async (address: string) => {
+    if (!mapsLoaded || !window.google?.maps) return;
+    
+    try {
+      const geocoder = new google.maps.Geocoder();
+      
+      geocoder.geocode(
+        { 
+          address: address,
+          componentRestrictions: { country: 'CO' } // Colombia
+        },
+        (results, status) => {
+          if (status === google.maps.GeocoderStatus.OK && results && results[0]) {
+            const location = results[0].geometry.location;
+            const lat = location.lat();
+            const lng = location.lng();
+            const formattedAddress = results[0].formatted_address;
+            
+            setSelectedLocation({ lat, lng, address: formattedAddress });
+            toast.success("Ubicación encontrada");
+          } else {
+            toast.error("No se pudo encontrar la ubicación");
+          }
+        }
+      );
+    } catch (error) {
+      console.error("Error geocoding address:", error);
+      toast.error("Error al buscar la ubicación");
     }
   };
   if (showOptions) {
@@ -435,6 +627,63 @@ const Hero = () => {
 
 
 </div>
+
+                  {/* Campo "Dónde" - NUEVO */}
+                  <div className="relative location-suggestions-container">
+                    <div className="flex items-start gap-2 border border-border rounded-lg p-2">
+                      <MapPin className="h-4 w-4 mt-2 flex-shrink-0 text-muted-foreground" />
+                      <Input
+                        placeholder="¿En dónde?"
+                        className="border-0 focus-visible:ring-0 text-base md:text-sm"
+                        value={searchWhere}
+                        onChange={(e) => handleWhereInputChange(e.target.value)}
+                        onFocus={() => {
+                          if (searchWhere.trim() && predictions.length > 0) {
+                            setShowLocationSuggestions(true);
+                          }
+                        }}
+                      />
+                    </div>
+
+                    {/* Dropdown de sugerencias */}
+                    {showLocationSuggestions && (predictions.length > 0 || searchWhere.trim()) && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-border rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
+                        {/* Primera opción: Usar mi ubicación */}
+                        <div 
+                          onClick={handleUseCurrentLocation}
+                          className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer border-b transition-colors"
+                        >
+                          <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
+                          <div>
+                            <div className="font-medium">📍 Usar mi ubicación actual</div>
+                          </div>
+                        </div>
+
+                        {/* Sugerencias de Google */}
+                        {predictions.length > 0 ? (
+                          predictions.map((suggestion) => (
+                            <div
+                              key={suggestion.place_id}
+                              onClick={() => handleSelectSuggestion(suggestion)}
+                              className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer transition-colors"
+                            >
+                              <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium truncate">{suggestion.structured_formatting.main_text}</div>
+                                <div className="text-sm text-muted-foreground truncate">
+                                  {suggestion.structured_formatting.secondary_text}
+                                </div>
+                              </div>
+                            </div>
+                          ))
+                        ) : searchWhere.trim() && (
+                          <div className="p-3 text-sm text-muted-foreground text-center">
+                            No se encontraron lugares
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
 
 
                   {/* Botón Buscar - TERCERO */}
