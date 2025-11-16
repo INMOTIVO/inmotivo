@@ -37,6 +37,7 @@ const PropertiesCatalog = () => {
   const userLat = searchParams.get('lat');
   const userLng = searchParams.get('lng');
   const radius = searchParams.get('radius');
+  const locationParam = searchParams.get('location');
   const semanticFiltersParam = searchParams.get('semanticFilters');
   const [filters, setFilters] = useState<any>(
     semanticFiltersParam ? JSON.parse(semanticFiltersParam) : {}
@@ -145,10 +146,9 @@ const PropertiesCatalog = () => {
         query = query.lte('price', filters.maxPrice);
       }
 
-      // 4. Filtrado por ubicación
-      if (filters.location) {
-        query = query.ilike('city', `%${filters.location}%`);
-      }
+      // 4. Ubicación: Se filtra por distancia más adelante (línea 177-192)
+      //    cuando existen coordenadas lat/lng. El filtro textual de ciudad
+      //    se omite intencionalmente para evitar eliminar propiedades válidas.
 
       const { data: allProperties, error } = await query;
       if (error) throw error;
@@ -177,12 +177,13 @@ const PropertiesCatalog = () => {
       if (userLat && userLng) {
         const lat = parseFloat(userLat);
         const lng = parseFloat(userLng);
-        const maxRadius = parseFloat(radius || '5') * 1000; // km a metros
+        const effectiveRadiusKm = radius ? parseFloat(radius) : 12;
+        const maxRadiusMeters = effectiveRadiusKm * 1000; // km a metros
 
         filteredProperties = filteredProperties.filter(prop => {
           if (!prop.latitude || !prop.longitude) return false;
           const distance = calculateDistance(lat, lng, prop.latitude, prop.longitude);
-          return distance <= maxRadius;
+          return distance <= maxRadiusMeters;
         });
 
         // Ordenar por distancia
@@ -301,9 +302,9 @@ const PropertiesCatalog = () => {
               Propiedades para <span className="text-primary">{listingTypeParam === 'rent' ? 'arrendar' : 'comprar'}</span>
               <br className="hidden sm:block" />
               <span className="sm:inline"> </span>que coinciden con tu búsqueda
-              {userLat && userLng && radius && (
+              {userLat && userLng && (
                 <span className="block text-lg md:text-xl text-muted-foreground mt-2">
-                  a máximo {parseFloat(radius) / 1000} km de tu ubicación
+                  a máximo {parseFloat(radius || '12')} km de tu ubicación
                 </span>
               )}
               {!userLat && !userLng && filters.location && (
@@ -356,7 +357,10 @@ const PropertiesCatalog = () => {
                         <Search className="h-5 w-5 text-primary flex-shrink-0" />
                         <div className="min-w-0 flex-1">
                           <p className="text-xs text-muted-foreground mb-1">Tu búsqueda:</p>
-                          <p className="text-sm font-semibold text-foreground truncate">"{queryParam}"</p>
+                          <p className="text-sm font-semibold text-foreground truncate">
+                            "{queryParam}"
+                            {locationParam && <span className="text-muted-foreground font-normal"> en {locationParam}</span>}
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2 text-primary flex-shrink-0">
