@@ -21,6 +21,11 @@ const Navigate = () => {
   const listingType = searchParams.get('listingType') || 'rent';
   const isDirectNavigation = !!(destLat && destLng); // Flag for direct property navigation
   
+  // Get optional starting coordinates from "Dónde" field
+  const startLat = searchParams.get('lat');
+  const startLng = searchParams.get('lng');
+  const startLocation = searchParams.get('location');
+  
   // Initialize destination and isNavigating immediately if direct navigation
   const [destination, setDestination] = useState<[number, number] | null>(() => {
     if (destLat && destLng) {
@@ -44,7 +49,60 @@ const Navigate = () => {
   // Función para iniciar navegación automática
   const startAutoNavigation = async () => {
     try {
-      // Get user's current location
+      // Check if we have starting coordinates from "Dónde" field
+      const hasStartingCoords = startLat && startLng;
+      
+      if (hasStartingCoords) {
+        // Use coordinates from "Dónde" field
+        const lat = parseFloat(startLat);
+        const lng = parseFloat(startLng);
+        
+        if (!isNaN(lat) && !isNaN(lng)) {
+          const userLocation: [number, number] = [lat, lng];
+          
+          // Interpret search to get filters
+          const { data, error } = await supabase.functions.invoke('interpret-search', {
+            body: { query: initialQuery }
+          });
+
+          if (error instanceof FunctionsHttpError) {
+            const errorData = await error.context.json();
+            if (errorData?.error === 'invalid_query') {
+              toast.error(errorData.message || 'Por favor describe mejor qué buscas', {
+                duration: 5000,
+                description: "💡 Ejemplo: 'Apartamento de 2 habitaciones cerca del metro'"
+              });
+              setIsInitializing(false);
+              return;
+            }
+          }
+
+          if (error) throw error;
+
+          if (data?.error === 'invalid_query') {
+            toast.error(data.message || 'Por favor describe mejor qué buscas', {
+              duration: 5000,
+              description: data.suggestion || "💡 Ejemplo: 'Apartamento de 2 habitaciones cerca del metro'"
+            });
+            setIsInitializing(false);
+            return;
+          }
+
+          const interpretedFilters = data?.filters || {};
+          
+          // Use coordinates from "Dónde" as starting point
+          setDestination(userLocation);
+          setSearchCriteria(initialQuery);
+          setFilters(interpretedFilters);
+          setIsNavigating(true);
+          setIsInitializing(false);
+          
+          toast.success(`Navegación iniciada desde ${startLocation || 'ubicación seleccionada'}`);
+          return;
+        }
+      }
+      
+      // If no starting coordinates, get user's GPS location (current behavior)
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const userLocation: [number, number] = [
@@ -71,7 +129,6 @@ const Navigate = () => {
 
           if (error) throw error;
 
-          // También manejar respuesta inválida con 200
           if (data?.error === 'invalid_query') {
             toast.error(data.message || 'Por favor describe mejor qué buscas', {
               duration: 5000,
@@ -83,7 +140,7 @@ const Navigate = () => {
 
           const interpretedFilters = data?.filters || {};
           
-          // Use user's location as destination (they will discover properties while moving)
+          // Use user's GPS location as destination
           setDestination(userLocation);
           setSearchCriteria(initialQuery);
           setFilters(interpretedFilters);
@@ -103,7 +160,7 @@ const Navigate = () => {
       );
     } catch (error) {
       console.error('Error:', error);
-      toast.error('Error al iniciar la navegación');
+      toast.error('Error al iniciar navegación');
       setIsInitializing(false);
     }
   };
