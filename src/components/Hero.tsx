@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { useGooglePlacesAutocomplete } from "@/hooks/useGooglePlacesAutocomplete";
 import { useGoogleMapsLoader } from "@/hooks/useGoogleMapsLoader";
 import { useVoiceRecording } from "@/hooks/useVoiceRecording";
+import SearchModeDialog from './SearchModeDialog';
 
 const Hero = () => {
   const navigate = useNavigate();
@@ -19,12 +20,23 @@ const Hero = () => {
   const [listingType, setListingType] = useState<"rent" | "sale">("rent");
   const [location, setLocation] = useState("");
   const [loadingLocation, setLoadingLocation] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   
   // Estados para el campo "Dónde"
   const [searchWhere, setSearchWhere] = useState("");
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<{lat: number, lng: number, address: string} | null>(null);
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [userLocationName, setUserLocationName] = useState<string>("");
+  
+  // Estados del modal de selección
+  const [showSearchModeDialog, setShowSearchModeDialog] = useState(false);
+  const [pendingSearchData, setPendingSearchData] = useState<{
+    query: string;
+    listingType: string;
+    location?: { lat: number; lng: number; address: string };
+    semanticFilters?: string;
+  } | null>(null);
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
@@ -69,7 +81,9 @@ const Hero = () => {
           const address = data.address;
           const municipalityName = address.city || address.town || address.municipality || "";
           const sectorName = address.suburb || address.neighbourhood || "";
-          setLocation(sectorName ? `${municipalityName}, ${sectorName}` : municipalityName);
+          const locationName = sectorName ? `${municipalityName}, ${sectorName}` : municipalityName;
+          setLocation(locationName);
+          setUserLocationName(locationName);
         } catch (error) {
           console.error("Error getting location:", error);
         } finally {
@@ -173,33 +187,103 @@ const Hero = () => {
     }
 
     try {
-      const result = await interpretSearch(searchQuery);
-      if (!result) return;
+      setIsSearching(true);
 
+      // 1. Interpretar búsqueda semántica
+      const result = await interpretSearch(searchQuery);
+      if (!result) {
+        setIsSearching(false);
+        return;
+      }
+
+      // 2. Geocodificar si hay texto en "Dónde" sin selección previa
       if (searchWhere.trim() && !selectedLocation) {
         await handleGeocodeAddress(searchWhere);
       }
 
-      const params = new URLSearchParams({
+      // 3. Preparar datos para el modal
+      const searchData: any = {
         query: searchQuery,
         listingType: listingType,
-      });
+      };
 
+      // Agregar ubicación si existe (prioridad: selectedLocation > userLocation)
       if (selectedLocation) {
-        params.append('lat', selectedLocation.lat.toString());
-        params.append('lng', selectedLocation.lng.toString());
-        params.append('location', selectedLocation.address);
+        searchData.location = {
+          lat: selectedLocation.lat,
+          lng: selectedLocation.lng,
+          address: selectedLocation.address,
+        };
+      } else if (userLocation) {
+        // Si no seleccionó ubicación, usar la detectada automáticamente
+        searchData.location = {
+          lat: userLocation.lat,
+          lng: userLocation.lng,
+          address: userLocationName || 'Tu ubicación',
+        };
       }
 
+      // Agregar filtros semánticos si existen
       if (result.filters) {
-        params.append('semanticFilters', JSON.stringify(result.filters));
+        searchData.semanticFilters = JSON.stringify(result.filters);
       }
 
-      navigate(`/catalogo?${params.toString()}`);
+      // 4. Guardar datos y abrir modal
+      setPendingSearchData(searchData);
+      setShowSearchModeDialog(true);
+
     } catch (error) {
       console.error('Error en búsqueda:', error);
       toast.error('Error al procesar la búsqueda');
+    } finally {
+      setIsSearching(false);
     }
+  };
+
+  // Navegar con GPS - envía coordenadas del "Dónde"
+  const handleNavigateGPS = () => {
+    if (!pendingSearchData) return;
+
+    const navParams = new URLSearchParams({
+      query: pendingSearchData.query,
+      listingType: pendingSearchData.listingType,
+    });
+
+    // IMPORTANTE: Enviar coordenadas del campo "Dónde" como punto inicial
+    if (pendingSearchData.location) {
+      navParams.append('lat', pendingSearchData.location.lat.toString());
+      navParams.append('lng', pendingSearchData.location.lng.toString());
+      navParams.append('location', pendingSearchData.location.address);
+    }
+    // Si no hay ubicación, Navigate.tsx pedirá permisos GPS
+
+    setShowSearchModeDialog(false);
+    navigate(`/navegacion?${navParams.toString()}`);
+  };
+
+  // Ver propiedades - mantiene flujo actual al catálogo
+  const handleViewProperties = () => {
+    if (!pendingSearchData) return;
+
+    const params = new URLSearchParams({
+      query: pendingSearchData.query,
+      listingType: pendingSearchData.listingType,
+    });
+
+    // Agregar ubicación si existe
+    if (pendingSearchData.location) {
+      params.append('lat', pendingSearchData.location.lat.toString());
+      params.append('lng', pendingSearchData.location.lng.toString());
+      params.append('location', pendingSearchData.location.address);
+    }
+
+    // Agregar filtros semánticos si existen
+    if (pendingSearchData.semanticFilters) {
+      params.append('semanticFilters', pendingSearchData.semanticFilters);
+    }
+
+    setShowSearchModeDialog(false);
+    navigate(`/catalogo?${params.toString()}`);
   };
 
   const handleStartRecording = async () => {
@@ -428,6 +512,14 @@ const Hero = () => {
           </div>
         )}
       </div>
+
+      {/* Modal de selección de modo de búsqueda */}
+      <SearchModeDialog
+        open={showSearchModeDialog}
+        onOpenChange={setShowSearchModeDialog}
+        onNavigateGPS={handleNavigateGPS}
+        onViewProperties={handleViewProperties}
+      />
     </section>
   );
 };
