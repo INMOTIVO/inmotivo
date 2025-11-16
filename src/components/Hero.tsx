@@ -280,35 +280,50 @@ const Hero = () => {
 
         {/* Contenedor Cápsula de Búsqueda */}
         <div className="relative max-w-5xl mx-auto w-full px-4 sm:px-2">
-          {/* Gradiente animado del borde */}
-          <div className="absolute -inset-1 bg-gradient-to-r from-primary via-blue-500 to-primary rounded-full blur-sm opacity-75 animate-pulse" />
+          {/* Gradiente animado del borde - responsive */}
+          <div className="absolute -inset-1 bg-gradient-to-r from-primary via-blue-500 to-primary md:rounded-full rounded-2xl blur-sm opacity-75 animate-pulse" />
           
-          <div className="relative bg-white rounded-full shadow-2xl p-2 flex flex-col md:flex-row items-stretch md:items-center gap-2 md:gap-0">
-            {/* Sección QUÉ */}
-            <div className="flex-1 flex items-center gap-2 px-4 py-3 md:border-r border-gray-200">
-              <div className="flex flex-col w-full">
-                <label className="text-xs font-semibold text-gray-700 mb-1">Qué</label>
-                <Textarea
-                  ref={textareaRef}
-                  placeholder="Describe la propiedad que buscas"
-                  className="border-0 focus-visible:ring-0 resize-none text-sm w-full p-0 min-h-[24px] max-h-[80px] overflow-y-auto"
-                  value={isRecording ? partialText : searchQuery}
-                  onChange={handleSearchInput}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSearch();
-                    }
-                  }}
-                  rows={1}
+          <div className="relative bg-white md:rounded-full rounded-2xl shadow-2xl p-3 md:p-2 flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-0">
+            {/* Fila 1 Mobile: Qué + Micrófono */}
+            <div className="flex items-center gap-2 md:flex-1 md:border-r border-gray-200">
+              {/* Sección QUÉ */}
+              <div className="flex-1 flex items-center gap-2 px-3 py-2">
+                <div className="flex flex-col w-full">
+                  <label className="text-xs font-semibold text-gray-700 mb-1">Qué</label>
+                  <Textarea
+                    ref={textareaRef}
+                    placeholder="Describe la propiedad que buscas"
+                    className="border-0 focus-visible:ring-0 resize-none text-sm w-full p-0 min-h-[24px] max-h-[80px] overflow-y-auto"
+                    value={isRecording ? partialText : searchQuery}
+                    onChange={handleSearchInput}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSearch();
+                      }
+                    }}
+                    rows={1}
+                  />
+                </div>
+              </div>
+
+              {/* BOTÓN MICRÓFONO - visible en mobile en esta posición */}
+              <div className="flex md:hidden px-2">
+                <VoiceButton
+                  isRecording={isRecording}
+                  isProcessing={isProcessing}
+                  audioLevel={audioLevel}
+                  onStart={handleStartRecording}
+                  onStop={handleStopRecording}
+                  onCancel={handleCancelRecording}
                 />
               </div>
             </div>
 
-            {/* Separador vertical (oculto en mobile) */}
+            {/* Separador vertical solo desktop */}
             <div className="hidden md:block h-12 w-px bg-gray-200" />
 
-            {/* BOTÓN MICRÓFONO */}
+            {/* BOTÓN MICRÓFONO solo desktop */}
             <div className="hidden md:flex px-2">
               <VoiceButton
                 isRecording={isRecording}
@@ -320,90 +335,84 @@ const Hero = () => {
               />
             </div>
 
-            {/* Separador vertical (oculto en mobile) */}
+            {/* Separador horizontal mobile */}
+            <div className="md:hidden h-px w-full bg-gray-200" />
+
+            {/* Separador vertical solo desktop */}
             <div className="hidden md:block h-12 w-px bg-gray-200" />
 
-            {/* Sección DÓNDE */}
-            <div className="flex-1 flex items-center gap-2 px-4 py-3 md:border-r border-gray-200 relative location-suggestions-container">
-              <div className="flex flex-col w-full">
-                <label className="text-xs font-semibold text-gray-700 mb-1">Dónde</label>
-                <Input
-                  placeholder="¿En dónde?"
-                  className="border-0 focus-visible:ring-0 text-sm w-full p-0 h-6"
-                  value={searchWhere}
-                  onChange={(e) => handleWhereInputChange(e.target.value)}
-                  onFocus={() => setShowLocationSuggestions(searchWhere.trim().length > 0 && predictions.length > 0)}
-                />
-              </div>
+            {/* Fila 2 Mobile: Dónde + Buscar */}
+            <div className="flex items-center gap-2 md:flex-1">
+              {/* Sección DÓNDE */}
+              <div className="flex-1 flex items-center gap-2 px-3 py-2 md:border-r border-gray-200 relative location-suggestions-container">
+                <div className="flex flex-col w-full">
+                  <label className="text-xs font-semibold text-gray-700 mb-1">Dónde</label>
+                  <Input
+                    placeholder="¿En dónde?"
+                    className="border-0 focus-visible:ring-0 text-sm w-full p-0 h-6"
+                    value={searchWhere}
+                    onChange={(e) => handleWhereInputChange(e.target.value)}
+                    onFocus={() => setShowLocationSuggestions(searchWhere.trim().length > 0 && predictions.length > 0)}
+                  />
+                </div>
 
-              {/* Dropdown de sugerencias */}
-              {showLocationSuggestions && (predictions.length > 0 || searchWhere.trim()) && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-200 z-[100] overflow-hidden max-h-80 overflow-y-auto">
-                  {/* Primera opción: Usar mi ubicación */}
-                  <div 
-                    onClick={handleUseCurrentLocation}
-                    className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer border-b transition-colors"
-                  >
-                    <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
-                    <div className="font-medium">📍 Usar mi ubicación actual</div>
-                  </div>
+                {/* Dropdown de sugerencias */}
+                {showLocationSuggestions && (predictions.length > 0 || searchWhere.trim()) && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-200 z-[100] overflow-hidden max-h-80 overflow-y-auto">
+                    {/* Primera opción: Usar mi ubicación */}
+                    <div 
+                      onClick={handleUseCurrentLocation}
+                      className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer border-b transition-colors"
+                    >
+                      <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
+                      <div className="font-medium">📍 Usar mi ubicación actual</div>
+                    </div>
 
-                  {/* Sugerencias de Google */}
-                  {predictions.length > 0 ? (
-                    predictions.map((suggestion) => (
-                      <div
-                        key={suggestion.place_id}
-                        onClick={() => handleSelectSuggestion(suggestion)}
-                        className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer transition-colors"
-                      >
-                        <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium truncate">{suggestion.structured_formatting.main_text}</div>
-                          <div className="text-sm text-muted-foreground truncate">
-                            {suggestion.structured_formatting.secondary_text}
+                    {/* Sugerencias de Google */}
+                    {predictions.length > 0 ? (
+                      predictions.map((suggestion) => (
+                        <div
+                          key={suggestion.place_id}
+                          onClick={() => handleSelectSuggestion(suggestion)}
+                          className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer transition-colors"
+                        >
+                          <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium truncate">{suggestion.structured_formatting.main_text}</div>
+                            <div className="text-sm text-muted-foreground truncate">
+                              {suggestion.structured_formatting.secondary_text}
+                            </div>
                           </div>
                         </div>
+                      ))
+                    ) : searchWhere.trim() && (
+                      <div className="p-3 text-sm text-muted-foreground text-center">
+                        Escribe para buscar lugares
                       </div>
-                    ))
-                  ) : searchWhere.trim() && (
-                    <div className="p-3 text-sm text-muted-foreground text-center">
-                      Escribe para buscar lugares
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+                    )}
+                  </div>
+                )}
+              </div>
 
-            {/* BOTÓN BUSCAR */}
-            <Button 
-              onClick={handleSearch}
-              disabled={!searchQuery.trim() || isInterpretingSearch || isProcessing}
-              className="rounded-full px-8 py-6 h-auto font-semibold whitespace-nowrap"
-              size="lg"
-            >
-              {isInterpretingSearch ? (
-                <>
-                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                  Buscando...
-                </>
-              ) : (
-                <>
-                  <Search className="h-5 w-5 mr-2" />
-                  Buscar
-                </>
-              )}
-            </Button>
-
-            {/* Botón de voz en mobile (debajo) */}
-            <div className="flex md:hidden justify-center mt-2">
-              <VoiceButton
-                isRecording={isRecording}
-                isProcessing={isProcessing}
-                audioLevel={audioLevel}
-                onStart={handleStartRecording}
-                onStop={handleStopRecording}
-                onCancel={handleCancelRecording}
-              />
+              {/* BOTÓN BUSCAR */}
+              <Button 
+                onClick={handleSearch}
+                disabled={!searchQuery.trim() || isInterpretingSearch || isProcessing}
+                className="md:rounded-full rounded-xl px-6 md:px-8 py-5 md:py-6 h-auto font-semibold whitespace-nowrap shrink-0"
+                size="lg"
+              >
+                {isInterpretingSearch ? (
+                  <>
+                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                    Buscando...
+                  </>
+                ) : (
+                  <>
+                    <Search className="h-5 w-5 mr-2" />
+                    Buscar
+                  </>
+                )}
+              </Button>
             </div>
           </div>
         </div>
