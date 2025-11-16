@@ -230,10 +230,12 @@ IMPORTANTE: Solo marca is_valid: true si es búsqueda inmobiliaria. Si preguntan
 
     // Geocodificar location si existe
     if (filters.location) {
+      console.log(`🗺️ Detectada ubicación en query: "${filters.location}" - iniciando geocodificación...`);
       try {
         const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY");
         if (!GOOGLE_MAPS_API_KEY) {
-          console.warn("GOOGLE_MAPS_API_KEY no configurado, no se puede geocodificar");
+          console.error("❌ GOOGLE_MAPS_API_KEY no configurado - no se puede geocodificar");
+          console.log("Secreto debe estar configurado en Supabase Project Settings → Edge Functions → Secrets");
         } else {
           const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(filters.location + ', Colombia')}&key=${GOOGLE_MAPS_API_KEY}`;
           
@@ -245,15 +247,17 @@ IMPORTANTE: Solo marca is_valid: true si es búsqueda inmobiliaria. Si preguntan
             filters.searchLat = location.lat;
             filters.searchLng = location.lng;
             filters.radius = filters.radius || 12; // Default 12 km
-            console.log(`Geocoded "${filters.location}" → lat: ${location.lat}, lng: ${location.lng}`);
+            console.log(`✅ Geocoded "${filters.location}" → lat: ${location.lat}, lng: ${location.lng}, radius: ${filters.radius} km`);
           } else {
-            console.warn(`No se pudo geocodificar: ${filters.location}`, geoData.status);
+            console.error(`❌ Geocodificación falló para "${filters.location}" - Status: ${geoData.status}`, geoData.error_message || '');
           }
         }
       } catch (geoError) {
-        console.error("Error geocodificando:", geoError);
+        console.error("💥 Error geocodificando:", geoError);
         // No bloquear la búsqueda si falla geocodificación
       }
+    } else {
+      console.log("ℹ️ No se detectó ubicación en el query - se usará ubicación del campo 'Dónde' si está presente");
     }
 
     return new Response(
