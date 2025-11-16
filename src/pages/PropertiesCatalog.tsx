@@ -102,6 +102,26 @@ const PropertiesCatalog = () => {
     enabled: !!user,
   });
 
+  // Mapeo de tipos español → inglés para compatibilidad con BD
+  const PROPERTY_TYPE_MAP: Record<string, string> = {
+    'apartamento': 'apartment',
+    'apartaestudio': 'studio',
+    'estudio': 'studio',
+    'casa': 'house',
+    'local': 'commercial',
+    'bodega': 'warehouse',
+    'oficina': 'office',
+    'habitacion': 'room',
+    'loft': 'apartment',
+    'duplex': 'apartment',
+    'townhouse': 'house',
+    'casa-lote': 'house'
+  };
+
+  const mapPropertyType = (tipo: string): string => {
+    return PROPERTY_TYPE_MAP[tipo.toLowerCase()] || tipo;
+  };
+
   // Fetch properties based on semantic filters
   const { data: properties, isLoading: isLoadingProperties } = useQuery({
     queryKey: ['catalog-properties', filters.searchLat, filters.searchLng, filters.radius, userLat, userLng, radius, filters, listingTypeParam],
@@ -114,7 +134,13 @@ const PropertiesCatalog = () => {
 
       // 1. Filtrado por tipo (incluye tipos relacionados)
       if (filters.tipo) {
-        const types = [filters.tipo, ...(filters.relatedTypes || [])];
+        // Mapear tipos de español a inglés
+        const mappedType = mapPropertyType(filters.tipo);
+        const mappedRelatedTypes = (filters.relatedTypes || []).map(mapPropertyType);
+        
+        // Eliminar duplicados
+        const types = Array.from(new Set([mappedType, ...mappedRelatedTypes]));
+        
         query = query.in('property_type', types);
       }
 
