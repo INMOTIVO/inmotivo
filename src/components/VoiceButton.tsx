@@ -14,6 +14,7 @@ interface VoiceButtonProps {
   variant?: 'default' | 'outline' | 'destructive';
   size?: 'default' | 'sm' | 'lg' | 'icon';
   className?: string;
+  style?: 'default' | 'safari';
 }
 
 const VoiceButton = ({
@@ -26,7 +27,8 @@ const VoiceButton = ({
   disabled = false,
   variant,
   size = 'lg',
-  className
+  className,
+  style = 'default'
 }: VoiceButtonProps) => {
   const [recordingTime, setRecordingTime] = useState(0);
 
@@ -69,7 +71,44 @@ const VoiceButton = ({
   // Generate animated wave bars - responsive quantity
   const waveBars = Array.from({ length: 20 });
 
-  // Show compact recording bar if recording, otherwise show mic button
+  // Safari style variant: minimal icon + floating button when recording
+  if (style === 'safari') {
+    return (
+      <>
+        {/* Small icon inside input - always visible */}
+        <button
+          onClick={handleClick}
+          disabled={disabled || isProcessing}
+          className="p-0 hover:opacity-80 transition-opacity"
+          aria-label={isRecording ? "Detener grabación" : "Iniciar grabación de voz"}
+        >
+          {isProcessing ? (
+            <Loader2 className="h-5 w-5 animate-spin text-primary" />
+          ) : (
+            <Mic className={cn(
+              "h-5 w-5 text-primary",
+              isRecording && "opacity-50"
+            )} />
+          )}
+        </button>
+
+        {/* Floating circular button - only when recording */}
+        {isRecording && (
+          <div className="absolute bottom-0 left-0 -translate-y-2 translate-x-2 animate-in fade-in zoom-in duration-200">
+            <button
+              onClick={handleConfirm}
+              className="w-12 h-12 rounded-full bg-primary hover:bg-primary/90 shadow-lg flex items-center justify-center transition-all"
+              aria-label="Detener y enviar grabación"
+            >
+              <Mic className="h-6 w-6 text-primary-foreground animate-pulse" />
+            </button>
+          </div>
+        )}
+      </>
+    );
+  }
+
+  // Default style: Show compact recording bar if recording, otherwise show mic button
   if (isRecording) {
     return (
       <div className="flex items-center gap-1.5 sm:gap-2 bg-primary/10 rounded-full px-2 sm:px-3 py-2 border border-primary/20 animate-in fade-in duration-200 w-full max-w-full min-w-0">
