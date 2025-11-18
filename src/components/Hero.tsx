@@ -369,15 +369,15 @@ const Hero = () => {
           
           <div className="relative bg-white md:rounded-full rounded-2xl shadow-2xl p-3 md:p-2 flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-2">
             {/* Fila 1 Mobile: Qué + Micrófono */}
-            <div className="flex items-center gap-2 md:flex-1 md:border-r border-gray-200">
+            <div className="md:flex-1 md:border-r border-gray-200">
               {/* Sección QUÉ */}
-              <div className="flex-1 flex items-center gap-2 px-3 py-2">
+              <div className="flex-1 relative px-3 py-2">
                 <div className="flex flex-col justify-center w-full">
                   <label className="text-xs font-semibold text-gray-700 mb-1">Qué</label>
                   <Textarea
                     ref={textareaRef}
                     placeholder="Describe la propiedad que buscas"
-                    className="border-0 focus-visible:ring-0 resize-none text-sm w-full p-0 min-h-[24px] max-h-[80px] overflow-y-auto"
+                    className="border-0 focus-visible:ring-0 resize-none text-sm w-full p-0 pr-12 min-h-[24px] max-h-[80px] overflow-y-auto"
                     value={isRecording ? partialText : searchQuery}
                     onChange={handleSearchInput}
                     onKeyDown={(e) => {
@@ -389,34 +389,19 @@ const Hero = () => {
                     rows={1}
                   />
                 </div>
+                
+                {/* Botón de micrófono integrado dentro del input */}
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10">
+                  <VoiceButton
+                    isRecording={isRecording}
+                    isProcessing={isProcessing}
+                    audioLevel={audioLevel}
+                    onStart={handleStartRecording}
+                    onStop={handleStopRecording}
+                    onCancel={handleCancelRecording}
+                  />
+                </div>
               </div>
-
-              {/* BOTÓN MICRÓFONO - visible en mobile en esta posición */}
-              <div className="flex md:hidden px-2">
-                <VoiceButton
-                  isRecording={isRecording}
-                  isProcessing={isProcessing}
-                  audioLevel={audioLevel}
-                  onStart={handleStartRecording}
-                  onStop={handleStopRecording}
-                  onCancel={handleCancelRecording}
-                />
-              </div>
-            </div>
-
-            {/* Separador vertical solo desktop */}
-            <div className="hidden md:block h-12 w-px bg-gray-200 mx-2" />
-
-            {/* BOTÓN MICRÓFONO solo desktop */}
-            <div className="hidden md:flex items-center justify-center px-2">
-              <VoiceButton
-                isRecording={isRecording}
-                isProcessing={isProcessing}
-                audioLevel={audioLevel}
-                onStart={handleStartRecording}
-                onStop={handleStopRecording}
-                onCancel={handleCancelRecording}
-              />
             </div>
 
             {/* Separador horizontal mobile */}
