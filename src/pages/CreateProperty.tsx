@@ -625,7 +625,7 @@ const CreateProperty = () => {
             <CardContent className="space-y-4">
               <div>
                 <Label htmlFor="images">
-                  Sube hasta 10 imágenes (máx 5MB c/u)
+                  Sube hasta 10 imágenes en formato horizontal (máx 5MB c/u)
                 </Label>
                 <div className="mt-2">
                   <label htmlFor="images" className="flex items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-accent">
@@ -637,6 +637,16 @@ const CreateProperty = () => {
                       </div>}
                   </label>
                   <Input id="images" type="file" multiple accept="image/*" onChange={handleImageUpload} className="hidden" disabled={uploadingImages} />
+                </div>
+                <div className="mt-2 flex items-center gap-2 text-sm">
+                  <span className="text-muted-foreground">¿No sabes cómo subir fotos?</span>
+                  <button
+                    type="button"
+                    onClick={() => window.open('https://www.youtube.com/watch?v=INSTRUCTIVO_VIDEO_ID', '_blank')}
+                    className="text-primary hover:underline font-medium"
+                  >
+                    Ver instructivo →
+                  </button>
                 </div>
               </div>
 

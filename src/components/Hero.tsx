@@ -377,59 +377,59 @@ const Hero = () => {
               {/* Sección QUÉ */}
               <div className="flex-1 relative px-3 py-2 overflow-visible">
                 <div className="flex flex-col justify-center w-full">
-                  <label className="text-xs font-semibold text-gray-700 mb-1">Qué</label>
+                  <label className="text-xs font-semibold text-gray-700 mb-1">¿Qué estás buscando?</label>
 
 
-        {/* --- INPUT AVANZADO --- */}
-        <div className="relative w-full min-h-[28px]">
+              {/* --- INPUT AVANZADO --- */}
+              <div className="relative w-full min-h-[28px]">
 
-          {/* Capa visible (texto + cursor + mic) */}
-          <div
-            className="
-              absolute inset-0 whitespace-pre-wrap break-words
-              pl-1 pr-10 text-sm pointer-events-none select-none
-            "
-          >
-            {/* Texto dictado o escrito */}
-            <span>{isRecording ? partialText : searchQuery}</span>
+                {/* Capa visible (texto + cursor + mic) */}
+                <div
+                  className="
+                    absolute inset-0 whitespace-pre-wrap break-words
+                    pl-1 pr-10 text-sm pointer-events-none select-none
+                  "
+                >
+                  {/* Texto dictado o escrito */}
+                  <span>{isRecording ? partialText : searchQuery}</span>
 
-         
-            {/* Cursor parpadeando SOLO cuando graba */}
-            {isRecording && (
-              <span className="inline-block w-[2px] h-[18px] bg-green-500 ml-0.5 animate-blink align-bottom"></span>
-            )}
+              
+                  {/* Cursor parpadeando SOLO cuando graba */}
+                  {isRecording && (
+                    <span className="inline-block w-[2px] h-[18px] bg-green-500 ml-0.5 animate-blink align-bottom"></span>
+                  )}
 
-            {/* Mic verde pegado al cursor cuando graba */}
-            {isRecording && (
-              <span
-                className="
-                  inline-flex items-center justify-center ml-1
-                  w-5 h-5 rounded-full bg-green-500 shadow-md align-bottom
-                "
-              >
-                <Search className="w-3 h-3 text-white" />
-              </span>
-            )}
-          </div>
+                  {/* Mic verde pegado al cursor cuando graba */}
+                  {isRecording && (
+                    <span
+                      className="
+                        inline-flex items-center justify-center ml-1
+                        w-5 h-5 rounded-full bg-green-500 shadow-md align-bottom
+                      "
+                    >
+                      <Search className="w-3 h-3 text-white" />
+                    </span>
+                  )}
+                </div>
 
-          {/* Textarea REAL invisible (recibe input) */}
-          <textarea
-            ref={textareaRef}
-            className="
-              relative z-10 w-full bg-transparent
-              text-transparent caret-green-500
-              placeholder:text-gray-400
-              placeholder-transparent
-              border-0 resize-none focus-visible:ring-0 p-0
-              min-h-[28px] max-h-[80px]
-            "
-            placeholder={isRecording || searchQuery ? " " : "Describe la propiedad que buscas"}
-            value={isRecording ? partialText : searchQuery}
-            onChange={handleSearchInput}
-          />
+                {/* Textarea REAL invisible (recibe input) */}
+                <textarea
+                  ref={textareaRef}
+                  className="
+                    relative z-10 w-full bg-transparent
+                    text-transparent caret-green-500
+                    placeholder:text-gray-400
+                    placeholder-transparent
+                    border-0 resize-none focus-visible:ring-0 p-0
+                    min-h-[28px] max-h-[80px]
+                  "
+                  placeholder={isRecording || searchQuery ? " " : "Describe la propiedad que buscas"}
+                  value={isRecording ? partialText : searchQuery}
+                  onChange={handleSearchInput}
+                />
 
 
-        </div>
+              </div>
 
 
 
@@ -460,7 +460,7 @@ const Hero = () => {
                 <div className="flex flex-col justify-center w-full">
                   <label className="text-xs font-semibold text-gray-700 mb-1">Dónde</label>
                   <Input
-                    placeholder="¿En dónde?"
+                    placeholder="¿Dónde lo buscas?"
                     className="border-0 focus-visible:ring-0 text-sm w-full p-0 h-6"
                     value={searchWhere}
                     onChange={(e) => handleWhereInputChange(e.target.value)}
