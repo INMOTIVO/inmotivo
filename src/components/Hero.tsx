@@ -229,24 +229,16 @@ const Hero = () => {
         searchData.semanticFilters = JSON.stringify(result.filters);
       }
 
-      // 4. Navegar a página de selección de modo
-      const params = new URLSearchParams({
-        query: searchData.query,
-        listingType: searchData.listingType,
+      // 4. Navegar a página de selección de modo con state
+      navigate('/seleccionar-modo', { 
+        state: {
+          query: searchData.query,
+          listingType: searchData.listingType,
+          location: searchData.location,
+          semanticFilters: searchData.semanticFilters,
+          isUsingCurrentLocation: selectedLocation?.address === "Tu ubicación actual"
+        }
       });
-
-      if (searchData.location) {
-        params.append('lat', searchData.location.lat.toString());
-        params.append('lng', searchData.location.lng.toString());
-        params.append('location', searchData.location.address);
-        params.append('isUsingCurrentLocation', (selectedLocation?.address === "Tu ubicación actual").toString());
-      }
-
-      if (searchData.semanticFilters) {
-        params.append('semanticFilters', searchData.semanticFilters);
-      }
-
-      navigate(`/seleccionar-modo?${params.toString()}`);
 
     } catch (error) {
       console.error('Error en búsqueda:', error);
