@@ -332,7 +332,8 @@ const Hero = () => {
   }, [activeField]);
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
+    <section className="relative min-h-screen flex items-center justify-center overflow-visible bg-gradient-to-br from-gray-50 to-gray-100">
+
       {/* Fondo */}
       <div className="absolute inset-0 w-full h-full">
         <img src={heroImage} alt="Medellín cityscape" className="w-full h-full object-cover" />
@@ -562,10 +563,14 @@ const Hero = () => {
                   {/* Opción: usar ubicación actual */}
                   <div
                     onClick={handleUseCurrentLocation}
-                    className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer border-b"
+                    className="
+                      flex items-center gap-3 p-3 cursor-pointer border-b
+                      bg-green-50/70 hover:bg-green-100
+                      transition-colors
+                    "
                   >
-                    <MapPin className="h-4 w-4 text-primary" />
-                    <span className="font-medium">📍 Usar mi ubicación actual</span>
+                    <MapPin className="h-4 w-4 text-green-600" />
+                    <span className="font-semibold text-green-700"> Usar mi ubicación actual</span>
                   </div>
 
                   {/* Google Predictions */}
