@@ -383,7 +383,8 @@ const Hero = () => {
         {/* Contenedor Cápsula de Búsqueda */}
         <div className="relative max-w-5xl mx-auto w-full px-4 sm:px-2">
           {/* Gradiente animado del borde - responsive */}
-          <div className="absolute -inset-1 bg-gradient-to-r from-primary via-blue-500 to-primary md:rounded-full rounded-2xl blur-sm opacity-75 animate-pulse" />
+          <div className="absolute -inset-1 bg-gradient-to-r from-primary via-blue-500 to-primary md:rounded-[28px] rounded-2xl blur-sm opacity-75 animate-pulse" />
+
           
           <div className="relative bg-white md:rounded-[28px] rounded-2xl shadow-2xl p-3 md:p-2 flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-2">
 
