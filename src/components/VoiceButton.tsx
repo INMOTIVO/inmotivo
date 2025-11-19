@@ -94,19 +94,45 @@ const VoiceButton = ({
 
         {/* Floating circular button - only when recording */}
         {isRecording && (
-          <div className="absolute bottom-0 left-0 -translate-y-2 translate-x-2 animate-in fade-in zoom-in duration-200">
-            <button
-              onClick={handleConfirm}
-              className="w-12 h-12 rounded-full bg-primary hover:bg-primary/90 shadow-lg flex items-center justify-center transition-all"
-              aria-label="Detener y enviar grabación"
-            >
-              <Mic className="h-6 w-6 text-primary-foreground animate-pulse" />
-            </button>
-          </div>
+        <div
+          className="
+            absolute
+            top-1/2
+            left-1/2
+            -translate-x-1/2
+            -translate-y-1/2
+            z-50
+            pointer-events-none
+          "
+        >
+          <button
+            onClick={handleConfirm}
+            className="
+              pointer-events-auto
+              w-14 h-14
+              rounded-full
+              bg-primary
+              hover:bg-primary/90
+              shadow-xl
+              flex items-center justify-center
+              transition-all
+              animate-in fade-in zoom-in duration-200
+            "
+          >
+            <Mic className="h-7 w-7 text-white animate-pulse" />
+          </button>
+        </div>
+
+
         )}
+
+
+
+
       </>
     );
   }
+
 
   // Default style: Show compact recording bar if recording, otherwise show mic button
   if (isRecording) {

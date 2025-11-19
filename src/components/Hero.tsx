@@ -59,6 +59,10 @@ const Hero = () => {
     const textarea = e.target;
     textarea.style.height = 'auto';
     textarea.style.height = `${Math.min(textarea.scrollHeight, 80)}px`;
+    textareaRef.current?.scrollTo({
+      top: textareaRef.current.scrollHeight,
+    });
+
   };
 
   // Detectar ubicación automáticamente
@@ -374,23 +378,61 @@ const Hero = () => {
               <div className="flex-1 relative px-3 py-2 overflow-visible">
                 <div className="flex flex-col justify-center w-full">
                   <label className="text-xs font-semibold text-gray-700 mb-1">Qué</label>
-                  <Textarea
-                    ref={textareaRef}
-                    placeholder="Describe la propiedad que buscas"
-                    className={cn(
-                      "border-0 focus-visible:ring-0 resize-none text-sm w-full p-0 pr-12 min-h-[24px] max-h-[80px] overflow-y-auto",
-                      isRecording && "placeholder:opacity-40"
-                    )}
-                    value={isRecording ? partialText : searchQuery}
-                    onChange={handleSearchInput}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSearch();
-                      }
-                    }}
-                    rows={1}
-                  />
+
+
+        {/* --- INPUT AVANZADO --- */}
+        <div className="relative w-full min-h-[28px]">
+
+          {/* Capa visible (texto + cursor + mic) */}
+          <div
+            className="
+              absolute inset-0 whitespace-pre-wrap break-words
+              pl-1 pr-10 text-sm pointer-events-none select-none
+            "
+          >
+            {/* Texto dictado o escrito */}
+            <span>{isRecording ? partialText : searchQuery}</span>
+
+         
+            {/* Cursor parpadeando SOLO cuando graba */}
+            {isRecording && (
+              <span className="inline-block w-[2px] h-[18px] bg-green-500 ml-0.5 animate-blink align-bottom"></span>
+            )}
+
+            {/* Mic verde pegado al cursor cuando graba */}
+            {isRecording && (
+              <span
+                className="
+                  inline-flex items-center justify-center ml-1
+                  w-5 h-5 rounded-full bg-green-500 shadow-md align-bottom
+                "
+              >
+                <Search className="w-3 h-3 text-white" />
+              </span>
+            )}
+          </div>
+
+          {/* Textarea REAL invisible (recibe input) */}
+          <textarea
+            ref={textareaRef}
+            className="
+              relative z-10 w-full bg-transparent
+              text-transparent caret-green-500
+              placeholder:text-gray-400
+              placeholder-transparent
+              border-0 resize-none focus-visible:ring-0 p-0
+              min-h-[28px] max-h-[80px]
+            "
+            placeholder={isRecording || searchQuery ? " " : "Describe la propiedad que buscas"}
+            value={isRecording ? partialText : searchQuery}
+            onChange={handleSearchInput}
+          />
+
+
+        </div>
+
+
+
                 </div>
                 
                 {/* Botón de micrófono integrado dentro del input */}
@@ -405,14 +447,11 @@ const Hero = () => {
                     onCancel={handleCancelRecording}
                   />
                 </div>
+
               </div>
             </div>
 
-            {/* Separador horizontal mobile */}
-            <div className="md:hidden h-px w-full bg-gray-200" />
 
-            {/* Separador vertical solo desktop */}
-            <div className="hidden md:block h-12 w-px bg-gray-200 mx-2" />
 
             {/* Fila 2 Mobile: Dónde + Buscar */}
             <div className="flex items-center gap-2 md:flex-1">
@@ -467,8 +506,6 @@ const Hero = () => {
                 )}
               </div>
 
-              {/* Separador vertical solo desktop */}
-              <div className="hidden md:block h-12 w-px bg-gray-200 mx-2" />
 
               {/* BOTÓN BUSCAR - CIRCULAR CON SOLO ÍCONO */}
               <Button 
