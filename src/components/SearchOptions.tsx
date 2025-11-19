@@ -14,6 +14,8 @@ interface SearchOptionsProps {
   disableGPSNavigation?: boolean;
   useGPSForFixedView?: boolean;
   searchLocation?: string;
+  selectedLat?: number;
+  selectedLng?: number;
 }
 const SearchOptions = ({
   searchQuery,
@@ -23,8 +25,11 @@ const SearchOptions = ({
   onSearchChange,
   disableGPSNavigation = false,
   useGPSForFixedView = false,
-  searchLocation
+  searchLocation,
+  selectedLat,
+  selectedLng
 }: SearchOptionsProps) => {
+
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [editedQuery, setEditedQuery] = useState(searchQuery);
@@ -41,31 +46,55 @@ const SearchOptions = ({
     }
   };
   const handleFixedView = () => {
-    if (useGPSForFixedView) {
-      // Usar GPS con radio de 2km
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            const { latitude, longitude } = position.coords;
-            navigate(`/catalogo?query=${encodeURIComponent(editedQuery)}&lat=${latitude}&lng=${longitude}&radius=2000&listingType=${listingType}`);
-          },
-          (error) => {
-            console.error('Error getting location:', error);
-            toast.error("No se pudo obtener tu ubicación");
-            // Fallback: navegar sin ubicación
-            navigate(`/catalogo?query=${encodeURIComponent(editedQuery)}&listingType=${listingType}`);
-          }
+    // 🚫 Si NO es GPS, entonces jamás usar GPS ni radio
+    if (!useGPSForFixedView) {
+
+      // 👉 Si el usuario seleccionó una ubicación manual
+      if (selectedLat && selectedLng) {
+        navigate(
+          `/catalogo?query=${encodeURIComponent(editedQuery)}&listingType=${listingType}&lat=${selectedLat}&lng=${selectedLng}`
         );
-      } else {
-        toast.error("Tu navegador no soporta geolocalización");
-        navigate(`/catalogo?query=${encodeURIComponent(editedQuery)}&listingType=${listingType}`);
+      } 
+      else {
+        // 👉 Solo búsqueda: la edge function inferirá la zona
+        navigate(
+          `/catalogo?query=${encodeURIComponent(editedQuery)}&listingType=${listingType}`
+        );
       }
-    } else {
-      // Navegar sin ubicación GPS, solo con el query de búsqueda
-      // La ubicación se extraerá del texto mediante el edge function
-      navigate(`/catalogo?query=${encodeURIComponent(editedQuery)}&listingType=${listingType}`);
+
+      return;
+    }
+
+    // ===========================
+    // 📍 MODO GPS (mantener igual)
+    // ===========================
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          navigate(
+            `/catalogo?query=${encodeURIComponent(editedQuery)}&lat=${latitude}&lng=${longitude}&radius=2000&listingType=${listingType}`
+          );
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          toast.error("No se pudo obtener tu ubicación");
+
+          // fallback: usar la ubicación manual si existe
+          if (selectedLat && selectedLng) {
+            navigate(
+              `/catalogo?query=${encodeURIComponent(editedQuery)}&listingType=${listingType}&lat=${selectedLat}&lng=${selectedLng}`
+            );
+          } else {
+            navigate(
+              `/catalogo?query=${encodeURIComponent(editedQuery)}&listingType=${listingType}`
+            );
+          }
+        }
+      );
     }
   };
+
   const handleGPSNavigation = () => {
     setIsStartingNav(true);
     // Navegar inmediatamente sin delay

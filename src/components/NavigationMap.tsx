@@ -19,6 +19,7 @@ import { getCachedNearbyProperties, fetchRouteProperties, encodePolylineToGeoJSO
 import { calculateScore } from '@/utils/mapHelpers';
 import { showPropertyAlert, requestNotificationPermission } from '@/utils/notificationManager';
 import { debounce } from '@/utils/mapHelpers';
+import { useLocation } from "react-router-dom";
 
 
 interface NavigationMapProps {
@@ -69,6 +70,13 @@ const NavigationMap = ({
 
   const trafficLayerRef = useRef<google.maps.TrafficLayer | null>(null);
 
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+
+  const manualLat = params.get("lat");
+  const manualLng = params.get("lng");
+
+  const hasManualLocation = manualLat && manualLng;
 
 
   const [heading, setHeading] = useState<number>(0);
@@ -665,12 +673,12 @@ const NavigationMap = ({
       height: "100%",
     }}
 
-    center={
-      userLocation || {
-        lat: 6.2476,
-        lng: -75.5658,
-      }
-    }
+  center={
+    hasManualLocation
+      ? { lat: Number(manualLat), lng: Number(manualLng) } // ⬅ SI SELECCIONÓ OTRA ZONA
+      : userLocation || { lat: 6.2476, lng: -75.5658 }     // ⬅ MODO ACTUAL
+  }
+
     onDragStart={() => {
       setIsUserPanning(true);
 
