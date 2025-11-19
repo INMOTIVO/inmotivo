@@ -2,62 +2,72 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Navigation, List } from "lucide-react";
 
+// 🟢 AGREGA ESTA INTERFAZ COMPLETA
 interface SearchModeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onNavigateGPS: () => void;
   onViewProperties: () => void;
+  isUsingCurrentLocation: boolean; // 👈 IMPORTANTE
 }
 
-const SearchModeDialog = ({ 
-  open, 
-  onOpenChange, 
-  onNavigateGPS, 
-  onViewProperties 
+const SearchModeDialog = ({
+  open,
+  onOpenChange,
+  onNavigateGPS,
+  onViewProperties,
+  isUsingCurrentLocation,
 }: SearchModeDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="rounded-2xl p-6 max-w-lg w-full">
         <DialogHeader>
-          <DialogTitle className="text-center text-xl">
+          <DialogTitle className="text-center text-xl font-bold">
             ¿Cómo quieres buscar propiedades?
           </DialogTitle>
         </DialogHeader>
-        
+
         <div className="grid gap-4 py-4">
-          {/* Opción Navegar con GPS */}
+
+          {/* 🟢 OPCIÓN 1 — NAVEGAR CON GPS */}
           <Button
             onClick={onNavigateGPS}
-            className="h-auto p-6 flex flex-col items-center gap-3 hover:scale-105 transition-transform"
+            className="h-auto p-6 flex flex-col items-center gap-3 hover:scale-[1.02] transition-transform rounded-xl border"
             variant="outline"
           >
-            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
-              <Navigation className="h-7 w-7 text-primary" />
+            <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
+              <Navigation className="h-7 w-7 text-green-600" />
             </div>
+
             <div className="text-center">
               <div className="font-semibold text-lg mb-1">Navegar con GPS</div>
-              <div className="text-sm text-muted-foreground font-normal">
-                Descubre propiedades mientras te desplazas
+
+              <div className="text-sm text-gray-600 font-normal">
+                {isUsingCurrentLocation
+                  ? "Descubre propiedades mientras te desplazas"
+                  : "Ver en el mapa"}
               </div>
             </div>
           </Button>
 
-          {/* Opción Ver propiedades */}
+          {/* 🟢 OPCIÓN 2 — VER PROPIEDADES */}
           <Button
             onClick={onViewProperties}
-            className="h-auto p-6 flex flex-col items-center gap-3 hover:scale-105 transition-transform"
+            className="h-auto p-6 flex flex-col items-center gap-3 hover:scale-[1.02] transition-transform rounded-xl border"
             variant="outline"
           >
-            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
-              <List className="h-7 w-7 text-primary" />
+            <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
+              <List className="h-7 w-7 text-green-600" />
             </div>
+
             <div className="text-center">
               <div className="font-semibold text-lg mb-1">Ver propiedades</div>
-              <div className="text-sm text-muted-foreground font-normal">
+              <div className="text-sm text-gray-600 font-normal">
                 Explora el catálogo completo
               </div>
             </div>
           </Button>
+
         </div>
       </DialogContent>
     </Dialog>

@@ -413,9 +413,10 @@ const Hero = () => {
               <div
                 className="
                   absolute inset-0 whitespace-pre-wrap break-words
-                  pl-1 pr-10 text-sm pointer-events-none select-none
+                  pl-1 pr-10 text-[10px] md:text-sm pointer-events-none select-none
                 "
               >
+
                 {/* Texto dictado o escrito */}
                 <span>{isRecording ? partialText : searchQuery}</span>
 
@@ -441,7 +442,15 @@ const Hero = () => {
               {/* Textarea REAL invisible (recibe input) */}
               <textarea
                 ref={textareaRef}
-                className="relative z-10 w-full bg-transparent text-transparent caret-green-500 placeholder:text-gray-400 placeholder-transparent border-0 resize-none focus-visible:ring-0 p-0 min-h-[28px] max-h-[80px]"
+                className="
+                relative z-10 w-full bg-transparent 
+                text-transparent caret-green-500 
+                text-[10px] md:text-sm
+                placeholder:text-gray-400 placeholder-transparent 
+                border-0 resize-none focus-visible:ring-0 
+                p-0 min-h-[28px] max-h-[80px]
+              "
+
                 placeholder={isRecording || searchQuery ? " " : "Describe la propiedad que buscas"}
                 value={isRecording ? partialText : searchQuery}
                 onChange={handleSearchInput}
@@ -474,126 +483,114 @@ const Hero = () => {
 
 
 
-        {/* Fila 2: Dónde (input completo) */}
-
-        <div className="relative w-full md:flex-1">
-
-          <div
-            className={cn(
-              // MOBILE
-              "relative px-3 py-2 overflow-visible transition-all rounded-b-2xl rounded-l-2xl",
-              // DESKTOP
-              "md:rounded-none md:rounded-r-[28px] md:rounded-l-none",
-
-
-              activeField === "donde" && "bg-gray-100/70 shadow-inner ring-1 ring-gray-300"
-            )}
-          >
-            <div className="flex flex-col justify-center w-full">
-              <label className="text-xs font-semibold text-gray-700 mb-1">
-                Dónde
-              </label>
-
-              {/* --- INPUT AVANZADO IGUAL QUE 'QUÉ' --- */}
-              <div className="relative w-full min-h-[28px]">
-
-              {/* --- CAPA VISIBLE --- */}
+            {/* Fila 2: Dónde */} 
+            <div className="relative w-full md:flex-1">
               <div
-                className="
-                  absolute inset-0 whitespace-pre-wrap break-words
-                  pl-1 pr-10 text-sm pointer-events-none select-none
-                "
+                className={cn(
+                  "relative px-3 py-2 overflow-visible transition-all rounded-b-2xl rounded-l-2xl",
+                  "md:rounded-none md:rounded-r-[28px] md:rounded-l-none",
+                  activeField === "donde" && "bg-gray-100/70 shadow-inner ring-1 ring-gray-300"
+                )}
               >
-                <span>{searchWhere}</span>
-              </div>
+                <div className="flex flex-col justify-center w-full">
+                  <label className="text-xs font-semibold text-gray-700 mb-1">Dónde</label>
 
-              {/* --- INPUT REAL (para Google Autocomplete) --- */}
-              <input
-                type="text"
-                className="
-                  absolute inset-0 z-20 w-full h-full opacity-0
-                  cursor-text
-                "
-                value={searchWhere}
-                placeholder="¿Dónde lo buscas?"
-                onChange={(e) => {
-                  setSearchWhere(e.target.value);
-                  getPredictions(e.target.value);
-                  setShowLocationSuggestions(e.target.value.trim().length > 0);
-                }}
-                onFocus={() => {
-                  if (!searchQuery.trim()) {
-                    toast.error("Primero escribe qué estás buscando");
-                    return;
-                  }
-                  setActiveField("donde");
-                  setShowLocationSuggestions(
-                    searchWhere.trim().length > 0 && predictions.length > 0
-                  );
-                }}
-              />
+                  {/* INPUT AVANZADO IGUAL A 'QUÉ' */}
+                  <div className="relative w-full min-h-[28px]">
 
-              {/* --- TEXTAREA FALSA (solo para altura dinámica) --- */}
-              <textarea
-                className="
-                  relative z-10 w-full bg-transparent text-transparent
-                  border-0 resize-none focus-visible:ring-0 p-0
-                  min-h-[28px] max-h-[80px]
-                "
-                value={searchWhere}
-                readOnly
-                ref={(t) => {
-                  if (t) {
-                    t.style.height = "auto";
-                    t.style.height = `${Math.min(t.scrollHeight, 80)}px`;
-                  }
-                }}
 
-              />
-              {/* DROPDOWN DE OPCIONES */}
-              {showLocationSuggestions && predictions.length > 0 && (
+                {/* TEXTO VISIBLE */}
                 <div
                   className="
-                    absolute left-0 right-0 mt-2 z-[200]
-                    bg-white rounded-xl shadow-2xl border border-gray-200
-                    max-h-80 overflow-y-auto 
-                    location-suggestions-container
+                    absolute inset-0 whitespace-pre-wrap break-words
+                    pl-1 pr-10 text-[10px] md:text-sm
+                    pointer-events-none select-none
                   "
                 >
-                  {/* Opción: usar ubicación actual */}
+                  {searchWhere.trim() ? (
+                    <span>{searchWhere}</span>
+                  ) : (
+                    <span className="text-gray-400">¿Dónde lo buscas?</span>
+                  )}
+                </div>
+
+                {/* INPUT REAL (invisible) */}
+                <input
+                  type="text"
+                  className="
+                    absolute inset-0 z-20 w-full h-full opacity-0 cursor-text
+                  "
+                  value={searchWhere}
+                  onChange={(e) => {
+                    setSearchWhere(e.target.value);
+                    getPredictions(e.target.value);
+                    setShowLocationSuggestions(e.target.value.trim().length > 0);
+                  }}
+                  onFocus={() => {
+                    if (!searchQuery.trim()) {
+                      toast.error("Primero escribe qué estás buscando");
+                      return;
+                    }
+                    setActiveField("donde");
+                    setShowLocationSuggestions(
+                      searchWhere.trim().length > 0 && predictions.length > 0
+                    );
+                  }}
+                />
+
+                {/* TEXTAREA FALSA (altura dinámica) */}
+                <textarea
+                  className="
+                    relative z-10 w-full bg-transparent text-transparent
+                    text-[10px] md:text-sm
+                    border-0 resize-none focus-visible:ring-0 p-0
+                    min-h-[28px] max-h-[80px]
+                  "
+                  value={searchWhere}
+                  readOnly
+                  ref={(t) => {
+                    if (t) {
+                      t.style.height = "auto";
+                      t.style.height = `${Math.min(t.scrollHeight, 80)}px`;
+                    }
+                  }}
+                />
+
+                {/* DROPDOWN */}
+                {showLocationSuggestions && predictions.length > 0 && (
                   <div
-                    onClick={handleUseCurrentLocation}
                     className="
-                      flex items-center gap-3 p-3 cursor-pointer border-b
-                      bg-green-50/70 hover:bg-green-100
-                      transition-colors
+                      absolute left-0 right-0 mt-2 z-[200]
+                      bg-white rounded-xl shadow-2xl border border-gray-200
+                      max-h-80 overflow-y-auto
+                      location-suggestions-container
                     "
                   >
-                    <MapPin className="h-4 w-4 text-green-600" />
-                    <span className="font-semibold text-green-700"> Usar mi ubicación actual</span>
-                  </div>
-
-                  {/* Google Predictions */}
-                  {predictions.map((s) => (
                     <div
-                      key={s.place_id}
-                      onClick={() => handleSelectSuggestion(s)}
-                      className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer"
+                      onClick={handleUseCurrentLocation}
+                      className="flex items-center gap-3 p-3 cursor-pointer border-b bg-green-50 hover:bg-green-100"
                     >
-                      <MapPin className="h-4 w-4 text-gray-400" />
+                      <MapPin className="h-4 w-4 text-green-600" />
+                      <span className="font-semibold text-green-700">Usar mi ubicación actual</span>
+                    </div>
 
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium truncate">
-                          {s.structured_formatting.main_text}
-                        </div>
-                        <div className="text-sm text-gray-500 truncate">
-                          {s.structured_formatting.secondary_text}
+                    {predictions.map((s) => (
+                      <div
+                        key={s.place_id}
+                        onClick={() => handleSelectSuggestion(s)}
+                        className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer"
+                      >
+                        <MapPin className="h-4 w-4 text-gray-400" />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium truncate">{s.structured_formatting.main_text}</div>
+                          <div className="text-sm text-gray-500 truncate">
+                            {s.structured_formatting.secondary_text}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                    ))}
+                        </div>
+                      )}
 
 
 
@@ -629,18 +626,20 @@ const Hero = () => {
             disabled={!searchQuery.trim() || isInterpretingSearch || isProcessing}
             className="
               md:hidden
-              mt-4 w-full py-3
+              mt-4 w-full py-2.5
               bg-primary text-white font-semibold
-              md:rounded-[28px] shadow-lg
+              rounded-full                       /* ⬅ borde redondeado */
+              shadow-md hover:shadow-lg
               flex items-center justify-center
-              gap-2 text-base
+              gap-2 text-sm
+              transition-all active:scale-95
             "
           >
             {isInterpretingSearch ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
+              <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <>
-                <Search className="h-5 w-5" />
+                <Search className="h-4 w-4" />
                 Buscar
               </>
             )}
@@ -678,7 +677,10 @@ const Hero = () => {
         onOpenChange={setShowSearchModeDialog}
         onNavigateGPS={handleNavigateGPS}
         onViewProperties={handleViewProperties}
+        isUsingCurrentLocation={selectedLocation?.address === "Tu ubicación actual"}
       />
+
+
     </section>
   );
 };
