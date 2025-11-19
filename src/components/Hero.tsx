@@ -52,6 +52,7 @@ const Hero = () => {
     stopRecording,
     cancelRecording
   } = useVoiceRecording();
+  const [activeField, setActiveField] = useState<"que" | "donde" | null>(null);
 
   // Auto-adjust textarea height
   const handleSearchInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
