@@ -53,6 +53,10 @@ const Hero = () => {
     cancelRecording
   } = useVoiceRecording();
   const [activeField, setActiveField] = useState<"que" | "donde" | null>(null);
+  // Marcar "qué estás buscando" como el primer paso visual
+  useEffect(() => {
+    setActiveField("que");
+  }, []);
 
   // Auto-adjust textarea height
   const handleSearchInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -318,6 +322,15 @@ const Hero = () => {
     cancelRecording();
   };
 
+
+
+  // ⬇️ AGREGA ESTO AQUÍ (ANTES del return)
+  useEffect(() => {
+    if (activeField === "que") {
+      textareaRef.current?.focus();
+    }
+  }, [activeField]);
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Fondo */}
@@ -372,173 +385,286 @@ const Hero = () => {
           {/* Gradiente animado del borde - responsive */}
           <div className="absolute -inset-1 bg-gradient-to-r from-primary via-blue-500 to-primary md:rounded-full rounded-2xl blur-sm opacity-75 animate-pulse" />
           
-          <div className="relative bg-white md:rounded-full rounded-2xl shadow-2xl p-3 md:p-2 flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-2">
-            {/* Fila 1 Mobile: Qué + Micrófono */}
-            <div className="md:flex-1 md:border-r border-gray-200">
-              {/* Sección QUÉ */}
-              <div className="flex-1 relative px-3 py-2 overflow-visible">
-                <div className="flex flex-col justify-center w-full">
-                  <label className="text-xs font-semibold text-gray-700 mb-1">¿Qué estás buscando?</label>
+          <div className="relative bg-white md:rounded-[28px] rounded-2xl shadow-2xl p-3 md:p-2 flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-2">
+
+          {/* Fila 1 Mobile: Qué + Micrófono */}
+          <div className="md:flex-1 md:border-r border-gray-200">
+            {/* Sección QUÉ */}
+            <div
+              className={cn(
+                "flex-1 relative px-3 py-2 overflow-visible transition-all " +
+               "rounded-t-2xl rounded-l-2xl md:rounded-l-[28px] md:rounded-r-none",
+                activeField === "que" && "bg-gray-100/70 shadow-inner ring-1 ring-gray-300"
+              )}
+            >
 
 
-              {/* --- INPUT AVANZADO --- */}
+
+              <div className="flex flex-col justify-center w-full">
+                <label className="text-xs font-semibold text-gray-700 mb-1">¿Qué estás buscando?</label>
+
+
+            {/* --- INPUT AVANZADO --- */}
+            <div className="relative w-full min-h-[28px]">
+
+              {/* Capa visible (texto + cursor + mic) */}
+              <div
+                className="
+                  absolute inset-0 whitespace-pre-wrap break-words
+                  pl-1 pr-10 text-sm pointer-events-none select-none
+                "
+              >
+                {/* Texto dictado o escrito */}
+                <span>{isRecording ? partialText : searchQuery}</span>
+
+            
+                {/* Cursor parpadeando SOLO cuando graba */}
+                {isRecording && (
+                  <span className="inline-block w-[2px] h-[18px] bg-green-500 ml-0.5 animate-blink align-bottom"></span>
+                )}
+
+                {/* Mic verde pegado al cursor cuando graba */}
+                {isRecording && (
+                  <span
+                    className="
+                      inline-flex items-center justify-center ml-1
+                      w-5 h-5 rounded-full bg-green-500 shadow-md align-bottom
+                    "
+                  >
+                    <Search className="w-3 h-3 text-white" />
+                  </span>
+                )}
+              </div>
+
+              {/* Textarea REAL invisible (recibe input) */}
+              <textarea
+                ref={textareaRef}
+                className="relative z-10 w-full bg-transparent text-transparent caret-green-500 placeholder:text-gray-400 placeholder-transparent border-0 resize-none focus-visible:ring-0 p-0 min-h-[28px] max-h-[80px]"
+                placeholder={isRecording || searchQuery ? " " : "Describe la propiedad que buscas"}
+                value={isRecording ? partialText : searchQuery}
+                onChange={handleSearchInput}
+                onFocus={() => setActiveField("que")}   // ✅ NUEVO
+              />
+
+
+
+            </div>
+
+
+
+              </div>
+              
+              {/* Botón de micrófono integrado dentro del input */}
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10">
+                <VoiceButton
+                  style="safari"
+                  isRecording={isRecording}
+                  isProcessing={isProcessing}
+                  audioLevel={audioLevel}
+                  onStart={handleStartRecording}
+                  onStop={handleStopRecording}
+                  onCancel={handleCancelRecording}
+                />
+              </div>
+
+            </div>
+          </div>
+
+
+
+        {/* Fila 2: Dónde (input completo) */}
+
+        <div className="relative w-full md:flex-1">
+
+          <div
+            className={cn(
+              // MOBILE
+              "relative px-3 py-2 overflow-visible transition-all rounded-b-2xl rounded-l-2xl",
+              // DESKTOP
+              "md:rounded-none md:rounded-r-[28px] md:rounded-l-none",
+
+
+              activeField === "donde" && "bg-gray-100/70 shadow-inner ring-1 ring-gray-300"
+            )}
+          >
+            <div className="flex flex-col justify-center w-full">
+              <label className="text-xs font-semibold text-gray-700 mb-1">
+                Dónde
+              </label>
+
+              {/* --- INPUT AVANZADO IGUAL QUE 'QUÉ' --- */}
               <div className="relative w-full min-h-[28px]">
 
-                {/* Capa visible (texto + cursor + mic) */}
+              {/* --- CAPA VISIBLE --- */}
+              <div
+                className="
+                  absolute inset-0 whitespace-pre-wrap break-words
+                  pl-1 pr-10 text-sm pointer-events-none select-none
+                "
+              >
+                <span>{searchWhere}</span>
+              </div>
+
+              {/* --- INPUT REAL (para Google Autocomplete) --- */}
+              <input
+                type="text"
+                className="
+                  absolute inset-0 z-20 w-full h-full opacity-0
+                  cursor-text
+                "
+                value={searchWhere}
+                placeholder="¿Dónde lo buscas?"
+                onChange={(e) => {
+                  setSearchWhere(e.target.value);
+                  getPredictions(e.target.value);
+                  setShowLocationSuggestions(e.target.value.trim().length > 0);
+                }}
+                onFocus={() => {
+                  if (!searchQuery.trim()) {
+                    toast.error("Primero escribe qué estás buscando");
+                    return;
+                  }
+                  setActiveField("donde");
+                  setShowLocationSuggestions(
+                    searchWhere.trim().length > 0 && predictions.length > 0
+                  );
+                }}
+              />
+
+              {/* --- TEXTAREA FALSA (solo para altura dinámica) --- */}
+              <textarea
+                className="
+                  relative z-10 w-full bg-transparent text-transparent
+                  border-0 resize-none focus-visible:ring-0 p-0
+                  min-h-[28px] max-h-[80px]
+                "
+                value={searchWhere}
+                readOnly
+                ref={(t) => {
+                  if (t) {
+                    t.style.height = "auto";
+                    t.style.height = `${Math.min(t.scrollHeight, 80)}px`;
+                  }
+                }}
+
+              />
+              {/* DROPDOWN DE OPCIONES */}
+              {showLocationSuggestions && predictions.length > 0 && (
                 <div
                   className="
-                    absolute inset-0 whitespace-pre-wrap break-words
-                    pl-1 pr-10 text-sm pointer-events-none select-none
+                    absolute left-0 right-0 mt-2 z-[200]
+                    bg-white rounded-xl shadow-2xl border border-gray-200
+                    max-h-80 overflow-y-auto 
+                    location-suggestions-container
                   "
                 >
-                  {/* Texto dictado o escrito */}
-                  <span>{isRecording ? partialText : searchQuery}</span>
-
-              
-                  {/* Cursor parpadeando SOLO cuando graba */}
-                  {isRecording && (
-                    <span className="inline-block w-[2px] h-[18px] bg-green-500 ml-0.5 animate-blink align-bottom"></span>
-                  )}
-
-                  {/* Mic verde pegado al cursor cuando graba */}
-                  {isRecording && (
-                    <span
-                      className="
-                        inline-flex items-center justify-center ml-1
-                        w-5 h-5 rounded-full bg-green-500 shadow-md align-bottom
-                      "
-                    >
-                      <Search className="w-3 h-3 text-white" />
-                    </span>
-                  )}
-                </div>
-
-                {/* Textarea REAL invisible (recibe input) */}
-                <textarea
-                  ref={textareaRef}
-                  className="
-                    relative z-10 w-full bg-transparent
-                    text-transparent caret-green-500
-                    placeholder:text-gray-400
-                    placeholder-transparent
-                    border-0 resize-none focus-visible:ring-0 p-0
-                    min-h-[28px] max-h-[80px]
-                  "
-                  placeholder={isRecording || searchQuery ? " " : "Describe la propiedad que buscas"}
-                  value={isRecording ? partialText : searchQuery}
-                  onChange={handleSearchInput}
-                />
-
-
-              </div>
-
-
-
-                </div>
-                
-                {/* Botón de micrófono integrado dentro del input */}
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10">
-                  <VoiceButton
-                    style="safari"
-                    isRecording={isRecording}
-                    isProcessing={isProcessing}
-                    audioLevel={audioLevel}
-                    onStart={handleStartRecording}
-                    onStop={handleStopRecording}
-                    onCancel={handleCancelRecording}
-                  />
-                </div>
-
-              </div>
-            </div>
-
-
-
-            {/* Fila 2 Mobile: Dónde + Buscar */}
-            <div className="flex items-center gap-2 md:flex-1">
-              {/* Sección DÓNDE */}
-              <div className="flex-1 flex items-center gap-2 px-3 py-2 relative location-suggestions-container">
-                <div className="flex flex-col justify-center w-full">
-                  <label className="text-xs font-semibold text-gray-700 mb-1">Dónde</label>
-                  <Input
-                    placeholder="¿Dónde lo buscas?"
-                    className="border-0 focus-visible:ring-0 text-sm w-full p-0 h-6"
-                    value={searchWhere}
-                    onChange={(e) => handleWhereInputChange(e.target.value)}
-                    onFocus={() => setShowLocationSuggestions(searchWhere.trim().length > 0 && predictions.length > 0)}
-                  />
-                </div>
-
-                {/* Dropdown de sugerencias */}
-                {showLocationSuggestions && (predictions.length > 0 || searchWhere.trim()) && (
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-200 z-[100] overflow-hidden max-h-80 overflow-y-auto">
-                    {/* Primera opción: Usar mi ubicación */}
-                    <div 
-                      onClick={handleUseCurrentLocation}
-                      className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer border-b transition-colors"
-                    >
-                      <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
-                      <div className="font-medium">📍 Usar mi ubicación actual</div>
-                    </div>
-
-                    {/* Sugerencias de Google */}
-                    {predictions.length > 0 ? (
-                      predictions.map((suggestion) => (
-                        <div
-                          key={suggestion.place_id}
-                          onClick={() => handleSelectSuggestion(suggestion)}
-                          className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer transition-colors"
-                        >
-                          <MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <div className="font-medium truncate">{suggestion.structured_formatting.main_text}</div>
-                            <div className="text-sm text-muted-foreground truncate">
-                              {suggestion.structured_formatting.secondary_text}
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    ) : searchWhere.trim() && (
-                      <div className="p-3 text-sm text-muted-foreground text-center">
-                        Escribe para buscar lugares
-                      </div>
-                    )}
+                  {/* Opción: usar ubicación actual */}
+                  <div
+                    onClick={handleUseCurrentLocation}
+                    className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer border-b"
+                  >
+                    <MapPin className="h-4 w-4 text-primary" />
+                    <span className="font-medium">📍 Usar mi ubicación actual</span>
                   </div>
-                )}
+
+                  {/* Google Predictions */}
+                  {predictions.map((s) => (
+                    <div
+                      key={s.place_id}
+                      onClick={() => handleSelectSuggestion(s)}
+                      className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer"
+                    >
+                      <MapPin className="h-4 w-4 text-gray-400" />
+
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium truncate">
+                          {s.structured_formatting.main_text}
+                        </div>
+                        <div className="text-sm text-gray-500 truncate">
+                          {s.structured_formatting.secondary_text}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+
+
+
               </div>
-
-
-              {/* BOTÓN BUSCAR - CIRCULAR CON SOLO ÍCONO */}
-              <Button 
-                onClick={handleSearch}
-                disabled={!searchQuery.trim() || isInterpretingSearch || isProcessing}
-                className="rounded-full w-14 h-14 p-0 flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow shrink-0"
-                size="icon"
-              >
-                {isInterpretingSearch ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <Search className="h-5 w-5" />
-                )}
-              </Button>
             </div>
           </div>
+
+          {/* Botón Buscar */}
+          {/* Botón Buscar — cambia según el dispositivo */}
+
+
+          <button
+            onClick={handleSearch}
+            disabled={!searchQuery.trim() || isInterpretingSearch || isProcessing}
+            className="
+              hidden md:flex
+              absolute right-3 top-1/2 -translate-y-1/2
+              w-14 h-14 md:rounded-[28px] bg-primary text-white
+              shadow-lg hover:shadow-xl items-center justify-center
+              transition z-50
+            "
+          >
+            {isInterpretingSearch ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <Search className="h-5 w-5" />
+            )}
+          </button>
+
+          <button
+            onClick={handleSearch}
+            disabled={!searchQuery.trim() || isInterpretingSearch || isProcessing}
+            className="
+              md:hidden
+              mt-4 w-full py-3
+              bg-primary text-white font-semibold
+              md:rounded-[28px] shadow-lg
+              flex items-center justify-center
+              gap-2 text-base
+            "
+          >
+            {isInterpretingSearch ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <>
+                <Search className="h-5 w-5" />
+                Buscar
+              </>
+            )}
+          </button>
+
+
         </div>
 
-        {/* Tu ubicación actual */}
-        {location && !loadingLocation && (
-          <div className="mt-4 text-center text-white/80 text-sm">
-            Tu ubicación: <span className="font-medium">{location}</span>
-          </div>
-        )}
 
-        {loadingLocation && (
-          <div className="mt-4 text-center text-white/80 text-sm flex items-center justify-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Detectando ubicación...
-          </div>
-        )}
+
+
+
+
+        </div>
       </div>
+
+      {/* Tu ubicación actual */}
+      {location && !loadingLocation && (
+        <div className="mt-4 text-center text-white/80 text-sm">
+          Tu ubicación: <span className="font-medium">{location}</span>
+        </div>
+      )}
+
+      {loadingLocation && (
+        <div className="mt-4 text-center text-white/80 text-sm flex items-center justify-center gap-2">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Detectando ubicación...
+        </div>
+      )}
+    </div>
 
       {/* Modal de selección de modo de búsqueda */}
       <SearchModeDialog

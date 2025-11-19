@@ -86,7 +86,7 @@ const VoiceButton = ({
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
           ) : (
             <Mic className={cn(
-              "h-5 w-5 text-primary",
+              "h-4 w-4 text-primary",
               isRecording && "opacity-50"
             )} />
           )}
@@ -109,7 +109,7 @@ const VoiceButton = ({
             onClick={handleConfirm}
             className="
               pointer-events-auto
-              w-14 h-14
+              w-9 h-9
               rounded-full
               bg-primary
               hover:bg-primary/90
@@ -119,7 +119,7 @@ const VoiceButton = ({
               animate-in fade-in zoom-in duration-200
             "
           >
-            <Mic className="h-7 w-7 text-white animate-pulse" />
+            <Mic className="h-4 w-4 text-white animate-pulse" />
           </button>
         </div>
 
