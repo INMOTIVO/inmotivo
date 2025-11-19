@@ -31,7 +31,8 @@ const Hero = () => {
   
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  
+  const visibleTextRef = useRef<HTMLDivElement>(null);
+
   const { isLoaded: mapsLoaded } = useGoogleMapsLoader();
   const { predictions, getPredictions } = useGooglePlacesAutocomplete();
   const { interpretSearch, isProcessing: isInterpretingSearch } = useInterpretSearch();
@@ -53,14 +54,19 @@ const Hero = () => {
   // Auto-adjust textarea height
   const handleSearchInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setSearchQuery(e.target.value);
-    const textarea = e.target;
-    textarea.style.height = 'auto';
-    textarea.style.height = `${Math.min(textarea.scrollHeight, 80)}px`;
-    textareaRef.current?.scrollTo({
-      top: textareaRef.current.scrollHeight,
-    });
 
+    const ta = e.target;
+
+    // Ajustar altura del textarea real
+    ta.style.height = "auto";
+    ta.style.height = `${Math.min(ta.scrollHeight, 80)}px`;
+
+    // Sincronizar altura del texto visible
+    if (visibleTextRef.current) {
+      visibleTextRef.current.style.height = ta.style.height;
+    }
   };
+
 
   // Detectar ubicación automáticamente
   useEffect(() => {
@@ -363,53 +369,61 @@ const Hero = () => {
             {/* --- INPUT AVANZADO --- */}
             <div className="relative w-full min-h-[28px]">
 
-              {/* Capa visible (texto + cursor + mic) */}
-              <div
-                className="
-                  absolute inset-0 whitespace-pre-wrap break-words
-                  pl-1 pr-10 text-[10px] md:text-sm pointer-events-none select-none
-                "
-              >
+                {/* Capa visible (texto + cursor + mic) */}
+                <div
+                  ref={visibleTextRef}
+                  className="
+                    absolute inset-0 whitespace-pre-wrap break-words
+                    pl-1 pr-10 text-[12px] md:text-sm leading-[1.2rem]
+                    pointer-events-none select-none
+                  "
+                >
 
-                {/* Texto dictado o escrito */}
-                <span>{isRecording ? partialText : searchQuery}</span>
+                  {/* TEXTO VISIBLE */}
+                  <span>{isRecording ? partialText : searchQuery}</span>
 
-            
-                {/* Cursor parpadeando SOLO cuando graba */}
-                {isRecording && (
-                  <span className="inline-block w-[2px] h-[18px] bg-green-500 ml-0.5 animate-blink align-bottom"></span>
-                )}
+                  {/* CURSOR CUANDO NO ESTÁ GRABANDO */}
+                  {!isRecording && (
+                    <span className="inline-block w-[2px] h-[16px] bg-gray-700 ml-[1px] animate-blink"></span>
+                  )}
 
-                {/* Mic verde pegado al cursor cuando graba */}
-                {isRecording && (
-                  <span
-                    className="
-                      inline-flex items-center justify-center ml-1
-                      w-5 h-5 rounded-full bg-green-500 shadow-md align-bottom
-                    "
-                  >
-                    <Search className="w-3 h-3 text-white" />
-                  </span>
-                )}
-              </div>
+                  {/* CURSOR VERDE + MIC CUANDO ESTÁ GRABANDO */}
+                  {isRecording && (
+                    <>
+                      <span className="inline-block w-[2px] h-[18px] bg-green-500 ml-[1px] animate-blink align-middle"></span>
+                      <span
+                        className="
+                          inline-flex items-center justify-center ml-1
+                          w-5 h-5 rounded-full bg-green-500 shadow-md align-middle
+                        "
+                      >
+                        <Search className="w-3 h-3 text-white" />
+                      </span>
+                    </>
+                  )}
+                </div>
+
 
               {/* Textarea REAL invisible (recibe input) */}
               <textarea
                 ref={textareaRef}
-                className="
-                relative z-10 w-full bg-transparent 
-                text-transparent caret-green-500 
-                text-[10px] md:text-sm
-                placeholder:text-gray-400 placeholder-transparent 
-                border-0 resize-none focus-visible:ring-0 
-                p-0 min-h-[28px] max-h-[80px]
-              "
-
+                className={`
+                  relative z-10 w-full bg-transparent 
+                  text-transparent 
+                  ${isRecording ? "caret-green-500" : "caret-transparent"}
+                  text-[12px] md:text-sm
+                  leading-[1.15rem]
+                  placeholder:text-gray-400 placeholder-transparent 
+                  border-0 resize-none focus-visible:ring-0 
+                  outline-none focus:outline-none focus-visible:outline-none
+                  p-0 min-h-[28px] max-h-[80px]
+                `}
                 placeholder={isRecording || searchQuery ? " " : "Describe la propiedad que buscas"}
                 value={isRecording ? partialText : searchQuery}
                 onChange={handleSearchInput}
-                onFocus={() => setActiveField("que")}   // ✅ NUEVO
+                onFocus={() => setActiveField("que")}
               />
+
 
 
 
@@ -457,7 +471,7 @@ const Hero = () => {
                 <div
                   className="
                     absolute inset-0 whitespace-pre-wrap break-words
-                    pl-1 pr-10 text-[10px] md:text-sm
+                    pl-1 pr-10 text-[12px] md:text-sm
                     pointer-events-none select-none
                   "
                 >
@@ -496,7 +510,7 @@ const Hero = () => {
                 <textarea
                   className="
                     relative z-10 w-full bg-transparent text-transparent
-                    text-[10px] md:text-sm
+                    text-[12px] md:text-sm
                     border-0 resize-none focus-visible:ring-0 p-0
                     min-h-[28px] max-h-[80px]
                   "
