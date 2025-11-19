@@ -1,5 +1,4 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 import { Navigation, List } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import heroImage from "@/assets/hero-medellin.jpg";
@@ -77,63 +76,80 @@ const SearchModePage = () => {
       <div className="relative flex-1 flex items-center justify-center pt-20 pb-12 px-4">
         <div className="w-full max-w-2xl">
           {/* Título centrado */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-3 drop-shadow-lg">
+          <div className="text-center mb-12 md:mb-16">
+            <h1 className="text-3xl md:text-5xl font-semibold text-white mb-4 drop-shadow-2xl tracking-tight">
               ¿Cómo quieres buscar propiedades?
             </h1>
-            <p className="text-base md:text-lg text-white/90 drop-shadow-md">
+            <p className="text-sm md:text-base text-white/70 drop-shadow-lg font-light tracking-wide">
               Elige el modo que mejor se adapte a tu búsqueda
             </p>
           </div>
 
-          {/* Contenedor cápsula con gradiente animado */}
-          <div className="relative max-w-2xl mx-auto w-full">
-            {/* Gradiente animado del borde */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-primary via-blue-500 to-primary rounded-3xl blur-sm opacity-75 animate-pulse" />
-            
-            {/* Cápsula blanca con contenido */}
-            <div className="relative bg-white/30 backdrop-blur-xl rounded-[32px] shadow-xl shadow-black/10 p-5 md:p-6 border-[1.5px] border-white/20 animate-in slide-in-from-bottom-4 fade-in duration-500">
-              {/* Grid de opciones */}
-              <div className="grid gap-4">
+          {/* Contenedor minimalista sin fondo */}
+          <div className="max-w-xl mx-auto w-full space-y-4 animate-in slide-in-from-bottom-6 fade-in duration-700">
                 {/* Opción 1: Navegar con GPS */}
-                <Button
+                <button
                   onClick={handleNavigateGPS}
-                  className="h-auto p-6 flex flex-col items-center gap-3 hover:scale-[1.02] transition-transform rounded-xl border"
-                  variant="outline"
+                  className="group relative w-full bg-white/80 backdrop-blur-md hover:bg-white/95 rounded-2xl p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-black/10 hover:-translate-y-1 active:scale-[0.98]"
                 >
-                  <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Navigation className="h-7 w-7 text-primary" />
-                  </div>
-
-                  <div className="text-center">
-                    <div className="font-semibold text-lg mb-1">Navegar con GPS</div>
-                    <div className="text-sm text-muted-foreground font-normal">
-                      {isUsingCurrentLocation
-                        ? "Descubre propiedades mientras te desplazas"
-                        : "Ver en el mapa"}
+                  {/* Subtle top border accent */}
+                  <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+                  
+                  <div className="flex items-center gap-5">
+                    {/* Icono más grande y limpio */}
+                    <div className="flex-shrink-0 w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <Navigation className="h-8 w-8 text-primary" strokeWidth={1.5} />
                     </div>
+                    
+                    {/* Contenido alineado a la izquierda */}
+                    <div className="flex-1 text-left">
+                      <div className="font-semibold text-lg text-gray-900 mb-1 group-hover:text-primary transition-colors">
+                        Navegar con GPS
+                      </div>
+                      <div className="text-sm text-gray-500 font-normal leading-relaxed">
+                        {isUsingCurrentLocation
+                          ? "Descubre propiedades mientras te desplazas"
+                          : "Ver en el mapa"}
+                      </div>
+                    </div>
+                    
+                    {/* Chevron indicator */}
+                    <svg className="w-5 h-5 text-gray-400 group-hover:text-primary group-hover:translate-x-1 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
                   </div>
-                </Button>
+                </button>
 
                 {/* Opción 2: Ver propiedades */}
-                <Button
+                <button
                   onClick={handleViewProperties}
-                  className="h-auto p-6 flex flex-col items-center gap-3 hover:scale-[1.02] transition-transform rounded-xl border"
-                  variant="outline"
+                  className="group relative w-full bg-white/80 backdrop-blur-md hover:bg-white/95 rounded-2xl p-6 transition-all duration-300 hover:shadow-2xl hover:shadow-black/10 hover:-translate-y-1 active:scale-[0.98]"
                 >
-                  <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
-                    <List className="h-7 w-7 text-primary" />
-                  </div>
-
-                  <div className="text-center">
-                    <div className="font-semibold text-lg mb-1">Ver propiedades</div>
-                    <div className="text-sm text-muted-foreground font-normal">
-                      Explora el catálogo completo
+                  {/* Subtle top border accent */}
+                  <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+                  
+                  <div className="flex items-center gap-5">
+                    {/* Icono más grande y limpio */}
+                    <div className="flex-shrink-0 w-16 h-16 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                      <List className="h-8 w-8 text-primary" strokeWidth={1.5} />
                     </div>
+                    
+                    {/* Contenido alineado a la izquierda */}
+                    <div className="flex-1 text-left">
+                      <div className="font-semibold text-lg text-gray-900 mb-1 group-hover:text-primary transition-colors">
+                        Ver propiedades
+                      </div>
+                      <div className="text-sm text-gray-500 font-normal leading-relaxed">
+                        Explora el catálogo completo
+                      </div>
+                    </div>
+                    
+                    {/* Chevron indicator */}
+                    <svg className="w-5 h-5 text-gray-400 group-hover:text-primary group-hover:translate-x-1 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
                   </div>
-                </Button>
-              </div>
-            </div>
+                </button>
           </div>
         </div>
       </div>
