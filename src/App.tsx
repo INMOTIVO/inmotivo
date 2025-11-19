@@ -18,6 +18,7 @@ import CreateProperty from "./pages/CreateProperty";
 import Favorites from "./pages/Favorites";
 import TenantProfile from "./pages/TenantProfile";
 import NotFound from "./pages/NotFound";
+import SearchModePage from "./pages/SearchModePage";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ const AppRoutes = () => {
       <Route path="/mapa" element={<MapSearch />} />
       <Route path="/navegacion" element={<Navigate />} />
       <Route path="/navigate" element={<Navigate />} />
+      <Route path="/seleccionar-modo" element={<SearchModePage />} />
       <Route path="/catalogo" element={<PropertiesCatalog />} />
       <Route path="/publicar" element={<PublishProperty />} />
       <Route path="/dashboard" element={<ProviderDashboard />} />

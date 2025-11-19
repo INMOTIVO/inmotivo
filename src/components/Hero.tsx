@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { useGooglePlacesAutocomplete } from "@/hooks/useGooglePlacesAutocomplete";
 import { useGoogleMapsLoader } from "@/hooks/useGoogleMapsLoader";
 import { useVoiceRecording } from "@/hooks/useVoiceRecording";
-import SearchModeDialog from './SearchModeDialog';
+
 
 const Hero = () => {
   const navigate = useNavigate();
@@ -29,14 +29,6 @@ const Hero = () => {
   const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
   const [userLocationName, setUserLocationName] = useState<string>("");
   
-  // Estados del modal de selección
-  const [showSearchModeDialog, setShowSearchModeDialog] = useState(false);
-  const [pendingSearchData, setPendingSearchData] = useState<{
-    query: string;
-    listingType: string;
-    location?: { lat: number; lng: number; address: string };
-    semanticFilters?: string;
-  } | null>(null);
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
@@ -237,9 +229,24 @@ const Hero = () => {
         searchData.semanticFilters = JSON.stringify(result.filters);
       }
 
-      // 4. Guardar datos y abrir modal
-      setPendingSearchData(searchData);
-      setShowSearchModeDialog(true);
+      // 4. Navegar a página de selección de modo
+      const params = new URLSearchParams({
+        query: searchData.query,
+        listingType: searchData.listingType,
+      });
+
+      if (searchData.location) {
+        params.append('lat', searchData.location.lat.toString());
+        params.append('lng', searchData.location.lng.toString());
+        params.append('location', searchData.location.address);
+        params.append('isUsingCurrentLocation', (selectedLocation?.address === "Tu ubicación actual").toString());
+      }
+
+      if (searchData.semanticFilters) {
+        params.append('semanticFilters', searchData.semanticFilters);
+      }
+
+      navigate(`/seleccionar-modo?${params.toString()}`);
 
     } catch (error) {
       console.error('Error en búsqueda:', error);
@@ -249,51 +256,6 @@ const Hero = () => {
     }
   };
 
-  // Navegar con GPS - envía coordenadas del "Dónde"
-  const handleNavigateGPS = () => {
-    if (!pendingSearchData) return;
-
-    const navParams = new URLSearchParams({
-      query: pendingSearchData.query,
-      listingType: pendingSearchData.listingType,
-    });
-
-    // IMPORTANTE: Enviar coordenadas del campo "Dónde" como punto inicial
-    if (pendingSearchData.location) {
-      navParams.append('lat', pendingSearchData.location.lat.toString());
-      navParams.append('lng', pendingSearchData.location.lng.toString());
-      navParams.append('location', pendingSearchData.location.address);
-    }
-    // Si no hay ubicación, Navigate.tsx pedirá permisos GPS
-
-    setShowSearchModeDialog(false);
-    navigate(`/navegacion?${navParams.toString()}`);
-  };
-
-  // Ver propiedades - mantiene flujo actual al catálogo
-  const handleViewProperties = () => {
-    if (!pendingSearchData) return;
-
-    const params = new URLSearchParams({
-      query: pendingSearchData.query,
-      listingType: pendingSearchData.listingType,
-    });
-
-    // Agregar ubicación si existe
-    if (pendingSearchData.location) {
-      params.append('lat', pendingSearchData.location.lat.toString());
-      params.append('lng', pendingSearchData.location.lng.toString());
-      params.append('location', pendingSearchData.location.address);
-    }
-
-    // Agregar filtros semánticos si existen
-    if (pendingSearchData.semanticFilters) {
-      params.append('semanticFilters', pendingSearchData.semanticFilters);
-    }
-
-    setShowSearchModeDialog(false);
-    navigate(`/catalogo?${params.toString()}`);
-  };
 
   const handleStartRecording = async () => {
     try {
@@ -671,14 +633,6 @@ const Hero = () => {
       )}
     </div>
 
-      {/* Modal de selección de modo de búsqueda */}
-      <SearchModeDialog
-        open={showSearchModeDialog}
-        onOpenChange={setShowSearchModeDialog}
-        onNavigateGPS={handleNavigateGPS}
-        onViewProperties={handleViewProperties}
-        isUsingCurrentLocation={selectedLocation?.address === "Tu ubicación actual"}
-      />
 
 
     </section>
