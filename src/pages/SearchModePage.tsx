@@ -92,7 +92,7 @@ const SearchModePage = () => {
             <div className="absolute -inset-1 bg-gradient-to-r from-primary via-blue-500 to-primary rounded-3xl blur-sm opacity-75 animate-pulse" />
             
             {/* Cápsula blanca con contenido */}
-            <div className="relative bg-white rounded-3xl shadow-2xl p-6 md:p-8 animate-in slide-in-from-bottom-4 fade-in duration-300">
+            <div className="relative bg-white/30 backdrop-blur-xl rounded-[32px] shadow-xl shadow-black/10 p-5 md:p-6 border-[1.5px] border-white/20 animate-in slide-in-from-bottom-4 fade-in duration-500">
               {/* Grid de opciones */}
               <div className="grid gap-4">
                 {/* Opción 1: Navegar con GPS */}
