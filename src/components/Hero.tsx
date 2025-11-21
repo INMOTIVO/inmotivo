@@ -485,7 +485,7 @@ const Hero = () => {
                       onChange={(e) => {
                         setSearchWhere(e.target.value);
                         getPredictions(e.target.value);
-                        setShowLocationSuggestions(e.target.value.trim().length > 0);
+                        // NO cerrar dropdown automáticamente en onChange
                       }}
                       onFocus={() => {
                         if (!searchQuery.trim()) {
@@ -493,7 +493,8 @@ const Hero = () => {
                           return;
                         }
                         setActiveField("donde");
-                        setShowLocationSuggestions(searchWhere.trim().length > 0 && predictions.length > 0);
+                        // Siempre mostrar dropdown al enfocar (para permitir "Usar mi ubicación actual")
+                        setShowLocationSuggestions(true);
                       }}
                       onBlur={() => setActiveField(null)}
                       spellCheck={true}
@@ -530,7 +531,10 @@ const Hero = () => {
                     "
                       >
                         <div
-                          onClick={handleUseCurrentLocation}
+                          onMouseDown={(e) => {
+                            e.preventDefault(); // Prevenir que el input pierda el foco
+                            handleUseCurrentLocation();
+                          }}
                           className="flex items-center gap-3 p-3 cursor-pointer border-b bg-green-50 hover:bg-green-100"
                         >
                           <MapPin className="h-4 w-4 text-green-600" />
@@ -540,7 +544,10 @@ const Hero = () => {
                         {predictions.map((s) => (
                           <div
                             key={s.place_id}
-                            onClick={() => handleSelectSuggestion(s)}
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              handleSelectSuggestion(s);
+                            }}
                             className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer"
                           >
                             <MapPin className="h-4 w-4 text-gray-400" />
