@@ -804,6 +804,7 @@ const NavigationMap = ({
       fullscreenControl: false,
       rotateControl: false,
       gestureHandling: "greedy",
+      draggable: true,  // Habilitar arrastre explícitamente
       disableDefaultUI: true,
       clickableIcons: false,
       keyboardShortcuts: false,
