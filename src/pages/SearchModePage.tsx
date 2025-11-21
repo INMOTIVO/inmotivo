@@ -36,6 +36,11 @@ const SearchModePage = () => {
       navParams.append("location", locationAddress);
     }
 
+    // CRÍTICO: Pasar explícitamente si está usando ubicación actual
+    if (isUsingCurrentLocation) {
+      navParams.append("useCurrentLocation", "true");
+    }
+
     navigate(`/navegacion?${navParams.toString()}`);
   };
 

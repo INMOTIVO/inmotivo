@@ -43,7 +43,12 @@ const Navigate = () => {
   const [filters, setFilters] = useState<any>({ listingType });
   const [isInitializing, setIsInitializing] = useState(!isDirectNavigation); // Start initializing for GPS mode
   const [isUsingCurrentLocation, setIsUsingCurrentLocation] = useState(() => {
-    // Si hay coordenadas de "Dónde", NO está usando ubicación actual
+    // Leer explícitamente del parámetro useCurrentLocation
+    const useCurrentLocationParam = searchParams.get('useCurrentLocation');
+    if (useCurrentLocationParam === 'true') {
+      return true;
+    }
+    // Si no hay parámetro explícito y tampoco hay coordenadas de inicio, asumir GPS
     return !(startLat && startLng);
   });
   

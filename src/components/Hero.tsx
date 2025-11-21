@@ -119,11 +119,8 @@ const Hero = () => {
 
   const handleWhereInputChange = (value: string) => {
     setSearchWhere(value);
-    if (value.trim()) {
-      setShowLocationSuggestions(true);
-    } else {
-      setShowLocationSuggestions(false);
-    }
+    // Mostrar dropdown siempre que haya foco, incluso si está vacío (para mostrar "Usar mi ubicación actual")
+    setShowLocationSuggestions(true);
   };
 
   const handleUseCurrentLocation = () => {
@@ -523,7 +520,7 @@ const Hero = () => {
                     />
 
                     {/* DROPDOWN */}
-                    {showLocationSuggestions && predictions.length > 0 && (
+                    {showLocationSuggestions && (
                       <div
                         className="
                       absolute left-0 right-0 mt-2 z-[200]
