@@ -62,13 +62,19 @@ const Hero = () => {
   useEffect(() => {
     if (navigator.geolocation) {
       setLoadingLocation(true);
-      const timeoutId = setTimeout(() => setLoadingLocation(false), 7000);
+      const timeoutId = setTimeout(() => {
+        setLoadingLocation(false);
+        console.warn("Timeout al detectar ubicación");
+      }, 10000);
 
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           clearTimeout(timeoutId);
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
+          
+          console.log("GPS coordinates obtained:", { lat, lng, accuracy: position.coords.accuracy });
+          
           setUserLocation({ lat, lng });
 
           try {
@@ -76,22 +82,43 @@ const Hero = () => {
               `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=es`,
             );
             const data = await response.json();
+            
+            console.log("Nominatim response:", data);
+            
             const address = data.address;
             const municipalityName = address.city || address.town || address.municipality || "";
             const sectorName = address.suburb || address.neighbourhood || "";
             const locationName = sectorName ? `${municipalityName}, ${sectorName}` : municipalityName;
+            
+            console.log("Location name:", locationName);
+            
             setLocation(locationName);
             setUserLocationName(locationName);
           } catch (error) {
             console.error("Error getting location:", error);
+            toast.error("No se pudo obtener el nombre de tu ubicación");
           } finally {
             setLoadingLocation(false);
           }
         },
-        () => {
+        (error) => {
           clearTimeout(timeoutId);
+          console.error("Geolocation error:", error);
           setLoadingLocation(false);
+          
+          if (error.code === error.PERMISSION_DENIED) {
+            toast.error("Debes permitir el acceso a tu ubicación para usar esta función");
+          } else if (error.code === error.POSITION_UNAVAILABLE) {
+            toast.error("No se pudo determinar tu ubicación. Intenta de nuevo.");
+          } else if (error.code === error.TIMEOUT) {
+            toast.error("El tiempo de espera se agotó. Intenta de nuevo.");
+          }
         },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
       );
     }
   }, []);
@@ -124,28 +151,71 @@ const Hero = () => {
   };
 
   const handleUseCurrentLocation = () => {
-    if (userLocation) {
+    if (userLocation && userLocationName) {
       setSelectedLocation({
         lat: userLocation.lat,
         lng: userLocation.lng,
-        address: userLocationName || "Tu ubicación actual",
+        address: userLocationName,
         isCurrentLocation: true,
       });
-      setSearchWhere(userLocationName || "Tu ubicación actual");
+      setSearchWhere(userLocationName);
       setShowLocationSuggestions(false);
     } else {
+      setLoadingLocation(true);
+      
       navigator.geolocation.getCurrentPosition(
-        (position) => {
+        async (position) => {
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
           setUserLocation({ lat, lng });
-          setSelectedLocation({ lat, lng, address: userLocationName || "Tu ubicación actual", isCurrentLocation: true });
-          setSearchWhere(userLocationName || "Tu ubicación actual");
-          setShowLocationSuggestions(false);
+          
+          try {
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=es`
+            );
+            const data = await response.json();
+            const address = data.address;
+            const municipalityName = address.city || address.town || address.municipality || "";
+            const sectorName = address.suburb || address.neighbourhood || "";
+            const locationName = sectorName 
+              ? `${municipalityName}, ${sectorName}` 
+              : municipalityName;
+            
+            setUserLocationName(locationName);
+            setLocation(locationName);
+            
+            setSelectedLocation({ 
+              lat, 
+              lng, 
+              address: locationName, 
+              isCurrentLocation: true 
+            });
+            setSearchWhere(locationName);
+            
+          } catch (error) {
+            console.error("Error getting location name:", error);
+            setSelectedLocation({ 
+              lat, 
+              lng, 
+              address: "Tu ubicación actual", 
+              isCurrentLocation: true 
+            });
+            setSearchWhere("Tu ubicación actual");
+          } finally {
+            setLoadingLocation(false);
+            setShowLocationSuggestions(false);
+          }
         },
-        () => {
-          toast.error("No se pudo obtener tu ubicación");
+        (error) => {
+          console.error("Error getting location:", error);
+          toast.error("No se pudo obtener tu ubicación. Verifica los permisos del navegador.");
+          setLoadingLocation(false);
         },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
       );
     }
   };
@@ -612,8 +682,54 @@ const Hero = () => {
 
         {/* Tu ubicación actual */}
         {location && !loadingLocation && (
-          <div className="mt-4 text-center text-white/80 text-sm">
-            Tu ubicación: <span className="font-medium">{location}</span>
+          <div className="mt-4 text-center text-white/80 text-sm flex items-center justify-center gap-2">
+            <span>
+              Tu ubicación: <span className="font-medium">{location}</span>
+            </span>
+            <button
+              onClick={() => {
+                setLoadingLocation(true);
+                navigator.geolocation.getCurrentPosition(
+                  async (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    setUserLocation({ lat, lng });
+                    
+                    try {
+                      const response = await fetch(
+                        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=es`
+                      );
+                      const data = await response.json();
+                      const address = data.address;
+                      const municipalityName = address.city || address.town || address.municipality || "";
+                      const sectorName = address.suburb || address.neighbourhood || "";
+                      const locationName = sectorName 
+                        ? `${municipalityName}, ${sectorName}` 
+                        : municipalityName;
+                      
+                      setLocation(locationName);
+                      setUserLocationName(locationName);
+                      toast.success("Ubicación actualizada");
+                    } catch (error) {
+                      console.error("Error:", error);
+                      toast.error("Error al actualizar ubicación");
+                    } finally {
+                      setLoadingLocation(false);
+                    }
+                  },
+                  (error) => {
+                    console.error("Error:", error);
+                    toast.error("No se pudo actualizar tu ubicación");
+                    setLoadingLocation(false);
+                  },
+                  { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                );
+              }}
+              className="text-white/60 hover:text-white transition-colors"
+              title="Actualizar ubicación"
+            >
+              🔄
+            </button>
           </div>
         )}
 
