@@ -42,6 +42,10 @@ const Navigate = () => {
   const [searchCriteria, setSearchCriteria] = useState(destName || '');
   const [filters, setFilters] = useState<any>({ listingType });
   const [isInitializing, setIsInitializing] = useState(!isDirectNavigation); // Start initializing for GPS mode
+  const [isUsingCurrentLocation, setIsUsingCurrentLocation] = useState(() => {
+    // Si hay coordenadas de "Dónde", NO está usando ubicación actual
+    return !(startLat && startLng);
+  });
   
   // Get initial query from URL params
   const initialQuery = searchParams.get('query') || '';
@@ -59,6 +63,7 @@ const Navigate = () => {
         
         if (!isNaN(lat) && !isNaN(lng)) {
           const userLocation: [number, number] = [lat, lng];
+          setIsUsingCurrentLocation(false); // Usuario seleccionó una ubicación manual
           
           // Interpret search to get filters
           const { data, error } = await supabase.functions.invoke('interpret-search', {
@@ -141,6 +146,7 @@ const Navigate = () => {
           const interpretedFilters = data?.filters || {};
           
           // Use user's GPS location as destination
+          setIsUsingCurrentLocation(true); // Usuario está usando su ubicación GPS
           setDestination(userLocation);
           setSearchCriteria(initialQuery);
           setFilters(interpretedFilters);
@@ -260,6 +266,7 @@ const Navigate = () => {
               onStopNavigation={handleStopNavigation}
               searchCriteria={searchCriteria}
               isDirectNavigation={isDirectNavigation}
+              isUsingCurrentLocation={isUsingCurrentLocation}
             />
           )}
         </div>
