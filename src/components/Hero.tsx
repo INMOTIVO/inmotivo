@@ -380,26 +380,39 @@ const Hero = () => {
                   "
                 >
 
-                  {/* TEXTO VISIBLE */}
-                  <span>{isRecording ? partialText : searchQuery}</span>
-
-                  {/* CURSOR CUANDO NO ESTÁ GRABANDO */}
-                  {!isRecording && activeField === "que" && (
-                    <span className="inline-block w-[2px] h-[16px] bg-gray-700 ml-[1px] animate-blink align-text-bottom"></span>
-                  )}
-
-                  {/* CURSOR VERDE + MIC CUANDO ESTÁ GRABANDO */}
-                  {isRecording && activeField === "que" && (
+                  {/* TEXTO VISIBLE O PLACEHOLDER */}
+                  {searchQuery.trim() || isRecording ? (
                     <>
-                      <span className="inline-block w-[2px] h-[18px] bg-green-500 ml-[1px] animate-blink align-middle"></span>
-                      <span
-                        className="
-                          inline-flex items-center justify-center ml-1
-                          w-5 h-5 rounded-full bg-green-500 shadow-md align-middle
-                        "
-                      >
-                        <Search className="w-3 h-3 text-white" />
-                      </span>
+                      <span>{isRecording ? partialText : searchQuery}</span>
+                      
+                      {/* CURSOR CUANDO NO ESTÁ GRABANDO */}
+                      {!isRecording && activeField === "que" && (
+                        <span className="inline-block w-[2px] h-[16px] bg-gray-700 ml-[1px] animate-blink align-text-bottom"></span>
+                      )}
+
+                      {/* CURSOR VERDE + MIC CUANDO ESTÁ GRABANDO */}
+                      {isRecording && activeField === "que" && (
+                        <>
+                          <span className="inline-block w-[2px] h-[18px] bg-green-500 ml-[1px] animate-blink align-middle"></span>
+                          <span
+                            className="
+                              inline-flex items-center justify-center ml-1
+                              w-5 h-5 rounded-full bg-green-500 shadow-md align-middle
+                            "
+                          >
+                            <Search className="w-3 h-3 text-white" />
+                          </span>
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-gray-400">Describe la propiedad que buscas</span>
+                      
+                      {/* CURSOR DESPUÉS DEL PLACEHOLDER */}
+                      {activeField === "que" && (
+                        <span className="inline-block w-[2px] h-[16px] bg-gray-700 ml-[1px] animate-blink align-text-bottom"></span>
+                      )}
                     </>
                   )}
                 </div>
@@ -413,7 +426,7 @@ const Hero = () => {
                   text-transparent 
                   ${isRecording ? "caret-green-500" : "caret-transparent"}
                   text-[12px] md:text-sm
-                  leading-[1.15rem]
+                  leading-[1.4rem]
                   placeholder:text-gray-400 placeholder-transparent 
                   border-0 resize-none focus-visible:ring-0 
                   outline-none focus:outline-none focus-visible:outline-none
