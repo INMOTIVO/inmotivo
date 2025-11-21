@@ -24,7 +24,7 @@ const Hero = () => {
   // Estados para el campo "Dónde"
   const [searchWhere, setSearchWhere] = useState("");
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number; address: string } | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number; address: string; isCurrentLocation?: boolean } | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [userLocationName, setUserLocationName] = useState<string>("");
 
@@ -128,9 +128,10 @@ const Hero = () => {
       setSelectedLocation({
         lat: userLocation.lat,
         lng: userLocation.lng,
-        address: "Tu ubicación actual",
+        address: userLocationName || "Tu ubicación actual",
+        isCurrentLocation: true,
       });
-      setSearchWhere("Tu ubicación actual");
+      setSearchWhere(userLocationName || "Tu ubicación actual");
       setShowLocationSuggestions(false);
     } else {
       navigator.geolocation.getCurrentPosition(
@@ -138,8 +139,8 @@ const Hero = () => {
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
           setUserLocation({ lat, lng });
-          setSelectedLocation({ lat, lng, address: "Tu ubicación actual" });
-          setSearchWhere("Tu ubicación actual");
+          setSelectedLocation({ lat, lng, address: userLocationName || "Tu ubicación actual", isCurrentLocation: true });
+          setSearchWhere(userLocationName || "Tu ubicación actual");
           setShowLocationSuggestions(false);
         },
         () => {
@@ -235,7 +236,7 @@ const Hero = () => {
           listingType: searchData.listingType,
           location: searchData.location,
           semanticFilters: searchData.semanticFilters,
-          isUsingCurrentLocation: selectedLocation?.address === "Tu ubicación actual",
+          isUsingCurrentLocation: selectedLocation?.isCurrentLocation === true,
         },
       });
     } catch (error) {
