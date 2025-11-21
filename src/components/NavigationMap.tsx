@@ -105,9 +105,15 @@ const NavigationMap = ({
   const [routeDuration, setRouteDuration] = useState<string | null>(null);
   const [searchCenter, setSearchCenter] = useState<{ lat: number; lng: number } | null>(null);
   
-  // Cola de velocidades para calcular promedio de 3 minutos
-  const speedHistory = useRef<{ speed: number; timestamp: number }[]>([]);
-  const [avgSpeed3Min, setAvgSpeed3Min] = useState<number>(0);
+  // Estados de navegación (nuevos)
+  const [isDriving, setIsDriving] = useState(false);
+  const [isNavigationMode, setIsNavigationMode] = useState(false);
+  const [hasStartedNavigation, setHasStartedNavigation] = useState(false);
+  const [initialUserLocation, setInitialUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  
+  // Cola de velocidades para calcular promedio de 2 minutos (cambio de 3 a 2)
+  const speedSamples = useRef<{ speed: number; timestamp: number }[]>([]);
+  const [avgSpeed2Min, setAvgSpeed2Min] = useState<number>(0);
   const [showDrivingModal, setShowDrivingModal] = useState(false);
 
   // Memoizar funciones para evitar re-renders
@@ -327,20 +333,20 @@ const NavigationMap = ({
         speed = distance / timeDiff; // km/h
         setCurrentSpeed(speed);
         
-        // Agregar velocidad al historial
-        speedHistory.current.push({ speed, timestamp: now });
+        // Agregar velocidad al historial (cambio a 2 minutos)
+        speedSamples.current.push({ speed, timestamp: now });
         
-        // Filtrar historial: solo últimos 3 minutos
-        const threeMinutesAgo = now - (3 * 60 * 1000);
-        speedHistory.current = speedHistory.current.filter(
-          entry => entry.timestamp >= threeMinutesAgo
+        // Filtrar historial: solo últimos 2 minutos (NO 3)
+        const twoMinutesAgo = now - (2 * 60 * 1000);
+        speedSamples.current = speedSamples.current.filter(
+          entry => entry.timestamp >= twoMinutesAgo
         );
         
-        // Calcular velocidad promedio
-        if (speedHistory.current.length > 0) {
-          const totalSpeed = speedHistory.current.reduce((sum, entry) => sum + entry.speed, 0);
-          const avg = totalSpeed / speedHistory.current.length;
-          setAvgSpeed3Min(avg);
+        // Calcular velocidad promedio de 2 minutos
+        if (speedSamples.current.length > 0) {
+          const totalSpeed = speedSamples.current.reduce((sum, entry) => sum + entry.speed, 0);
+          const avg = totalSpeed / speedSamples.current.length;
+          setAvgSpeed2Min(avg);
         }
         
         // Calcular heading basado en el movimiento real
@@ -394,26 +400,51 @@ const NavigationMap = ({
         }
       }
       
-      // Detectar modo vehículo (>30 km/h promedio en últimos 3 minutos)
-      if (avgSpeed3Min > 30 && !isVehicleMode && isUsingCurrentLocation) {
+      // Detectar conducción automática: velocidad promedio > 10 km/h en 2 minutos
+      if (avgSpeed2Min > 10 && !isDriving && !hasStartedNavigation && isUsingCurrentLocation) {
+        setIsDriving(true);
+        setIsNavigationMode(true);
+        setHasStartedNavigation(true);
         setIsVehicleMode(true);
         travelDistance.current = 0;
         collectedPropertyIds.current.clear();
         setCollectedProperties([]);
+        
         toast.info("Modo conducción activado automáticamente", {
-          description: "Velocidad promedio detectada: " + Math.round(avgSpeed3Min) + " km/h",
+          description: `Velocidad promedio: ${Math.round(avgSpeed2Min)} km/h`,
           duration: 4000
         });
-      } else if (avgSpeed3Min <= 30 && isVehicleMode) {
-        setIsVehicleMode(false);
-        if (collectedProperties.length > 0) {
-          setShowCollectedProperties(true);
-          toast.success(`${collectedProperties.length} propiedades encontradas en tu recorrido`);
+      }
+      // Desactivar si velocidad baja de 10 km/h por más de 2 minutos
+      else if (avgSpeed2Min <= 10 && isDriving && hasStartedNavigation) {
+        const belowThresholdSamples = speedSamples.current.filter(s => s.speed <= 10);
+        const timeBelow = belowThresholdSamples.length > 0 
+          ? (now - belowThresholdSamples[0].timestamp) / 1000 
+          : 0;
+        
+        if (timeBelow >= 120) { // 2 minutos = 120 segundos
+          setIsDriving(false);
+          setIsNavigationMode(false);
+          setIsVehicleMode(false);
+          
+          toast.info("Modo conducción desactivado", {
+            description: "Velocidad reducida detectada",
+            duration: 3000
+          });
+          
+          if (collectedProperties.length > 0) {
+            setShowCollectedProperties(true);
+          }
         }
       }
       
       previousLocation.current = { lat: newLocation.lat, lng: newLocation.lng, time: now };
       setUserLocation(newLocation);
+      
+      // Guardar ubicación inicial solo una vez
+      if (!initialUserLocation && isUsingCurrentLocation) {
+        setInitialUserLocation(newLocation);
+      }
 
       // ===============================
       // 🔥 RADIO DINÁMICO MIENTRAS TE MUEVES
@@ -446,17 +477,10 @@ const NavigationMap = ({
       }
 
       
-    // CONTROL TOTAL DEL MAPA (modo Waze real)
+    // CONTROL DEL MAPA (solo en modo navegación activa)
     if (mapRef.current) {
-
-      // 1. Seguir SIEMPRE la ubicación del usuario (pan + snap)
-      const lastPos = mapRef.current.getCenter();
-      const dist = lastPos
-        ? calculateDistance(lastPos.lat(), lastPos.lng(), newLocation.lat, newLocation.lng)
-        : 0;
-
-      // Si hay un cambio mayor a ~3 metros, mover suavemente
-      if (!isUserPanning) {
+      // Solo recentrar automáticamente si está navegando
+      if (!isUserPanning && isDriving && hasStartedNavigation) {
         const lastPos = mapRef.current.getCenter();
         const dist = lastPos
           ? calculateDistance(lastPos.lat(), lastPos.lng(), newLocation.lat, newLocation.lng)
@@ -469,21 +493,16 @@ const NavigationMap = ({
         }
       }
 
-
-      // 2. Rotar el mapa según heading suavizado
-      if (!isPaused) {
+      // Rotar el mapa y ajustar tilt solo en modo conducción
+      if (isDriving && hasStartedNavigation && !isPaused) {
         mapRef.current.setHeading(smoothHeading.current);
-
-        // Zoom dinámico:
-        // - Si vas rápido → más lejos
-        // - Si vas lento → más cerca
+        
         if (currentSpeed > 35) mapRef.current.setTilt(60);
         else if (currentSpeed > 15) mapRef.current.setTilt(50);
         else mapRef.current.setTilt(40);
-      }
-
-      // 3. Si está pausado → volver al modo normal
-      if (isPaused) {
+      } 
+      // Modo pasivo: mapa plano sin rotación
+      else {
         mapRef.current.setHeading(0);
         mapRef.current.setTilt(0);
       }
@@ -507,7 +526,24 @@ const NavigationMap = ({
     return () => {
       if (watchId) navigator.geolocation.clearWatch(watchId);
     };
-  }, [isPaused, isVehicleMode, collectedProperties.length, heading]);
+  }, [isPaused, isDriving, hasStartedNavigation, collectedProperties.length, heading]);
+  
+  // Función para iniciar conducción manual
+  const handleStartDriving = () => {
+    setIsDriving(true);
+    setIsNavigationMode(true);
+    setHasStartedNavigation(true);
+    setIsVehicleMode(true);
+    setShowDrivingModal(false);
+    travelDistance.current = 0;
+    collectedPropertyIds.current.clear();
+    setCollectedProperties([]);
+    
+    toast.success("Navegación iniciada", {
+      description: "Las propiedades cercanas se guardarán automáticamente",
+      duration: 3000
+    });
+  };
   
   const updateDynamicRadius = async (newLocation: { lat: number; lng: number }) => {
     try {
@@ -710,14 +746,14 @@ const NavigationMap = ({
     }}
 
     onDragEnd={() => {
-      // En modo conducción: esperar 2 segundos y volver a centrar
-      // En modo normal: mantener donde el usuario lo dejó
-      if (isVehicleMode && isUsingCurrentLocation) {
+      // En modo conducción: recenter después de 2 segundos
+      if (isDriving && hasStartedNavigation && isUsingCurrentLocation) {
         userPanTimeout.current = setTimeout(() => {
-          setIsUserPanning(false); // volver a centrar
-        }, 2000); // Cambio de 6000 a 2000
-      } else {
-        // En modo manual, actualizar centro inmediatamente
+          setIsUserPanning(false);
+        }, 2000);
+      } 
+      // En modo pasivo o manual: permitir arrastre libre
+      else {
         setIsUserPanning(false);
       }
     }}
@@ -796,136 +832,109 @@ const NavigationMap = ({
                 position: "relative",
               }}
             >
-              {/* Pulse rings */}
-              <div
-                style={{
-                  position: "absolute",
-                  width: "60px",
-                  height: "60px",
-                  top: "-10px",
-                  borderRadius: "50%",
-                  background: "rgba(34, 197, 94, 0.3)",
-                  animation:
-                    "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
-                }}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  width: "50px",
-                  height: "50px",
-                  top: "-5px",
-                  borderRadius: "50%",
-                  background: "rgba(34, 197, 94, 0.4)",
-                  animation:
-                    "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite 0.5s",
-                }}
-              />
+              {/* Pulse rings - solo en modo pasivo */}
+              {!isDriving && (
+                <>
+                  <div
+                    style={{
+                      position: "absolute",
+                      width: "60px",
+                      height: "60px",
+                      top: "-10px",
+                      borderRadius: "50%",
+                      background: "rgba(34, 197, 94, 0.3)",
+                      animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: "absolute",
+                      width: "50px",
+                      height: "50px",
+                      top: "-5px",
+                      borderRadius: "50%",
+                      background: "rgba(34, 197, 94, 0.4)",
+                      animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite 0.5s",
+                    }}
+                  />
+                </>
+              )}
 
-              {/* 🔵 Flecha / Pin según modo */}
-              {directions ? (
-                transportMode === "walking" ? (
-                  // 👣 Huellas caminando
-                  <svg
-                    width="42"
-                    height="42"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    style={{
-                      filter:
-                        "drop-shadow(0 8px 20px rgba(34, 197, 94, 0.7))",
-                      position: "relative",
-                      zIndex: 10,
-                      transform: `rotate(${heading}deg)`,
-                      transition: "transform 0.3s ease-out",
-                    }}
-                  >
-                    <path
-                      d="M12 2L4 20L12 16L20 20L12 2Z"
-                      fill="rgba(0,0,0,0.2)"
-                      transform="translate(0, 1)"
-                    />
-                    <path
-                      d="M12 2L4 20L12 16L20 20L12 2Z"
-                      fill="url(#arrowGradient)"
-                      stroke="white"
-                      strokeWidth="2"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                ) : (
-                  // 🚗 Flecha en modo carro
-                  <svg
-                    width="42"
-                    height="42"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    style={{
-                      filter:
-                        "drop-shadow(0 8px 20px rgba(34, 197, 94, 0.7))",
-                      position: "relative",
-                      zIndex: 10,
-                      transform: `rotate(${heading}deg)`,
-                      transition: "transform 0.3s ease-out",
-                    }}
-                  >
-                    <path
-                      d="M12 2L4 20L12 16L20 20L12 2Z"
-                      fill="rgba(0,0,0,0.2)"
-                      transform="translate(0, 1)"
-                    />
-                    <path
-                      d="M12 2L4 20L12 16L20 20L12 2Z"
-                      fill="url(#arrowGradient)"
-                      stroke="white"
-                      strokeWidth="2"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                )
-              ) : (
-                // 📍 Pin cuando NO hay navegación
+              {/* ========================================= */}
+              {/* ICONO DINÁMICO: PASIVO vs ACTIVO         */}
+              {/* ========================================= */}
+              
+              {!isDriving && !hasStartedNavigation ? (
+                // 🟢 ICONO PASIVO: Círculo verde con punto morado
                 <svg
                   width="48"
                   height="48"
+                  viewBox="0 0 48 48"
+                  fill="none"
+                  style={{
+                    filter: "drop-shadow(0 4px 12px rgba(0, 197, 109, 0.4))",
+                    position: "relative",
+                    zIndex: 10,
+                    transition: "all 0.3s ease",
+                  }}
+                >
+                  {/* Círculo exterior verde */}
+                  <circle
+                    cx="24"
+                    cy="24"
+                    r="18"
+                    fill="#00C56D"
+                    stroke="white"
+                    strokeWidth="3"
+                  />
+                  {/* Punto interior morado */}
+                  <circle
+                    cx="24"
+                    cy="24"
+                    r="6"
+                    fill="#8b5cf6"
+                    style={{
+                      animation: "pulse 2s ease-in-out infinite"
+                    }}
+                  />
+                </svg>
+              ) : (
+                // 🔵 ICONO ACTIVO: Flecha de navegación
+                <svg
+                  width="42"
+                  height="42"
                   viewBox="0 0 24 24"
                   fill="none"
                   style={{
-                    filter:
-                      "drop-shadow(0 8px 16px rgba(34, 197, 94, 0.6))",
+                    filter: "drop-shadow(0 8px 20px rgba(34, 197, 94, 0.7))",
                     position: "relative",
                     zIndex: 10,
+                    transform: `rotate(${heading}deg)`,
+                    transition: "transform 0.3s ease-out",
                   }}
                 >
-                  <circle
-                    cx="12"
-                    cy="10"
-                    r="7"
-                    fill="url(#glow)"
-                    opacity="0.4"
-                  />
+                  {/* Sombra */}
                   <path
-                    d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"
-                    fill="url(#gradient)"
-                    stroke="white"
-                    strokeWidth="1.5"
+                    d="M12 2L4 20L12 16L20 20L12 2Z"
+                    fill="rgba(0,0,0,0.2)"
+                    transform="translate(0, 1)"
                   />
+                  {/* Flecha principal */}
+                  <path
+                    d="M12 2L4 20L12 16L20 20L12 2Z"
+                    fill="url(#arrowGradient)"
+                    stroke="white"
+                    strokeWidth="2"
+                    strokeLinejoin="round"
+                  />
+                  <defs>
+                    <linearGradient id="arrowGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#22c55e" />
+                      <stop offset="100%" stopColor="#16a34a" />
+                    </linearGradient>
+                  </defs>
                 </svg>
               )}
-
-              {/* Punto centro */}
-              <div
-                style={{
-                  width: "16px",
-                  height: "16px",
-                  background:
-                    "linear-gradient(135deg, #8b5cf6, #a78bfa)",
-                  borderRadius: "50%",
-                  border: "3px solid white",
-                  boxShadow: "0 0 20px rgba(139, 92, 246, 0.6)",
-                  animation: "pulse 2s ease-in-out infinite",
-                }}
-              />
             </div>
 
             <style>{`
@@ -937,8 +946,8 @@ const NavigationMap = ({
           </div>
         </OverlayView>
 
-        {/* Circulo del radio */}
-        {!isDirectNavigation && isUsingCurrentLocation && (
+        {/* Circulo del radio - Solo en modo navegación activa */}
+        {!isDirectNavigation && isUsingCurrentLocation && hasStartedNavigation && (
           <Circle
             center={userLocation}
             radius={searchRadius}
@@ -1301,8 +1310,8 @@ const NavigationMap = ({
                 </button>
               </div>
 
-              {/* Info ruta compacta */}
-              {isUsingCurrentLocation && routeDistance && routeDuration && (
+              {/* Info ruta compacta - Solo en modo navegación */}
+              {isUsingCurrentLocation && routeDistance && routeDuration && hasStartedNavigation && !isDirectNavigation && (
                 <div
                   className="
                     px-2.5 py-1
@@ -1322,14 +1331,14 @@ const NavigationMap = ({
                 </div>
               )}
 
-              {/* Botón Iniciar Modo Conducción */}
-              {isUsingCurrentLocation && !isVehicleMode && (
+              {/* Botón Iniciar Modo Conducción - Solo en modo pasivo */}
+              {isUsingCurrentLocation && !hasStartedNavigation && !isDirectNavigation && (
                 <button
                   onClick={() => setShowDrivingModal(true)}
                   className="px-3 py-1.5 rounded-lg text-[12px] text-white font-semibold shadow bg-blue-600 hover:bg-blue-700 flex items-center gap-1"
                 >
                   <Car className="h-3 w-3" />
-                  Conducir
+                  Iniciar conducción
                 </button>
               )}
 
@@ -1346,8 +1355,8 @@ const NavigationMap = ({
             </div>
 
 
-            {/* === RADIO compactado === */}
-            {isUsingCurrentLocation && (
+            {/* === RADIO compactado - Solo en modo navegación === */}
+            {isUsingCurrentLocation && hasStartedNavigation && (
               <div className="bg-white/70 border rounded-lg p-2 shadow-sm">
                 <div className="flex justify-between text-[11px] mb-0.5">
                   <span className="text-gray-600">Radio</span>
@@ -1432,29 +1441,21 @@ const NavigationMap = ({
       <Dialog open={showDrivingModal} onOpenChange={setShowDrivingModal}>
         <DialogContent className="sm:max-w-md z-[10000]">
           <DialogHeader>
-            <DialogTitle className="text-xl">⚠️ ¡Atención!</DialogTitle>
-            <DialogDescription className="text-base pt-2">
-              Entrarás en modo conducción.
-              <br />
-              Las propiedades se guardarán automáticamente mientras manejas.
+            <DialogTitle>Modo Conducción</DialogTitle>
+            <DialogDescription>
+              Entrarás en modo conducción. Las propiedades cercanas se guardarán automáticamente mientras te mueves.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex gap-2 justify-end pt-4">
-            <Button variant="outline" onClick={() => setShowDrivingModal(false)}>
+          <div className="flex gap-3 mt-4">
+            <Button variant="outline" onClick={() => setShowDrivingModal(false)} className="flex-1">
               Cancelar
             </Button>
             <Button 
-              onClick={() => {
-                setIsVehicleMode(true);
-                setShowDrivingModal(false);
-                travelDistance.current = 0;
-                collectedPropertyIds.current.clear();
-                setCollectedProperties([]);
-                toast.success("Modo conducción activado");
-              }}
-              className="bg-blue-600 hover:bg-blue-700"
+              onClick={handleStartDriving}
+              className="bg-primary flex-1 gap-2"
             >
-              Iniciar
+              <Car className="h-4 w-4" />
+              Iniciar navegación
             </Button>
           </div>
         </DialogContent>
