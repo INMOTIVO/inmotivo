@@ -120,6 +120,9 @@ const MapView: React.FC<MapViewProps> = ({ radius, filters }) => {
         center: userLocation,
         zoom: 13,
         scrollWheelZoom: true,
+        dragging: true,        // Habilitar arrastre explícito
+        touchZoom: true,       // Zoom táctil
+        doubleClickZoom: true, // Zoom con doble clic
       });
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {

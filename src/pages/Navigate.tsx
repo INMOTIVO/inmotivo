@@ -58,6 +58,10 @@ const Navigate = () => {
   // Función para iniciar navegación automática
   const startAutoNavigation = async () => {
     try {
+      // Leer explícitamente si debe usar GPS actual
+      const useCurrentLocationParam = searchParams.get('useCurrentLocation');
+      const shouldUseCurrentLocation = useCurrentLocationParam === 'true';
+      
       // Check if we have starting coordinates from "Dónde" field
       const hasStartingCoords = startLat && startLng;
       
@@ -68,7 +72,12 @@ const Navigate = () => {
         
         if (!isNaN(lat) && !isNaN(lng)) {
           const userLocation: [number, number] = [lat, lng];
-          setIsUsingCurrentLocation(false); // Usuario seleccionó una ubicación manual
+          
+          // CRÍTICO: Solo establecer false si NO es ubicación actual
+          if (!shouldUseCurrentLocation) {
+            setIsUsingCurrentLocation(false);
+          }
+          // Si shouldUseCurrentLocation=true, mantener el valor inicial (true)
           
           // Interpret search to get filters
           const { data, error } = await supabase.functions.invoke('interpret-search', {
