@@ -112,11 +112,26 @@ interface CacheEntry {
 const cache: Map<string, CacheEntry> = new Map();
 const CACHE_DURATION = 30000; // 30 seconds
 
-export const getCachedNearbyProperties = async (params: NearbyParams) => {
-  const cacheKey = `${Math.round(params.lat * 100)},${Math.round(params.lon * 100)},${params.radius}`;
-  const now = Date.now();
+export const getCachedNearbyProperties = async (params: NearbyParams & {
+  neLat?: number;
+  neLng?: number;
+  swLat?: number;
+  swLng?: number;
+}) => {
+  // Generar cache key basado en bounds si existen
+  let cacheKey: string;
   
+  if (params.neLat && params.neLng && params.swLat && params.swLng) {
+    // Clave basada en bounds (redondear para agrupar búsquedas similares)
+    cacheKey = `bounds_${Math.round(params.neLat * 100)},${Math.round(params.neLng * 100)},${Math.round(params.swLat * 100)},${Math.round(params.swLng * 100)}`;
+  } else {
+    // Clave basada en centro + radio (modo legacy)
+    cacheKey = `${Math.round(params.lat * 100)},${Math.round(params.lon * 100)},${params.radius}`;
+  }
+  
+  const now = Date.now();
   const cached = cache.get(cacheKey);
+  
   if (cached && now - cached.timestamp < CACHE_DURATION) {
     console.log('Using cached properties');
     return cached.data;
@@ -125,8 +140,8 @@ export const getCachedNearbyProperties = async (params: NearbyParams) => {
   const data = await fetchNearbyProperties(params);
   cache.set(cacheKey, { data, timestamp: now, key: cacheKey });
   
-  // Clean old cache entries
-  if (cache.size > 10) {
+  // Limpiar cache antiguo (aumentar a 20 entradas)
+  if (cache.size > 20) {
     const entries = Array.from(cache.entries());
     entries.sort((a, b) => a[1].timestamp - b[1].timestamp);
     cache.delete(entries[0][0]);
