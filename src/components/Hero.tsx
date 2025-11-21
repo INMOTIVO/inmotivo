@@ -374,8 +374,9 @@ const Hero = () => {
                   ref={visibleTextRef}
                   className="
                     absolute inset-0 whitespace-pre-wrap break-words
-                    pl-1 pr-10 text-[12px] md:text-sm leading-[1.2rem]
+                    pl-1 pr-10 text-[12px] md:text-sm leading-[1.4rem]
                     pointer-events-none select-none
+                    flex items-center
                   "
                 >
 
@@ -383,12 +384,12 @@ const Hero = () => {
                   <span>{isRecording ? partialText : searchQuery}</span>
 
                   {/* CURSOR CUANDO NO ESTÁ GRABANDO */}
-                  {!isRecording && (
+                  {!isRecording && activeField === "que" && (
                     <span className="inline-block w-[2px] h-[16px] bg-gray-700 ml-[1px] animate-blink align-text-bottom"></span>
                   )}
 
                   {/* CURSOR VERDE + MIC CUANDO ESTÁ GRABANDO */}
-                  {isRecording && (
+                  {isRecording && activeField === "que" && (
                     <>
                       <span className="inline-block w-[2px] h-[18px] bg-green-500 ml-[1px] animate-blink align-middle"></span>
                       <span
@@ -422,6 +423,7 @@ const Hero = () => {
                 value={isRecording ? partialText : searchQuery}
                 onChange={handleSearchInput}
                 onFocus={() => setActiveField("que")}
+                onBlur={() => setActiveField(null)}
               />
 
 
@@ -471,14 +473,25 @@ const Hero = () => {
                 <div
                   className="
                     absolute inset-0 whitespace-pre-wrap break-words
-                    pl-1 pr-10 text-[12px] md:text-sm
+                    pl-1 pr-10 text-[12px] md:text-sm leading-[1.4rem]
                     pointer-events-none select-none
+                    flex items-center
                   "
                 >
                   {searchWhere.trim() ? (
-                    <span>{searchWhere}</span>
+                    <>
+                      <span>{searchWhere}</span>
+                      {activeField === "donde" && (
+                        <span className="inline-block w-[2px] h-[16px] bg-gray-700 ml-[1px] animate-blink align-text-bottom"></span>
+                      )}
+                    </>
                   ) : (
-                    <span className="text-gray-400">¿Dónde lo buscas?</span>
+                    <>
+                      <span className="text-gray-400">¿Dónde lo buscas?</span>
+                      {activeField === "donde" && (
+                        <span className="inline-block w-[2px] h-[16px] bg-gray-700 ml-[1px] animate-blink align-text-bottom"></span>
+                      )}
+                    </>
                   )}
                 </div>
 
@@ -504,6 +517,7 @@ const Hero = () => {
                       searchWhere.trim().length > 0 && predictions.length > 0
                     );
                   }}
+                  onBlur={() => setActiveField(null)}
                 />
 
                 {/* TEXTAREA FALSA (altura dinámica) */}
