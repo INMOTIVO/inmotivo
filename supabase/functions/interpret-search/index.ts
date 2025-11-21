@@ -13,7 +13,7 @@ serve(async (req) => {
   try {
     const { query } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    
+
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY is not configured");
     }
@@ -22,7 +22,7 @@ serve(async (req) => {
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -67,12 +67,12 @@ EJEMPLOS:
 "local comercial laureles" →
   tipo: "local", relatedTypes: ["oficina"], location: "laureles"
 
-IMPORTANTE: Solo marca is_valid: true si es búsqueda inmobiliaria. Si preguntan por restaurantes, productos, etc., marca is_valid: false.`
+IMPORTANTE: Solo marca is_valid: true si es búsqueda inmobiliaria. Si preguntan por restaurantes, productos, etc., marca is_valid: false.`,
           },
           {
             role: "user",
-            content: query
-          }
+            content: query,
+          },
         ],
         tools: [
           {
@@ -85,124 +85,124 @@ IMPORTANTE: Solo marca is_valid: true si es búsqueda inmobiliaria. Si preguntan
                 properties: {
                   is_valid: {
                     type: "boolean",
-                    description: "true si la consulta es sobre búsqueda de propiedades inmobiliarias"
+                    description: "true si la consulta es sobre búsqueda de propiedades inmobiliarias",
                   },
                   tipo: {
                     type: "string",
                     enum: ["apartamento", "casa", "local", "bodega", "oficina", "habitacion", "estudio", null],
-                    description: "Tipo principal de propiedad"
+                    description: "Tipo principal de propiedad",
                   },
                   habitaciones: {
                     type: "number",
-                    description: "Número de habitaciones mencionadas"
+                    description: "Número de habitaciones mencionadas",
                   },
                   relatedTypes: {
                     type: "array",
                     items: { type: "string" },
-                    description: "Tipos similares o relacionados (ej: apartamento → apartaestudio, loft)"
+                    description: "Tipos similares o relacionados (ej: apartamento → apartaestudio, loft)",
                   },
                   flexibleBedrooms: {
                     type: "boolean",
-                    description: "true si acepta ±1 habitación del número mencionado"
+                    description: "true si acepta ±1 habitación del número mencionado",
                   },
                   areaPriority: {
                     type: "boolean",
-                    description: "true si menciona 'amplio', 'grande', 'espacioso'"
+                    description: "true si menciona 'amplio', 'grande', 'espacioso'",
                   },
                   priceIntent: {
                     type: "string",
                     enum: ["low", "medium", "high", null],
-                    description: "Intención de precio: económico=low, promedio=medium, lujoso=high"
+                    description: "Intención de precio: económico=low, promedio=medium, lujoso=high",
                   },
                   nearbyAmbiguity: {
                     type: "boolean",
-                    description: "true si dice 'cerca de' sin ubicación exacta"
+                    description: "true si dice 'cerca de' sin ubicación exacta",
                   },
                   mustInclude: {
                     type: "array",
                     items: { type: "string" },
-                    description: "Palabras clave obligatorias: patio, balcón, parqueadero, etc"
+                    description: "Palabras clave obligatorias: patio, balcón, parqueadero, etc",
                   },
                   location: {
                     type: "string",
-                    description: "Ubicación mencionada (ciudad, barrio, zona)"
+                    description: "Ubicación mencionada (ciudad, barrio, zona)",
                   },
                   minPrice: {
                     type: "number",
-                    description: "Precio mínimo en pesos colombianos"
+                    description: "Precio mínimo en pesos colombianos",
                   },
                   maxPrice: {
                     type: "number",
-                    description: "Precio máximo en pesos colombianos"
+                    description: "Precio máximo en pesos colombianos",
                   },
                   radius: {
                     type: "number",
-                    description: "Radio de búsqueda en kilómetros (por defecto 5)"
-                  }
+                    description: "Radio de búsqueda en kilómetros (por defecto 5)",
+                  },
                 },
                 required: ["is_valid"],
-                additionalProperties: false
-              }
-            }
-          }
+                additionalProperties: false,
+              },
+            },
+          },
         ],
-        tool_choice: { type: "function", function: { name: "extract_semantic_intent" } }
+        tool_choice: { type: "function", function: { name: "extract_semantic_intent" } },
       }),
     });
 
     if (!response.ok) {
       if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Límite de solicitudes excedido. Intenta más tarde." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return new Response(JSON.stringify({ error: "Límite de solicitudes excedido. Intenta más tarde." }), {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
       if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "Fondos insuficientes. Por favor añade créditos." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+        return new Response(JSON.stringify({ error: "Fondos insuficientes. Por favor añade créditos." }), {
+          status: 402,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
       throw new Error("Error en AI gateway");
     }
 
     const data = await response.json();
     const toolCall = data.choices[0]?.message?.tool_calls?.[0];
-    
+
     if (!toolCall) {
       console.error("No tool call found in response:", JSON.stringify(data));
       throw new Error("No se pudieron extraer filtros");
     }
 
     console.log("Tool call arguments:", toolCall.function.arguments);
-    
+
     // El arguments puede venir como string o como objeto
     let result;
     try {
-      if (typeof toolCall.function.arguments === 'string') {
+      if (typeof toolCall.function.arguments === "string") {
         // Limpiar JSONs duplicados - el modelo a veces devuelve múltiples objetos
         let cleanedArgs = toolCall.function.arguments.trim();
-        
+
         // Si contiene múltiples objetos JSON, extraer solo el primero
-        const firstBraceIndex = cleanedArgs.indexOf('{');
+        const firstBraceIndex = cleanedArgs.indexOf("{");
         if (firstBraceIndex !== -1) {
           let braceCount = 0;
           let endIndex = firstBraceIndex;
-          
+
           for (let i = firstBraceIndex; i < cleanedArgs.length; i++) {
-            if (cleanedArgs[i] === '{') braceCount++;
-            if (cleanedArgs[i] === '}') braceCount--;
-            
+            if (cleanedArgs[i] === "{") braceCount++;
+            if (cleanedArgs[i] === "}") braceCount--;
+
             if (braceCount === 0) {
               endIndex = i + 1;
               break;
             }
           }
-          
+
           cleanedArgs = cleanedArgs.substring(firstBraceIndex, endIndex);
           console.log("Cleaned arguments:", cleanedArgs);
         }
-        
+
         result = JSON.parse(cleanedArgs);
       } else {
         result = toolCall.function.arguments;
@@ -212,16 +212,16 @@ IMPORTANTE: Solo marca is_valid: true si es búsqueda inmobiliaria. Si preguntan
       console.error("Raw arguments:", toolCall.function.arguments);
       throw new Error("Error al procesar la respuesta de IA");
     }
-    
+
     // Validar si es búsqueda válida
     if (result.is_valid === false) {
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
           error: "invalid_query",
           message: "Lo siento, soy un buscador especializado en propiedades inmobiliarias.",
-          suggestion: "Ejemplo: Apartamento de 2 habitaciones cerca del metro, máximo 2.5 millones"
+          suggestion: "Ejemplo: Apartamento de 2 habitaciones cerca del metro, máximo 2.5 millones",
         }),
-        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
@@ -237,19 +237,24 @@ IMPORTANTE: Solo marca is_valid: true si es búsqueda inmobiliaria. Si preguntan
           console.error("❌ GOOGLE_MAPS_API_KEY no configurado - no se puede geocodificar");
           console.log("Secreto debe estar configurado en Supabase Project Settings → Edge Functions → Secrets");
         } else {
-          const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(filters.location + ', Colombia')}&key=${GOOGLE_MAPS_API_KEY}`;
-          
+          const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(filters.location + ", Colombia")}&key=${GOOGLE_MAPS_API_KEY}`;
+
           const geoResponse = await fetch(geocodeUrl);
           const geoData = await geoResponse.json();
-          
-          if (geoData.status === 'OK' && geoData.results?.[0]) {
+
+          if (geoData.status === "OK" && geoData.results?.[0]) {
             const location = geoData.results[0].geometry.location;
             filters.searchLat = location.lat;
             filters.searchLng = location.lng;
-            filters.radius = filters.radius || 12; // Default 12 km
-            console.log(`✅ Geocoded "${filters.location}" → lat: ${location.lat}, lng: ${location.lng}, radius: ${filters.radius} km`);
+            filters.radius = filters.radius || 10; // Default 10 km
+            console.log(
+              `✅ Geocoded "${filters.location}" → lat: ${location.lat}, lng: ${location.lng}, radius: ${filters.radius} km`,
+            );
           } else {
-            console.error(`❌ Geocodificación falló para "${filters.location}" - Status: ${geoData.status}`, geoData.error_message || '');
+            console.error(
+              `❌ Geocodificación falló para "${filters.location}" - Status: ${geoData.status}`,
+              geoData.error_message || "",
+            );
           }
         }
       } catch (geoError) {
@@ -260,15 +265,14 @@ IMPORTANTE: Solo marca is_valid: true si es búsqueda inmobiliaria. Si preguntan
       console.log("ℹ️ No se detectó ubicación en el query - se usará ubicación del campo 'Dónde' si está presente");
     }
 
-    return new Response(
-      JSON.stringify({ filters }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ filters }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (error) {
     console.error("Error:", error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Error desconocido" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Error desconocido" }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });
