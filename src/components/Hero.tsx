@@ -432,7 +432,7 @@ const Hero = () => {
                   outline-none focus:outline-none focus-visible:outline-none
                   p-0 min-h-[28px] max-h-[80px]
                 `}
-                placeholder={isRecording || searchQuery ? " " : "Describe la propiedad que buscas"}
+                placeholder={isRecording || searchQuery ? " " : }
                 value={isRecording ? partialText : searchQuery}
                 onChange={handleSearchInput}
                 onFocus={() => setActiveField("que")}
