@@ -34,15 +34,14 @@ const dynamicRadiusGrowth = (
   distanceMovedMeters: number,
   currentRadius: number
 ): number => {
-
-  // si no te moviste → no hacer nada
+  // Si no te moviste → no hacer nada
   if (distanceMovedMeters < 5) return currentRadius;
 
-  // escala de crecimiento: 1 metro de movimiento → +2 metros de radio
+  // Escala de crecimiento: 1 metro → +2 metros de radio
   const newRadius = currentRadius + distanceMovedMeters * 2;
 
-  // límite entre 200 y 2000 metros
-  return Math.min(Math.max(newRadius, 200), 2000);
+  // SIN LÍMITES - dejar que crezca naturalmente (solo mínimo de 100m)
+  return Math.max(newRadius, 100);
 };
 
 
@@ -115,11 +114,30 @@ const NavigationMap = ({
   const speedSamples = useRef<{ speed: number; timestamp: number }[]>([]);
   const [avgSpeed2Min, setAvgSpeed2Min] = useState<number>(0);
   const [showDrivingModal, setShowDrivingModal] = useState(false);
+  
+  // Nuevos estados para sistema de recarga dinámica
+  const [mapBounds, setMapBounds] = useState<google.maps.LatLngBounds | null>(null);
+  const [isAtWheel, setIsAtWheel] = useState(false); // ¿Estás conduciendo?
+  const [showWheelModal, setShowWheelModal] = useState(false);
+  const lastFetchPosition = useRef<{ lat: number; lng: number } | null>(null);
 
   // Memoizar funciones para evitar re-renders
   const handlePropertyClick = useCallback((propertyId: string) => {
     navigate(`/property/${propertyId}`);
   }, [navigate]);
+  
+  // Función para calcular distancia entre dos puntos (Haversine)
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // Radio de la Tierra en km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
 
   // Función para obtener el icono según el tipo de propiedad
   const getPropertyIconSVG = (propertyType: string) => {
@@ -184,9 +202,21 @@ const NavigationMap = ({
     return icons[propertyType?.toLowerCase()] || icons['default'];
   };
 
-  // Convertir zoom a radio de búsqueda
+  // Calcular radio dinámico del viewport
+  const calculateViewportRadius = useCallback((
+    ne: google.maps.LatLng, 
+    sw: google.maps.LatLng
+  ): number => {
+    const width = calculateDistance(ne.lat(), sw.lng(), ne.lat(), ne.lng());
+    const height = calculateDistance(ne.lat(), ne.lng(), sw.lat(), ne.lng());
+    const diagonal = Math.sqrt(width * width + height * height);
+    const radiusKm = (diagonal / 2) * 1.2;
+    const radiusMeters = radiusKm * 1000;
+    return Math.round(radiusMeters);
+  }, []);
+  
+  // Convertir zoom a radio de búsqueda (legacy)
   const zoomToRadius = (zoom: number): number => {
-    // Zoom 19+ = 100m, Zoom 18 = 200m, Zoom 17 = 300m, Zoom 16 = 500m, Zoom 15 = 750m, Zoom 14- = 1000m
     if (zoom >= 19) return 100;
     if (zoom >= 18) return 200;
     if (zoom >= 17) return 300;
@@ -194,6 +224,7 @@ const NavigationMap = ({
     if (zoom >= 15) return 750;
     return 1000;
   };
+  
   useEffect(() => {
     if (userLocation && !searchCenter) {
       setSearchCenter(userLocation);
@@ -208,16 +239,6 @@ const NavigationMap = ({
     }
     isManualRadiusChange.current = false;
   }, [mapZoom]);
-
-  // Manejar cambios en el zoom del mapa
-  const handleZoomChanged = () => {
-    if (mapRef.current) {
-      const zoom = mapRef.current.getZoom();
-      if (zoom !== undefined) {
-        setMapZoom(zoom);
-      }
-    }
-  };
   const [isUserPanning, setIsUserPanning] = useState(false);
   const userPanTimeout = useRef<any>(null);
 
@@ -229,9 +250,16 @@ const NavigationMap = ({
     // Ajustar zoom del mapa según el radio manual
     if (mapRef.current) {
       let targetZoom = 17;
-      if (value <= 100) targetZoom = 19;else if (value <= 200) targetZoom = 18;else if (value <= 300) targetZoom = 17;else if (value <= 500) targetZoom = 16;else if (value <= 750) targetZoom = 15;else targetZoom = 14;
+      if (value <= 100) targetZoom = 19;
+      else if (value <= 200) targetZoom = 18;
+      else if (value <= 300) targetZoom = 17;
+      else if (value <= 500) targetZoom = 16;
+      else if (value <= 750) targetZoom = 15;
+      else targetZoom = 14;
       mapRef.current.setZoom(targetZoom);
     }
+    
+    loadPropertiesInViewport(); // ⬅️ Recargar con nuevo radio
   };
   const formatPrice = (price: number) => {
     if (!price) return "";
@@ -245,26 +273,40 @@ const NavigationMap = ({
     return `$${(price / 1_000_000).toFixed(1)}M`;
   };
 
-  // Fetch properties using new API - Optimizado con mejor caché
-  // Skip property fetching when in direct navigation mode
+  // Fetch properties using new API - Sistema de recarga dinámica
   const {
     data: propertiesGeoJSON,
     refetch: refetchProperties
   } = useQuery({
-    queryKey: ['navigation-properties', searchCenter, searchRadius, filters],
+    queryKey: ['navigation-properties', mapBounds, searchRadius, filters],
     queryFn: async () => {
       if (!searchCenter || isDirectNavigation) return null;
 
       try {
-        const geojson = await getCachedNearbyProperties({
+        let params: any = {
           lat: searchCenter.lat,
           lon: searchCenter.lng,
           radius: searchRadius,
           priceMax: filters.maxPrice,
           type: filters.propertyType || 'all',
           listingType: filters.listingType || 'rent'
-        });
-
+        };
+        
+        // Si hay bounds, enviarlos al edge function
+        if (mapBounds) {
+          const ne = mapBounds.getNorthEast();
+          const sw = mapBounds.getSouthWest();
+          
+          params = {
+            ...params,
+            neLat: ne.lat(),
+            neLng: ne.lng(),
+            swLat: sw.lat(),
+            swLng: sw.lng()
+          };
+        }
+        
+        const geojson = await getCachedNearbyProperties(params);
         return geojson;
       } catch (error) {
         console.error('Error fetching nearby properties:', error);
@@ -273,15 +315,51 @@ const NavigationMap = ({
     },
     enabled: !!searchCenter && !isPaused && !isDirectNavigation,
     refetchInterval: false,
-    staleTime: isVehicleMode ? 20000 : 60000,
-    gcTime: 600000
+    staleTime: 5000,
+    gcTime: 300000
   });
+  
+  // Función de recarga dinámica (DESPUÉS de refetchProperties)
+  const loadPropertiesInViewport = useCallback(async () => {
+    if (!mapRef.current || isDirectNavigation || isPaused) return;
+    
+    const bounds = mapRef.current.getBounds();
+    if (!bounds) return;
+    
+    const ne = bounds.getNorthEast();
+    const sw = bounds.getSouthWest();
+    const center = bounds.getCenter();
+    
+    const radiusMeters = calculateViewportRadius(ne, sw);
+    
+    console.log('Loading properties in viewport:', {
+      ne: { lat: ne.lat(), lng: ne.lng() },
+      sw: { lat: sw.lat(), lng: sw.lng() },
+      radius: radiusMeters
+    });
+    
+    setSearchCenter({ lat: center.lat(), lng: center.lng() });
+    setMapBounds(bounds);
+    setSearchRadius(radiusMeters);
+    
+    refetchProperties();
+  }, [isDirectNavigation, isPaused, refetchProperties, calculateViewportRadius]);
+  
+  // Manejar cambios en el zoom del mapa
+  const handleZoomChanged = () => {
+    if (mapRef.current) {
+      const zoom = mapRef.current.getZoom();
+      if (zoom !== undefined) {
+        setMapZoom(zoom);
+        loadPropertiesInViewport();
+      }
+    }
+  };
 
 
 
-  // Convert GeoJSON to properties array - Limitado para mejor rendimiento en móvil
+  // Convert GeoJSON to properties array - SIN límite artificial
   const properties = propertiesGeoJSON?.features
-    ?.slice(0, isVehicleMode ? 5 : 10) // Reducir marcadores significativamente en móvil
     ?.map((feature: any) => ({
       id: feature.properties.id,
       title: feature.properties.title,
@@ -386,18 +464,24 @@ const NavigationMap = ({
           lastHeadingUpdate.current = now;
         }
         
-        // Acumular distancia recorrida
-        if (isVehicleMode) {
-          travelDistance.current += distance;
-          
-          // Limitar a 2km de registro
-          if (travelDistance.current > 2) {
-            // Resetear el registro más antiguo
-            collectedPropertyIds.current.clear();
-            setCollectedProperties([]);
-            travelDistance.current = 0;
-          }
+      // Acumular distancia recorrida
+      if (isVehicleMode) {
+        travelDistance.current += distance;
+        
+        // Si se movió más de 60 metros, recargar propiedades
+        const movedMeters = distance * 1000;
+        if (movedMeters > 60) {
+          loadPropertiesInViewport();
+          lastFetchPosition.current = newLocation;
         }
+        
+        // Limitar a 2km de registro
+        if (travelDistance.current > 2) {
+          collectedPropertyIds.current.clear();
+          setCollectedProperties([]);
+          travelDistance.current = 0;
+        }
+      }
       }
       
       // Detectar conducción automática: velocidad promedio > 10 km/h en 2 minutos
@@ -582,19 +666,6 @@ const NavigationMap = ({
     }
   };
 
-  // Función para calcular distancia entre dos puntos (Haversine)
-  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
-    const R = 6371; // Radio de la Tierra en km
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = 
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  };
-
   // Calculate directions - Optimizado para actualizar menos frecuentemente
   useEffect(() => {
     if (!userLocation || !isLoaded || isPaused) return;
@@ -695,6 +766,7 @@ const NavigationMap = ({
     } else {
       // Reanudar: zoom in a 100 metros
       handleManualRadiusChange(100);
+      loadPropertiesInViewport(); // ⬅️ Recargar al reanudar
       toast.success("Navegación reanudada");
     }
   };
@@ -746,6 +818,8 @@ const NavigationMap = ({
     }}
 
     onDragEnd={() => {
+      loadPropertiesInViewport(); // ⬅️ Recargar inmediatamente
+      
       // En modo conducción: recenter después de 2 segundos
       if (isDriving && hasStartedNavigation && isUsingCurrentLocation) {
         userPanTimeout.current = setTimeout(() => {
@@ -1335,7 +1409,7 @@ const NavigationMap = ({
               {/* Botón Iniciar Modo Conducción - Solo en modo pasivo */}
               {isUsingCurrentLocation && !hasStartedNavigation && !isDirectNavigation && (
                 <button
-                  onClick={() => setShowDrivingModal(true)}
+                  onClick={() => setShowWheelModal(true)}
                   className="px-3 py-1.5 rounded-lg text-[12px] text-white font-semibold shadow bg-blue-600 hover:bg-blue-700 flex items-center gap-1"
                 >
                   <Car className="h-3 w-3" />
@@ -1438,32 +1512,51 @@ const NavigationMap = ({
         </DialogContent>
       </Dialog>
 
-      {/* Modal confirmación modo conducción */}
-      <Dialog open={showDrivingModal} onOpenChange={setShowDrivingModal}>
-        <DialogContent className="sm:max-w-md z-[10000]">
+      {/* Modal "¿Estás al volante?" */}
+      <Dialog open={showWheelModal} onOpenChange={setShowWheelModal}>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Modo Conducción</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <Car className="h-5 w-5 text-primary" />
+              ¿Estás al volante?
+            </DialogTitle>
             <DialogDescription>
-              Entrarás en modo conducción. Las propiedades cercanas se guardarán automáticamente mientras te mueves.
+              Si estás conduciendo, bloquearemos la pantalla por seguridad. Las propiedades se guardarán automáticamente.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex gap-3 mt-4">
-            <Button variant="outline" onClick={() => setShowDrivingModal(false)} className="flex-1">
-              Cancelar
-            </Button>
-            <Button 
-              onClick={handleStartDriving}
-              className="bg-primary flex-1 gap-2"
+          
+          <div className="flex flex-col gap-3 mt-4">
+            <Button
+              onClick={() => {
+                setIsAtWheel(true);
+                setShowWheelModal(false);
+                handleStartDriving();
+                toast.info("Modo conducción con pantalla bloqueada activado");
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white gap-2"
             >
               <Car className="h-4 w-4" />
-              Iniciar navegación
+              Sí, estoy conduciendo
+            </Button>
+            
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsAtWheel(false);
+                setShowWheelModal(false);
+                handleStartDriving();
+                toast.success("Modo copiloto activado - pantalla disponible");
+              }}
+              className="gap-2"
+            >
+              No, soy copiloto/pasajero
             </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Overlay de modo conducción con pantalla bloqueada */}
-      {isVehicleMode && isUsingCurrentLocation && (
+      {/* Overlay de modo conducción - SOLO si está al volante */}
+      {isVehicleMode && isUsingCurrentLocation && isAtWheel && (
         <DrivingModeOverlay 
           speed={currentSpeed}
           propertiesCount={collectedProperties.length}

@@ -19,10 +19,19 @@ serve(async (req) => {
     const priceMax = parseFloat(url.searchParams.get("priceMax") || "0");
     const type = url.searchParams.get("type") || "all";
     const listingType = url.searchParams.get("listingType") || "rent";
+    
+    // Nuevos parámetros para búsqueda por bounds
+    const neLat = parseFloat(url.searchParams.get("neLat") || "");
+    const neLng = parseFloat(url.searchParams.get("neLng") || "");
+    const swLat = parseFloat(url.searchParams.get("swLat") || "");
+    const swLng = parseFloat(url.searchParams.get("swLng") || "");
+    
+    const hasBounds = !isNaN(neLat) && !isNaN(neLng) && !isNaN(swLat) && !isNaN(swLng);
 
-    if (isNaN(lat) || isNaN(lon)) {
+    // Validación: necesitamos bounds O centro+radio
+    if (!hasBounds && (isNaN(lat) || isNaN(lon))) {
       return new Response(
-        JSON.stringify({ error: "lat and lon are required" }),
+        JSON.stringify({ error: "Either bounds (neLat, neLng, swLat, swLng) or center (lat, lon) is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -56,26 +65,54 @@ serve(async (req) => {
       throw error;
     }
 
-    // Calculate distance and filter by radius
-    const radiusKm = radius / 1000;
-    const filteredProperties = (properties || [])
-      .map((property) => {
-        // Use real coordinates if available, otherwise generate fake ones near user
-        const propLat = property.latitude || lat + (Math.random() - 0.5) * 0.01;
-        const propLon = property.longitude || lon + (Math.random() - 0.5) * 0.01;
-        
-        const distance = calculateDistance(lat, lon, propLat, propLon);
-        
-        return {
-          ...property,
-          latitude: propLat,
-          longitude: propLon,
-          distance_km: distance,
-        };
-      })
-      .filter((p) => p.distance_km <= radiusKm)
-      .sort((a, b) => a.distance_km - b.distance_km)
-      .slice(0, 50); // Limit to 50 properties
+    let filteredProperties;
+    
+    if (hasBounds) {
+      // Filtrar por bounding box
+      filteredProperties = (properties || [])
+        .map((property) => {
+          const propLat = property.latitude || lat + (Math.random() - 0.5) * 0.01;
+          const propLon = property.longitude || lon + (Math.random() - 0.5) * 0.01;
+          
+          // Calcular distancia al centro para ordenar
+          const distance = calculateDistance(lat, lon, propLat, propLon);
+          
+          return {
+            ...property,
+            latitude: propLat,
+            longitude: propLon,
+            distance_km: distance,
+          };
+        })
+        .filter((p) => 
+          p.latitude >= swLat && 
+          p.latitude <= neLat &&
+          p.longitude >= swLng && 
+          p.longitude <= neLng
+        )
+        .sort((a, b) => a.distance_km - b.distance_km)
+        .slice(0, 200); // Aumentar límite a 200 propiedades
+    } else {
+      // Filtrar por radio circular (modo legacy)
+      const radiusKm = radius / 1000;
+      filteredProperties = (properties || [])
+        .map((property) => {
+          const propLat = property.latitude || lat + (Math.random() - 0.5) * 0.01;
+          const propLon = property.longitude || lon + (Math.random() - 0.5) * 0.01;
+          
+          const distance = calculateDistance(lat, lon, propLat, propLon);
+          
+          return {
+            ...property,
+            latitude: propLat,
+            longitude: propLon,
+            distance_km: distance,
+          };
+        })
+        .filter((p) => p.distance_km <= radiusKm)
+        .sort((a, b) => a.distance_km - b.distance_km)
+        .slice(0, 200);
+    }
 
     // Convert to GeoJSON
     const geojson = {
