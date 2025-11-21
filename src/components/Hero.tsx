@@ -416,6 +416,9 @@ const Hero = () => {
                       onChange={handleSearchInput}
                       onFocus={() => setActiveField("que")}
                       onBlur={() => setActiveField(null)}
+                      spellCheck={true}
+                      lang="es"
+                      autoCorrect="on"
                     />
                   </div>
                 </div>
@@ -496,6 +499,9 @@ const Hero = () => {
                         setShowLocationSuggestions(searchWhere.trim().length > 0 && predictions.length > 0);
                       }}
                       onBlur={() => setActiveField(null)}
+                      spellCheck={true}
+                      lang="es"
+                      autoCorrect="on"
                     />
 
                     {/* TEXTAREA FALSA (altura dinámica) */}
