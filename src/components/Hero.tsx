@@ -125,21 +125,40 @@ const Hero = () => {
 
   const handleUseCurrentLocation = () => {
     if (userLocation) {
+      const displayName = userLocationName || "Tu ubicación actual";
       setSelectedLocation({
         lat: userLocation.lat,
         lng: userLocation.lng,
-        address: "Tu ubicación actual",
+        address: displayName,
       });
-      setSearchWhere("Tu ubicación actual");
+      setSearchWhere(displayName);
       setShowLocationSuggestions(false);
     } else {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
+        async (position) => {
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
           setUserLocation({ lat, lng });
-          setSelectedLocation({ lat, lng, address: "Tu ubicación actual" });
-          setSearchWhere("Tu ubicación actual");
+          
+          try {
+            const response = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=es`,
+            );
+            const data = await response.json();
+            const address = data.address;
+            const municipalityName = address.city || address.town || address.municipality || "";
+            const sectorName = address.suburb || address.neighbourhood || "";
+            const locationName = sectorName ? `${municipalityName}, ${sectorName}` : municipalityName;
+            
+            setUserLocationName(locationName);
+            setSelectedLocation({ lat, lng, address: locationName });
+            setSearchWhere(locationName);
+          } catch (error) {
+            console.error("Error getting location name:", error);
+            setSelectedLocation({ lat, lng, address: "Tu ubicación actual" });
+            setSearchWhere("Tu ubicación actual");
+          }
+          
           setShowLocationSuggestions(false);
         },
         () => {
