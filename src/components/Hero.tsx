@@ -7,11 +7,12 @@ import { Textarea } from "@/components/ui/textarea";
 import heroImage from "@/assets/hero-medellin.jpg";
 import { toast } from "sonner";
 import { useInterpretSearch } from "@/hooks/useInterpretSearch";
-import VoiceButton from "./VoiceButton";
+import VoiceButton from './VoiceButton';
 import { cn } from "@/lib/utils";
 import { useGooglePlacesAutocomplete } from "@/hooks/useGooglePlacesAutocomplete";
 import { useGoogleMapsLoader } from "@/hooks/useGoogleMapsLoader";
 import { useVoiceRecording } from "@/hooks/useVoiceRecording";
+
 
 const Hero = () => {
   const navigate = useNavigate();
@@ -20,22 +21,30 @@ const Hero = () => {
   const [location, setLocation] = useState("");
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
-
+  
   // Estados para el campo "Dónde"
   const [searchWhere, setSearchWhere] = useState("");
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number; address: string } | null>(null);
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<{lat: number, lng: number, address: string} | null>(null);
+  const [userLocation, setUserLocation] = useState<{lat: number, lng: number} | null>(null);
   const [userLocationName, setUserLocationName] = useState<string>("");
-
+  
+  
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const visibleTextRef = useRef<HTMLDivElement>(null);
 
   const { isLoaded: mapsLoaded } = useGoogleMapsLoader();
   const { predictions, getPredictions } = useGooglePlacesAutocomplete();
   const { interpretSearch, isProcessing: isInterpretingSearch } = useInterpretSearch();
-  const { isRecording, isProcessing, audioLevel, partialText, startRecording, stopRecording, cancelRecording } =
-    useVoiceRecording();
+  const {
+    isRecording,
+    isProcessing,
+    audioLevel,
+    partialText,
+    startRecording,
+    stopRecording,
+    cancelRecording
+  } = useVoiceRecording();
   const [activeField, setActiveField] = useState<"que" | "donde" | null>(null);
   // Marcar "qué estás buscando" como el primer paso visual
   useEffect(() => {
@@ -58,41 +67,39 @@ const Hero = () => {
     }
   };
 
+
   // Detectar ubicación automáticamente
   useEffect(() => {
     if (navigator.geolocation) {
       setLoadingLocation(true);
       const timeoutId = setTimeout(() => setLoadingLocation(false), 7000);
 
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          clearTimeout(timeoutId);
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
-          setUserLocation({ lat, lng });
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        clearTimeout(timeoutId);
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        setUserLocation({ lat, lng });
 
-          try {
-            const response = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=es`,
-            );
-            const data = await response.json();
-            const address = data.address;
-            const municipalityName = address.city || address.town || address.municipality || "";
-            const sectorName = address.suburb || address.neighbourhood || "";
-            const locationName = sectorName ? `${municipalityName}, ${sectorName}` : municipalityName;
-            setLocation(locationName);
-            setUserLocationName(locationName);
-          } catch (error) {
-            console.error("Error getting location:", error);
-          } finally {
-            setLoadingLocation(false);
-          }
-        },
-        () => {
-          clearTimeout(timeoutId);
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=es`
+          );
+          const data = await response.json();
+          const address = data.address;
+          const municipalityName = address.city || address.town || address.municipality || "";
+          const sectorName = address.suburb || address.neighbourhood || "";
+          const locationName = sectorName ? `${municipalityName}, ${sectorName}` : municipalityName;
+          setLocation(locationName);
+          setUserLocationName(locationName);
+        } catch (error) {
+          console.error("Error getting location:", error);
+        } finally {
           setLoadingLocation(false);
-        },
-      );
+        }
+      }, () => {
+        clearTimeout(timeoutId);
+        setLoadingLocation(false);
+      });
     }
   }, []);
 
@@ -100,14 +107,14 @@ const Hero = () => {
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
-      if (!target.closest(".location-suggestions-container")) {
+      if (!target.closest('.location-suggestions-container')) {
         setShowLocationSuggestions(false);
       }
     };
     if (showLocationSuggestions) {
-      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener('mousedown', handleClickOutside);
     }
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showLocationSuggestions]);
 
   // Actualizar sugerencias cuando cambie searchWhere
@@ -131,36 +138,33 @@ const Hero = () => {
       setSelectedLocation({
         lat: userLocation.lat,
         lng: userLocation.lng,
-        address: "Tu ubicación actual",
+        address: "Tu ubicación actual"
       });
       setSearchWhere("Tu ubicación actual");
       setShowLocationSuggestions(false);
     } else {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const lat = position.coords.latitude;
-          const lng = position.coords.longitude;
-          setUserLocation({ lat, lng });
-          setSelectedLocation({ lat, lng, address: "Tu ubicación actual" });
-          setSearchWhere("Tu ubicación actual");
-          setShowLocationSuggestions(false);
-        },
-        () => {
-          toast.error("No se pudo obtener tu ubicación");
-        },
-      );
+      navigator.geolocation.getCurrentPosition((position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        setUserLocation({ lat, lng });
+        setSelectedLocation({ lat, lng, address: "Tu ubicación actual" });
+        setSearchWhere("Tu ubicación actual");
+        setShowLocationSuggestions(false);
+      }, () => {
+        toast.error("No se pudo obtener tu ubicación");
+      });
     }
   };
 
   const handleSelectSuggestion = (suggestion: any) => {
     if (!window.google?.maps) return;
-    const service = new window.google.maps.places.PlacesService(document.createElement("div"));
+    const service = new window.google.maps.places.PlacesService(document.createElement('div'));
     service.getDetails({ placeId: suggestion.place_id }, (place, status) => {
-      if (status === "OK" && place?.geometry?.location) {
+      if (status === 'OK' && place?.geometry?.location) {
         setSelectedLocation({
           lat: place.geometry.location.lat(),
           lng: place.geometry.location.lng(),
-          address: suggestion.description,
+          address: suggestion.description
         });
         setSearchWhere(suggestion.structured_formatting.main_text);
         setShowLocationSuggestions(false);
@@ -171,13 +175,13 @@ const Hero = () => {
   const handleGeocodeAddress = async (address: string) => {
     if (!window.google?.maps) return;
     const geocoder = new window.google.maps.Geocoder();
-    geocoder.geocode({ address, componentRestrictions: { country: "CO" } }, (results, status) => {
-      if (status === "OK" && results?.[0]) {
+    geocoder.geocode({ address, componentRestrictions: { country: 'CO' } }, (results, status) => {
+      if (status === 'OK' && results?.[0]) {
         const location = results[0].geometry.location;
         setSelectedLocation({
           lat: location.lat(),
           lng: location.lng(),
-          address: results[0].formatted_address,
+          address: results[0].formatted_address
         });
       }
     });
@@ -222,7 +226,7 @@ const Hero = () => {
         searchData.location = {
           lat: userLocation.lat,
           lng: userLocation.lng,
-          address: userLocationName || "Tu ubicación",
+          address: userLocationName || 'Tu ubicación',
         };
       }
 
@@ -232,28 +236,30 @@ const Hero = () => {
       }
 
       // 4. Navegar a página de selección de modo con state
-      navigate("/seleccionar-modo", {
+      navigate('/seleccionar-modo', { 
         state: {
           query: searchData.query,
           listingType: searchData.listingType,
           location: searchData.location,
           semanticFilters: searchData.semanticFilters,
-          isUsingCurrentLocation: selectedLocation?.address === "Tu ubicación actual",
-        },
+          isUsingCurrentLocation: selectedLocation?.address === "Tu ubicación actual"
+        }
       });
+
     } catch (error) {
-      console.error("Error en búsqueda:", error);
-      toast.error("Error al procesar la búsqueda");
+      console.error('Error en búsqueda:', error);
+      toast.error('Error al procesar la búsqueda');
     } finally {
       setIsSearching(false);
     }
   };
 
+
   const handleStartRecording = async () => {
     try {
       await startRecording();
     } catch (error: any) {
-      toast.error(error.message || "Error al iniciar grabación");
+      toast.error(error.message || 'Error al iniciar grabación');
     }
   };
 
@@ -263,18 +269,20 @@ const Hero = () => {
       if (transcribedText) {
         setSearchQuery(transcribedText);
         if (textareaRef.current) {
-          textareaRef.current.style.height = "auto";
+          textareaRef.current.style.height = 'auto';
           textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 80)}px`;
         }
       }
     } catch (error: any) {
-      toast.error(error.message || "Error al procesar audio");
+      toast.error(error.message || 'Error al procesar audio');
     }
   };
 
   const handleCancelRecording = () => {
     cancelRecording();
   };
+
+
 
   // ⬇️ AGREGA ESTO AQUÍ (ANTES del return)
   useEffect(() => {
@@ -285,6 +293,7 @@ const Hero = () => {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-visible bg-gradient-to-br from-gray-50 to-gray-100">
+
       {/* Fondo */}
       <div className="absolute inset-0 w-full h-full">
         <img src={heroImage} alt="Medellín cityscape" className="w-full h-full object-cover" />
@@ -294,7 +303,9 @@ const Hero = () => {
       {/* Contenido */}
       <div className="relative z-10 w-full max-w-5xl mx-auto px-4 py-20">
         <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 drop-shadow-lg">Encuentra tu lugar ideal</h1>
+          <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 drop-shadow-lg">
+            Encuentra tu lugar ideal
+          </h1>
           <p className="text-lg md:text-xl text-white/90 drop-shadow-md">
             Busca propiedades en arriendo o venta de forma inteligente
           </p>
@@ -310,7 +321,7 @@ const Hero = () => {
                 "rounded-md px-6 py-2 text-sm font-medium transition-all",
                 listingType === "rent"
                   ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
               Arrendar
@@ -322,7 +333,7 @@ const Hero = () => {
                 "rounded-md px-6 py-2 text-sm font-medium transition-all",
                 listingType === "sale"
                   ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground",
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
               Comprar
@@ -335,71 +346,82 @@ const Hero = () => {
           {/* Gradiente animado del borde - responsive */}
           <div className="absolute -inset-1 bg-gradient-to-r from-primary via-blue-500 to-primary md:rounded-[28px] rounded-2xl blur-sm opacity-75 animate-pulse" />
 
+          
           <div className="relative bg-white md:rounded-[28px] rounded-2xl shadow-2xl p-3 md:p-2 flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-2">
-            {/* Fila 1 Mobile: Qué + Micrófono */}
-            <div className="md:flex-1 md:border-r border-gray-200">
-              {/* Sección QUÉ */}
-              <div
-                className={cn(
-                  "flex-1 relative px-3 py-2 overflow-visible transition-all " +
-                    "rounded-t-2xl rounded-l-2xl md:rounded-l-[28px] md:rounded-r-none",
-                  activeField === "que" && "bg-gray-100/70 shadow-inner ring-1 ring-gray-300",
-                )}
-              >
-                <div className="flex flex-col justify-center w-full">
-                  <label className="text-xs font-semibold text-gray-700 mb-1">¿Qué estás buscando?</label>
 
-                  {/* --- INPUT AVANZADO --- */}
-                  <div className="relative w-full min-h-[28px]">
-                    {/* Capa visible (texto + cursor + mic) */}
-                    <div
-                      ref={visibleTextRef}
-                      className="
+          {/* Fila 1 Mobile: Qué + Micrófono */}
+          <div className="md:flex-1 md:border-r border-gray-200">
+            {/* Sección QUÉ */}
+            <div
+              className={cn(
+                "flex-1 relative px-3 py-2 overflow-visible transition-all " +
+               "rounded-t-2xl rounded-l-2xl md:rounded-l-[28px] md:rounded-r-none",
+                activeField === "que" && "bg-gray-100/70 shadow-inner ring-1 ring-gray-300"
+              )}
+            >
+
+
+
+              <div className="flex flex-col justify-center w-full">
+                <label className="text-xs font-semibold text-gray-700 mb-1">¿Qué estás buscando?</label>
+
+
+            {/* --- INPUT AVANZADO --- */}
+            <div className="relative w-full min-h-[28px]">
+
+                {/* Capa visible (texto + cursor + mic) */}
+                <div
+                  ref={visibleTextRef}
+                  className="
                     absolute inset-0 whitespace-pre-wrap break-words
                     pl-1 pr-10 text-[12px] md:text-sm leading-[1.4rem]
                     pointer-events-none select-none
                     flex items-center
                   "
-                    >
-                      {/* TEXTO VISIBLE O PLACEHOLDER */}
-                      {searchQuery.trim() || isRecording ? (
+                >
+
+                  {/* TEXTO VISIBLE O PLACEHOLDER */}
+                  {searchQuery.trim() || isRecording ? (
+                    <>
+                      <span>{isRecording ? partialText : searchQuery}</span>
+                      
+                      {/* CURSOR CUANDO NO ESTÁ GRABANDO */}
+                      {!isRecording && activeField === "que" && (
+                        <span className="inline-block w-[2px] h-[16px] bg-gray-700 ml-[1px] animate-blink align-text-bottom"></span>
+                      )}
+
+                      {/* CURSOR VERDE + MIC CUANDO ESTÁ GRABANDO */}
+                      {isRecording && activeField === "que" && (
                         <>
-                          <span>{isRecording ? partialText : searchQuery}</span>
-
-                          {/* CURSOR CUANDO NO ESTÁ GRABANDO */}
-                          {!isRecording && activeField === "que" && (
-                            <span className="inline-block w-[2px] h-[16px] bg-gray-700 ml-[1px] animate-blink align-text-bottom"></span>
-                          )}
-
-                          {/* CURSOR VERDE + MIC CUANDO ESTÁ GRABANDO */}
-                          {isRecording && activeField === "que" && (
-                            <>
-                              <span className="inline-block w-[2px] h-[18px] bg-green-500 ml-[1px] animate-blink align-middle"></span>
-                              <span
-                                className="
+                          <span className="inline-block w-[2px] h-[18px] bg-green-500 ml-[1px] animate-blink align-middle"></span>
+                          <span
+                            className="
                               inline-flex items-center justify-center ml-1
                               w-5 h-5 rounded-full bg-green-500 shadow-md align-middle
                             "
-                              >
-                                <Search className="w-3 h-3 text-white" />
-                              </span>
-                            </>
-                          )}
-                        </>
-                      ) : (
-                        <>
-                          {/* CURSOR DESPUÉS DEL PLACEHOLDER */}
-                          {activeField === "que" && (
-                            <span className="inline-block w-[2px] h-[16px] bg-gray-700 ml-[1px] animate-blink align-text-bottom"></span>
-                          )}
+                          >
+                            <Search className="w-3 h-3 text-white" />
+                          </span>
                         </>
                       )}
-                    </div>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-gray-400">Describe la propiedad que buscas</span>
+                      
+                      {/* CURSOR DESPUÉS DEL PLACEHOLDER */}
+                      {activeField === "que" && (
+                        <span className="inline-block w-[2px] h-[16px] bg-gray-700 ml-[1px] animate-blink align-text-bottom"></span>
+                      )}
+                    </>
+                  )}
+                </div>
 
-                    {/* Textarea REAL invisible (recibe input) */}
-                    <textarea
-                      ref={textareaRef}
-                      className={`
+
+              {/* Textarea REAL invisible (recibe input) */}
+              <textarea
+                ref={textareaRef}
+                className={`
                   relative z-10 w-full bg-transparent 
                   text-transparent 
                   ${isRecording ? "caret-green-500" : "caret-transparent"}
@@ -410,37 +432,47 @@ const Hero = () => {
                   outline-none focus:outline-none focus-visible:outline-none
                   p-0 min-h-[28px] max-h-[80px]
                 `}
-                      placeholder={isRecording || searchQuery ? " " : "Describe la propiedad que buscas"}
-                      value={isRecording ? partialText : searchQuery}
-                      onChange={handleSearchInput}
-                      onFocus={() => setActiveField("que")}
-                      onBlur={() => setActiveField(null)}
-                    />
-                  </div>
-                </div>
+                placeholder={isRecording || searchQuery ? " " : "Describe la propiedad que buscas"}
+                value={isRecording ? partialText : searchQuery}
+                onChange={handleSearchInput}
+                onFocus={() => setActiveField("que")}
+                onBlur={() => setActiveField(null)}
+              />
 
-                {/* Botón de micrófono integrado dentro del input */}
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10">
-                  <VoiceButton
-                    style="safari"
-                    isRecording={isRecording}
-                    isProcessing={isProcessing}
-                    audioLevel={audioLevel}
-                    onStart={handleStartRecording}
-                    onStop={handleStopRecording}
-                    onCancel={handleCancelRecording}
-                  />
-                </div>
-              </div>
+
+
+
             </div>
 
-            {/* Fila 2: Dónde */}
+
+
+              </div>
+              
+              {/* Botón de micrófono integrado dentro del input */}
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10">
+                <VoiceButton
+                  style="safari"
+                  isRecording={isRecording}
+                  isProcessing={isProcessing}
+                  audioLevel={audioLevel}
+                  onStart={handleStartRecording}
+                  onStop={handleStopRecording}
+                  onCancel={handleCancelRecording}
+                />
+              </div>
+
+            </div>
+          </div>
+
+
+
+            {/* Fila 2: Dónde */} 
             <div className="relative w-full md:flex-1">
               <div
                 className={cn(
                   "relative px-3 py-2 overflow-visible transition-all rounded-b-2xl rounded-l-2xl",
                   "md:rounded-none md:rounded-r-[28px] md:rounded-l-none",
-                  activeField === "donde" && "bg-gray-100/70 shadow-inner ring-1 ring-gray-300",
+                  activeField === "donde" && "bg-gray-100/70 shadow-inner ring-1 ring-gray-300"
                 )}
               >
                 <div className="flex flex-col justify-center w-full">
@@ -448,133 +480,146 @@ const Hero = () => {
 
                   {/* INPUT AVANZADO IGUAL A 'QUÉ' */}
                   <div className="relative w-full min-h-[28px]">
-                    {/* TEXTO VISIBLE */}
-                    <div
-                      className="
+
+
+                {/* TEXTO VISIBLE */}
+                <div
+                  className="
                     absolute inset-0 whitespace-pre-wrap break-words
                     pl-1 pr-10 text-[12px] md:text-sm leading-[1.4rem]
                     pointer-events-none select-none
                     flex items-center
                   "
-                    >
-                      {searchWhere.trim() ? (
-                        <>
-                          <span>{searchWhere}</span>
-                          {activeField === "donde" && (
-                            <span className="inline-block w-[2px] h-[16px] bg-gray-700 ml-[1px] animate-blink align-text-bottom"></span>
-                          )}
-                        </>
-                      ) : (
-                        <>
-                          <span className="text-gray-400">¿Dónde lo buscas?</span>
-                          {activeField === "donde" && (
-                            <span className="inline-block w-[2px] h-[16px] bg-gray-700 ml-[1px] animate-blink align-text-bottom"></span>
-                          )}
-                        </>
+                >
+                  {searchWhere.trim() ? (
+                    <>
+                      <span>{searchWhere}</span>
+                      {activeField === "donde" && (
+                        <span className="inline-block w-[2px] h-[16px] bg-gray-700 ml-[1px] animate-blink align-text-bottom"></span>
                       )}
-                    </div>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-gray-400">¿Dónde lo buscas?</span>
+                      {activeField === "donde" && (
+                        <span className="inline-block w-[2px] h-[16px] bg-gray-700 ml-[1px] animate-blink align-text-bottom"></span>
+                      )}
+                    </>
+                  )}
+                </div>
 
-                    {/* INPUT REAL (invisible) */}
-                    <input
-                      type="text"
-                      className="
+                {/* INPUT REAL (invisible) */}
+                <input
+                  type="text"
+                  className="
                     absolute inset-0 z-20 w-full h-full opacity-0 cursor-text
                   "
-                      value={searchWhere}
-                      onChange={(e) => {
-                        setSearchWhere(e.target.value);
-                        getPredictions(e.target.value);
-                        setShowLocationSuggestions(e.target.value.trim().length > 0);
-                      }}
-                      onFocus={() => {
-                        if (!searchQuery.trim()) {
-                          toast.error("Primero escribe qué estás buscando");
-                          return;
-                        }
-                        setActiveField("donde");
-                        setShowLocationSuggestions(searchWhere.trim().length > 0 && predictions.length > 0);
-                      }}
-                      onBlur={() => setActiveField(null)}
-                    />
+                  value={searchWhere}
+                  onChange={(e) => {
+                    setSearchWhere(e.target.value);
+                    getPredictions(e.target.value);
+                    setShowLocationSuggestions(e.target.value.trim().length > 0);
+                  }}
+                  onFocus={() => {
+                    if (!searchQuery.trim()) {
+                      toast.error("Primero escribe qué estás buscando");
+                      return;
+                    }
+                    setActiveField("donde");
+                    setShowLocationSuggestions(
+                      searchWhere.trim().length > 0 && predictions.length > 0
+                    );
+                  }}
+                  onBlur={() => setActiveField(null)}
+                />
 
-                    {/* TEXTAREA FALSA (altura dinámica) */}
-                    <textarea
-                      className="
+                {/* TEXTAREA FALSA (altura dinámica) */}
+                <textarea
+                  className="
                     relative z-10 w-full bg-transparent text-transparent
                     text-[12px] md:text-sm
                     border-0 resize-none focus-visible:ring-0 p-0
                     min-h-[28px] max-h-[80px]
                   "
-                      value={searchWhere}
-                      readOnly
-                      ref={(t) => {
-                        if (t) {
-                          t.style.height = "auto";
-                          t.style.height = `${Math.min(t.scrollHeight, 80)}px`;
-                        }
-                      }}
-                    />
+                  value={searchWhere}
+                  readOnly
+                  ref={(t) => {
+                    if (t) {
+                      t.style.height = "auto";
+                      t.style.height = `${Math.min(t.scrollHeight, 80)}px`;
+                    }
+                  }}
+                />
 
-                    {/* DROPDOWN */}
-                    {showLocationSuggestions && predictions.length > 0 && (
-                      <div
-                        className="
+                {/* DROPDOWN */}
+                {showLocationSuggestions && predictions.length > 0 && (
+                  <div
+                    className="
                       absolute left-0 right-0 mt-2 z-[200]
                       bg-white rounded-xl shadow-2xl border border-gray-200
                       max-h-80 overflow-y-auto
                       location-suggestions-container
                     "
+                  >
+                    <div
+                      onClick={handleUseCurrentLocation}
+                      className="flex items-center gap-3 p-3 cursor-pointer border-b bg-green-50 hover:bg-green-100"
+                    >
+                      <MapPin className="h-4 w-4 text-green-600" />
+                      <span className="font-semibold text-green-700">Usar mi ubicación actual</span>
+                    </div>
+
+                    {predictions.map((s) => (
+                      <div
+                        key={s.place_id}
+                        onClick={() => handleSelectSuggestion(s)}
+                        className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer"
                       >
-                        <div
-                          onClick={handleUseCurrentLocation}
-                          className="flex items-center gap-3 p-3 cursor-pointer border-b bg-green-50 hover:bg-green-100"
-                        >
-                          <MapPin className="h-4 w-4 text-green-600" />
-                          <span className="font-semibold text-green-700">Usar mi ubicación actual</span>
-                        </div>
-
-                        {predictions.map((s) => (
-                          <div
-                            key={s.place_id}
-                            onClick={() => handleSelectSuggestion(s)}
-                            className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer"
-                          >
-                            <MapPin className="h-4 w-4 text-gray-400" />
-                            <div className="flex-1 min-w-0">
-                              <div className="font-medium truncate">{s.structured_formatting.main_text}</div>
-                              <div className="text-sm text-gray-500 truncate">
-                                {s.structured_formatting.secondary_text}
-                              </div>
-                            </div>
+                        <MapPin className="h-4 w-4 text-gray-400" />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-medium truncate">{s.structured_formatting.main_text}</div>
+                          <div className="text-sm text-gray-500 truncate">
+                            {s.structured_formatting.secondary_text}
                           </div>
-                        ))}
+                        </div>
                       </div>
-                    )}
-                  </div>
-                </div>
+                    ))}
+                        </div>
+                      )}
+
+
+
+
               </div>
+            </div>
+          </div>
 
-              {/* Botón Buscar */}
-              {/* Botón Buscar — cambia según el dispositivo */}
+          {/* Botón Buscar */}
+          {/* Botón Buscar — cambia según el dispositivo */}
 
-              <button
-                onClick={handleSearch}
-                disabled={!searchQuery.trim() || isInterpretingSearch || isProcessing}
-                className="
+
+          <button
+            onClick={handleSearch}
+            disabled={!searchQuery.trim() || isInterpretingSearch || isProcessing}
+            className="
               hidden md:flex
               absolute right-3 top-1/2 -translate-y-1/2
               w-14 h-14 md:rounded-[28px] bg-primary text-white
               shadow-lg hover:shadow-xl items-center justify-center
               transition z-50
             "
-              >
-                {isInterpretingSearch ? <Loader2 className="h-5 w-5 animate-spin" /> : <Search className="h-5 w-5" />}
-              </button>
+          >
+            {isInterpretingSearch ? (
+              <Loader2 className="h-5 w-5 animate-spin" />
+            ) : (
+              <Search className="h-5 w-5" />
+            )}
+          </button>
 
-              <button
-                onClick={handleSearch}
-                disabled={!searchQuery.trim() || isInterpretingSearch || isProcessing}
-                className="
+          <button
+            onClick={handleSearch}
+            disabled={!searchQuery.trim() || isInterpretingSearch || isProcessing}
+            className="
               md:hidden
               mt-4 w-full py-2.5
               bg-primary text-white font-semibold
@@ -584,34 +629,45 @@ const Hero = () => {
               gap-2 text-sm
               transition-all active:scale-95
             "
-              >
-                {isInterpretingSearch ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <>
-                    <Search className="h-4 w-4" />
-                    Buscar
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
+          >
+            {isInterpretingSearch ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                <Search className="h-4 w-4" />
+                Buscar
+              </>
+            )}
+          </button>
+
+
         </div>
 
-        {/* Tu ubicación actual */}
-        {location && !loadingLocation && (
-          <div className="mt-4 text-center text-white/80 text-sm">
-            Tu ubicación: <span className="font-medium">{location}</span>
-          </div>
-        )}
 
-        {loadingLocation && (
-          <div className="mt-4 text-center text-white/80 text-sm flex items-center justify-center gap-2">
-            <Loader2 className="h-4 w-4 animate-spin" />
-            Detectando ubicación...
-          </div>
-        )}
+
+
+
+
+        </div>
       </div>
+
+      {/* Tu ubicación actual */}
+      {location && !loadingLocation && (
+        <div className="mt-4 text-center text-white/80 text-sm">
+          Tu ubicación: <span className="font-medium">{location}</span>
+        </div>
+      )}
+
+      {loadingLocation && (
+        <div className="mt-4 text-center text-white/80 text-sm flex items-center justify-center gap-2">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Detectando ubicación...
+        </div>
+      )}
+    </div>
+
+
+
     </section>
   );
 };
