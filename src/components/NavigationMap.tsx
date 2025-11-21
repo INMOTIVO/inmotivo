@@ -28,6 +28,7 @@ interface NavigationMapProps {
   onStopNavigation: () => void;
   searchCriteria?: string;
   isDirectNavigation?: boolean; // When true, shows only route to destination
+  isUsingCurrentLocation?: boolean; // When true, user is using GPS location
 }
 const dynamicRadiusGrowth = (
   distanceMovedMeters: number,
@@ -51,7 +52,8 @@ const NavigationMap = ({
   filters,
   onStopNavigation,
   searchCriteria = '',
-  isDirectNavigation = false
+  isDirectNavigation = false,
+  isUsingCurrentLocation = true // Default true para retrocompatibilidad
 }: NavigationMapProps) => {
   // Load Google Maps first (must be before any other hooks)
   const { isLoaded } = useGoogleMapsLoader();
@@ -102,6 +104,11 @@ const NavigationMap = ({
   const [routeDistance, setRouteDistance] = useState<string | null>(null);
   const [routeDuration, setRouteDuration] = useState<string | null>(null);
   const [searchCenter, setSearchCenter] = useState<{ lat: number; lng: number } | null>(null);
+  
+  // Cola de velocidades para calcular promedio de 3 minutos
+  const speedHistory = useRef<{ speed: number; timestamp: number }[]>([]);
+  const [avgSpeed3Min, setAvgSpeed3Min] = useState<number>(0);
+  const [showDrivingModal, setShowDrivingModal] = useState(false);
 
   // Memoizar funciones para evitar re-renders
   const handlePropertyClick = useCallback((propertyId: string) => {
@@ -320,6 +327,22 @@ const NavigationMap = ({
         speed = distance / timeDiff; // km/h
         setCurrentSpeed(speed);
         
+        // Agregar velocidad al historial
+        speedHistory.current.push({ speed, timestamp: now });
+        
+        // Filtrar historial: solo últimos 3 minutos
+        const threeMinutesAgo = now - (3 * 60 * 1000);
+        speedHistory.current = speedHistory.current.filter(
+          entry => entry.timestamp >= threeMinutesAgo
+        );
+        
+        // Calcular velocidad promedio
+        if (speedHistory.current.length > 0) {
+          const totalSpeed = speedHistory.current.reduce((sum, entry) => sum + entry.speed, 0);
+          const avg = totalSpeed / speedHistory.current.length;
+          setAvgSpeed3Min(avg);
+        }
+        
         // Calcular heading basado en el movimiento real
         const dLat = newLocation.lat - previousLocation.current.lat;
         const dLng = newLocation.lng - previousLocation.current.lng;
@@ -371,17 +394,17 @@ const NavigationMap = ({
         }
       }
       
-      // Detectar modo vehículo (>20 km/h)
-      if (speed > 20 && !isVehicleMode) {
+      // Detectar modo vehículo (>30 km/h promedio en últimos 3 minutos)
+      if (avgSpeed3Min > 30 && !isVehicleMode && isUsingCurrentLocation) {
         setIsVehicleMode(true);
         travelDistance.current = 0;
         collectedPropertyIds.current.clear();
         setCollectedProperties([]);
-        toast.info("Modo conducción activado", {
-          description: "Pantalla bloqueada por seguridad. Las propiedades se guardarán automáticamente",
+        toast.info("Modo conducción activado automáticamente", {
+          description: "Velocidad promedio detectada: " + Math.round(avgSpeed3Min) + " km/h",
           duration: 4000
         });
-      } else if (speed <= 20 && isVehicleMode) {
+      } else if (avgSpeed3Min <= 30 && isVehicleMode) {
         setIsVehicleMode(false);
         if (collectedProperties.length > 0) {
           setShowCollectedProperties(true);
@@ -687,10 +710,16 @@ const NavigationMap = ({
     }}
 
     onDragEnd={() => {
-      // Esperar a que el usuario suelte → activar espera
-      userPanTimeout.current = setTimeout(() => {
-        setIsUserPanning(false); // volver a centrar
-      }, 6000);
+      // En modo conducción: esperar 2 segundos y volver a centrar
+      // En modo normal: mantener donde el usuario lo dejó
+      if (isVehicleMode && isUsingCurrentLocation) {
+        userPanTimeout.current = setTimeout(() => {
+          setIsUserPanning(false); // volver a centrar
+        }, 2000); // Cambio de 6000 a 2000
+      } else {
+        // En modo manual, actualizar centro inmediatamente
+        setIsUserPanning(false);
+      }
     }}
 
     zoom={mapZoom}
@@ -710,7 +739,7 @@ const NavigationMap = ({
 
     onZoomChanged={handleZoomChanged}
 
-    // 🔥🔥🔥 ESTA ES LA CLAVE PARA MOSTRAR NUEVAS PROPIEDADES AL ARRASTRAR EL MAPA
+    // 🔥🔥🔥 ACTUALIZAR CENTRO DE BÚSQUEDA AL ARRASTRAR
     onIdle={() => {
       if (isVehicleMode) return; // No actualizar mientras conduces
       if (!mapRef.current) return;
@@ -718,10 +747,14 @@ const NavigationMap = ({
       const c = mapRef.current.getCenter();
       if (!c) return;
 
-      setSearchCenter({
-        lat: c.lat(),
-        lng: c.lng(),
-      });
+      // En modo manual (ubicación seleccionada), SIEMPRE actualizar centro al arrastrar
+      // En modo GPS, solo actualizar si el usuario lo movió manualmente
+      if (!isUsingCurrentLocation || isUserPanning) {
+        setSearchCenter({
+          lat: c.lat(),
+          lng: c.lng(),
+        });
+      }
     }}
 
     options={{
@@ -905,7 +938,7 @@ const NavigationMap = ({
         </OverlayView>
 
         {/* Circulo del radio */}
-        {!isDirectNavigation && (
+        {!isDirectNavigation && isUsingCurrentLocation && (
           <Circle
             center={userLocation}
             radius={searchRadius}
@@ -1269,7 +1302,7 @@ const NavigationMap = ({
               </div>
 
               {/* Info ruta compacta */}
-              {routeDistance && routeDuration && (
+              {isUsingCurrentLocation && routeDistance && routeDuration && (
                 <div
                   className="
                     px-2.5 py-1
@@ -1289,6 +1322,17 @@ const NavigationMap = ({
                 </div>
               )}
 
+              {/* Botón Iniciar Modo Conducción */}
+              {isUsingCurrentLocation && !isVehicleMode && (
+                <button
+                  onClick={() => setShowDrivingModal(true)}
+                  className="px-3 py-1.5 rounded-lg text-[12px] text-white font-semibold shadow bg-blue-600 hover:bg-blue-700 flex items-center gap-1"
+                >
+                  <Car className="h-3 w-3" />
+                  Conducir
+                </button>
+              )}
+
               {/* Botón detener */}
               <button
                 onClick={handleToggleNavigation}
@@ -1303,24 +1347,26 @@ const NavigationMap = ({
 
 
             {/* === RADIO compactado === */}
-            <div className="bg-white/70 border rounded-lg p-2 shadow-sm">
-              <div className="flex justify-between text-[11px] mb-0.5">
-                <span className="text-gray-600">Radio</span>
-                <span className="font-semibold text-gray-900">
-                  {searchRadius >= 1000
-                    ? `${(searchRadius / 1000).toFixed(1)} km`
-                    : `${searchRadius} m`}
-                </span>
-              </div>
+            {isUsingCurrentLocation && (
+              <div className="bg-white/70 border rounded-lg p-2 shadow-sm">
+                <div className="flex justify-between text-[11px] mb-0.5">
+                  <span className="text-gray-600">Radio</span>
+                  <span className="font-semibold text-gray-900">
+                    {searchRadius >= 1000
+                      ? `${(searchRadius / 1000).toFixed(1)} km`
+                      : `${searchRadius} m`}
+                  </span>
+                </div>
 
-              <Slider
-                value={[searchRadius]}
-                min={100}
-                max={2000}
-                step={50}
-                onValueChange={(v) => handleManualRadiusChange(v[0])}
-              />
-            </div>
+                <Slider
+                  value={[searchRadius]}
+                  min={100}
+                  max={2000}
+                  step={50}
+                  onValueChange={(v) => handleManualRadiusChange(v[0])}
+                />
+              </div>
+            )}
 
 
             {/* === BUSCAR === */}
@@ -1382,8 +1428,40 @@ const NavigationMap = ({
         </DialogContent>
       </Dialog>
 
+      {/* Modal confirmación modo conducción */}
+      <Dialog open={showDrivingModal} onOpenChange={setShowDrivingModal}>
+        <DialogContent className="sm:max-w-md z-[10000]">
+          <DialogHeader>
+            <DialogTitle className="text-xl">⚠️ ¡Atención!</DialogTitle>
+            <DialogDescription className="text-base pt-2">
+              Entrarás en modo conducción.
+              <br />
+              Las propiedades se guardarán automáticamente mientras manejas.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-2 justify-end pt-4">
+            <Button variant="outline" onClick={() => setShowDrivingModal(false)}>
+              Cancelar
+            </Button>
+            <Button 
+              onClick={() => {
+                setIsVehicleMode(true);
+                setShowDrivingModal(false);
+                travelDistance.current = 0;
+                collectedPropertyIds.current.clear();
+                setCollectedProperties([]);
+                toast.success("Modo conducción activado");
+              }}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              Iniciar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Overlay de modo conducción con pantalla bloqueada */}
-      {isVehicleMode && (
+      {isVehicleMode && isUsingCurrentLocation && (
         <DrivingModeOverlay 
           speed={currentSpeed}
           propertiesCount={collectedProperties.length}
