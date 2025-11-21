@@ -384,7 +384,7 @@ const Hero = () => {
 
                   {/* CURSOR CUANDO NO ESTÁ GRABANDO */}
                   {!isRecording && (
-                    <span className="inline-block w-[2px] h-[16px] bg-gray-700 ml-[1px] animate-blink"></span>
+                    <span className="inline-block w-[2px] h-[16px] bg-gray-700 ml-[1px] animate-blink align-text-bottom"></span>
                   )}
 
                   {/* CURSOR VERDE + MIC CUANDO ESTÁ GRABANDO */}
