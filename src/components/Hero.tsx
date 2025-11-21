@@ -128,7 +128,7 @@ const Hero = () => {
       setSelectedLocation({
         lat: userLocation.lat,
         lng: userLocation.lng,
-        address: "Tu ubicación actual",
+        address: locationName,
       });
       setSearchWhere("Tu ubicación actual");
       setShowLocationSuggestions(false);
