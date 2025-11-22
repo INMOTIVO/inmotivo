@@ -141,6 +141,33 @@ const NavigationMap = ({
   const [isAtWheel, setIsAtWheel] = useState(false); // ¿Estás conduciendo?
   const [showWheelModal, setShowWheelModal] = useState(false);
   const lastFetchPosition = useRef<{ lat: number; lng: number } | null>(null);
+  
+  // 🔥 PASO 1: Sistema de detección de interacción del usuario
+  const [isUserInteracting, setIsUserInteracting] = useState(false);
+  const interactionTimeout = useRef<any>(null);
+  
+  // 🔥 PASO 8: Refs para evitar re-renders
+  const currentZoomRef = useRef<number>(18);
+  const currentCenterRef = useRef<{ lat: number; lng: number } | null>(null);
+
+  // 🔥 PASO 1: Handlers de interacción del usuario
+  const handleDragStart = useCallback(() => {
+    setIsUserInteracting(true);
+    if (interactionTimeout.current) clearTimeout(interactionTimeout.current);
+  }, []);
+
+  const handleIdle = useCallback(() => {
+    // Esperar 300ms después de que el usuario suelta el mapa
+    interactionTimeout.current = setTimeout(() => {
+      setIsUserInteracting(false);
+    }, 300);
+  }, []);
+
+  const handleBoundsChanged = useCallback(() => {
+    if (!isUserInteracting) {
+      setIsUserInteracting(true);
+    }
+  }, [isUserInteracting]);
 
   // Memoizar funciones para evitar re-renders
   const handlePropertyClick = useCallback((propertyId: string) => {
@@ -393,34 +420,43 @@ const NavigationMap = ({
     refetchProperties();
   }, [isDirectNavigation, isPaused, refetchProperties, calculateViewportRadius]);
   
+  // 🔥 PASO 2: Debounced version para suavizar recarga
+  const debouncedLoadProperties = useMemo(
+    () => debounce(loadPropertiesInViewport, 250),
+    [loadPropertiesInViewport]
+  );
+  
   // Manejar cambios en el zoom del mapa
-  const handleZoomChanged = () => {
+  const handleZoomChanged = useCallback(() => {
     if (mapRef.current) {
       const zoom = mapRef.current.getZoom();
       if (zoom !== undefined) {
+        currentZoomRef.current = zoom; // 🔥 PASO 8: Usar ref
         setMapZoom(zoom);
-        loadPropertiesInViewport();
+        debouncedLoadProperties(); // 🔥 PASO 2: Con debounce
       }
     }
-  };
+  }, [debouncedLoadProperties]);
 
 
 
-  // Convert GeoJSON to properties array - SIN límite artificial
-  const properties = propertiesGeoJSON?.features
-    ?.map((feature: any) => ({
-      id: feature.properties.id,
-      title: feature.properties.title,
-      price: feature.properties.price,
-      bedrooms: feature.properties.bedrooms,
-      bathrooms: feature.properties.bathrooms,
-      area: feature.properties.area,
-      property_type: feature.properties.property_type,
-      images: feature.properties.images,
-      latitude: feature.geometry.coordinates[1],
-      longitude: feature.geometry.coordinates[0],
-      distance_km: feature.properties.distance_km
-    })) || [];
+  // 🔥 PASO 6: Memoizar propiedades para evitar re-renders
+  const properties = useMemo(() => {
+    return propertiesGeoJSON?.features
+      ?.map((feature: any) => ({
+        id: feature.properties.id,
+        title: feature.properties.title,
+        price: feature.properties.price,
+        bedrooms: feature.properties.bedrooms,
+        bathrooms: feature.properties.bathrooms,
+        area: feature.properties.area,
+        property_type: feature.properties.property_type,
+        images: feature.properties.images,
+        latitude: feature.geometry.coordinates[1],
+        longitude: feature.geometry.coordinates[0],
+        distance_km: feature.properties.distance_km
+      })) || [];
+  }, [propertiesGeoJSON]);
 
   // Establecer centro inicial solo una vez
   useEffect(() => {
@@ -532,10 +568,10 @@ const NavigationMap = ({
       if (isVehicleMode) {
         travelDistance.current += distance;
         
-        // Si se movió más de 60 metros, recargar propiedades
+        // Si se movió más de 60 metros Y usuario NO está interactuando, recargar propiedades
         const movedMeters = distance * 1000;
-        if (movedMeters > 60) {
-          loadPropertiesInViewport();
+        if (movedMeters > 60 && !isUserInteracting) {
+          debouncedLoadProperties();
           lastFetchPosition.current = newLocation;
         }
         
@@ -633,23 +669,22 @@ const NavigationMap = ({
         });
       }
 
-      
-    // CONTROL DEL MAPA - Solo en modo navegación activa
+     // CONTROL DEL MAPA - Solo en modo navegación activa
     if (mapRef.current && isUsingCurrentLocation) {
       // Solo recentrar automáticamente si TODAS estas condiciones se cumplen:
       // 1. NO está arrastrando manualmente
       // 2. Está en modo conducción
       // 3. Ha iniciado navegación
       // 4. Está usando ubicación GPS actual (no manual)
-      if (!isUserPanning && isDriving && hasStartedNavigation && isUsingCurrentLocation) {
+      // 5. Usuario NO está interactuando con el mapa (NUEVO)
+      if (!isUserPanning && isDriving && hasStartedNavigation && isUsingCurrentLocation && !isUserInteracting) {
         const lastPos = mapRef.current.getCenter();
         const dist = lastPos
           ? calculateDistance(lastPos.lat(), lastPos.lng(), newLocation.lat, newLocation.lng)
           : 0;
 
+        // Usar setCenter para movimiento instantáneo sin animación
         if (dist > 0.003) {
-          mapRef.current.panTo(newLocation);
-        } else {
           mapRef.current.setCenter(newLocation);
         }
       }
@@ -687,7 +722,7 @@ const NavigationMap = ({
     return () => {
       if (watchId) navigator.geolocation.clearWatch(watchId);
     };
-  }, [isPaused, isDriving, hasStartedNavigation, collectedProperties.length, heading]);
+  }, [isPaused, isDriving, hasStartedNavigation, collectedProperties.length, heading, isUserInteracting, debouncedLoadProperties]);
   
   // Función para iniciar conducción manual
   const handleStartDriving = () => {
@@ -874,16 +909,40 @@ const NavigationMap = ({
     );
   }
   
-  return <div className="relative w-full h-full">
+    
+    // 🔥 PASO 3: Memoizar center y options para evitar re-renders
+    const memoizedCenter = useMemo(() => {
+      return initialCenter || { lat: 6.2476, lng: -75.5658 };
+    }, [initialCenter]);
+    
+    const mapOptions = useMemo(() => ({
+      mapTypeId:
+        mapType === "satellite"
+          ? google.maps.MapTypeId.HYBRID
+          : google.maps.MapTypeId.ROADMAP,
+      zoomControl: false,
+      streetViewControl: false,
+      mapTypeControl: false,
+      fullscreenControl: false,
+      rotateControl: false,
+      gestureHandling: "greedy",
+      draggable: true,
+      disableDefaultUI: true,
+      clickableIcons: false,
+      keyboardShortcuts: false,
+      heading: heading,
+      tilt: isVehicleMode && hasStartedNavigation ? 60 : 0
+    }), [mapType, heading, isVehicleMode, hasStartedNavigation]);
+    
+    return <div className="relative w-full h-full">
   <GoogleMap
     mapContainerStyle={{
       width: "100%",
       height: "100%",
     }}
-
-  center={initialCenter || { lat: 6.2476, lng: -75.5658 }}
-
+    center={memoizedCenter}
     onDragStart={() => {
+      handleDragStart(); // 🔥 PASO 1: Detectar interacción
       setIsUserPanning(true);
 
       // Pausar centrado por 6s después del último drag
@@ -891,7 +950,7 @@ const NavigationMap = ({
     }}
 
     onDragEnd={() => {
-      loadPropertiesInViewport(); // ⬅️ Recargar inmediatamente
+      debouncedLoadProperties(); // 🔥 PASO 2: Con debounce
       
       // En modo conducción: recenter después de 2 segundos
       if (isDriving && hasStartedNavigation && isUsingCurrentLocation) {
@@ -921,9 +980,10 @@ const NavigationMap = ({
     }}
 
     onZoomChanged={handleZoomChanged}
-
-    // ACTUALIZAR CENTRO DE BÚSQUEDA AL ARRASTRAR
+    onBoundsChanged={handleBoundsChanged}
     onIdle={() => {
+      handleIdle(); // 🔥 PASO 1: Detectar fin de interacción
+      
       // NO actualizar si está en navegación activa
       if (isDriving && hasStartedNavigation && isUsingCurrentLocation) return;
       
@@ -938,23 +998,7 @@ const NavigationMap = ({
         lng: c.lng(),
       });
     }}
-
-    options={{
-      mapTypeId:
-        mapType === "satellite"
-          ? google.maps.MapTypeId.HYBRID
-          : google.maps.MapTypeId.ROADMAP,
-      zoomControl: false,
-      streetViewControl: false,
-      mapTypeControl: false,
-      fullscreenControl: false,
-      rotateControl: false,
-      gestureHandling: "greedy",
-      draggable: true,  // Habilitar arrastre explícitamente
-      disableDefaultUI: true,
-      clickableIcons: false,
-      keyboardShortcuts: false,
-    }}
+    options={mapOptions}
   >
     {/* ======================= */}
     {/* USER LOCATION MARKER    */}
@@ -1155,6 +1199,8 @@ const NavigationMap = ({
                 flexDirection: "column",
                 alignItems: "center",
                 gap: "2px",
+                animation: "fadeInMarker 0.15s ease-in",
+                opacity: 1
               }}
             >
               {/* Precio */}
@@ -1266,7 +1312,8 @@ const NavigationMap = ({
                   lat: Number(manualLat), 
                   lng: Number(manualLng) 
                 };
-                mapRef.current.panTo(manualLocation);
+                // 🔥 PASO 4: Usar setCenter para movimiento instantáneo
+                mapRef.current.setCenter(manualLocation);
                 mapRef.current.setZoom(17);
                 toast.success("Mapa centrado en la ubicación seleccionada");
               }
