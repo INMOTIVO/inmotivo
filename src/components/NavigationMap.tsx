@@ -195,7 +195,157 @@ const NavigationMap = ({
     }
   }, [collectedProperties, handleCancelDriving]);
   
-  // Función para calcular distancia entre dos puntos (Haversine)
+  // ========================================
+  // 5️⃣ TODOS LOS HOOKS - useQuery
+  // ========================================
+  const {
+    data: propertiesGeoJSON,
+    refetch: refetchProperties
+  } = useQuery({
+    queryKey: ['navigation-properties', mapBounds, searchRadius, filters],
+    queryFn: async () => {
+      if (!searchCenter || isDirectNavigation) return null;
+
+      try {
+        let params: any = {
+          lat: searchCenter.lat,
+          lon: searchCenter.lng,
+          radius: searchRadius,
+          priceMax: filters.maxPrice,
+          type: filters.propertyType || 'all',
+          listingType: filters.listingType || 'rent'
+        };
+        
+        if (mapBounds) {
+          const ne = mapBounds.getNorthEast();
+          const sw = mapBounds.getSouthWest();
+          
+          params = {
+            ...params,
+            neLat: ne.lat(),
+            neLng: ne.lng(),
+            swLat: sw.lat(),
+            swLng: sw.lng()
+          };
+        }
+        
+        const geojson = await getCachedNearbyProperties(params);
+        return geojson;
+      } catch (error) {
+        console.error('Error fetching nearby properties:', error);
+        return null;
+      }
+    },
+    enabled: !!searchCenter && !isPaused && !isDirectNavigation,
+    refetchInterval: false,
+    staleTime: 5000,
+    gcTime: 300000
+  });
+  
+  const loadPropertiesInViewport = useCallback(async () => {
+    if (!mapRef.current || isDirectNavigation || isPaused) return;
+    
+    const bounds = mapRef.current.getBounds();
+    if (!bounds) return;
+    
+    const ne = bounds.getNorthEast();
+    const sw = bounds.getSouthWest();
+    const center = bounds.getCenter();
+    
+    const radiusMeters = calculateViewportRadius(ne, sw);
+    
+    console.log('Loading properties in viewport:', {
+      ne: { lat: ne.lat(), lng: ne.lng() },
+      sw: { lat: sw.lat(), lng: sw.lng() },
+      radius: radiusMeters
+    });
+    
+    setSearchCenter({ lat: center.lat(), lng: center.lng() });
+    setMapBounds(bounds);
+    setSearchRadius(radiusMeters);
+    
+    refetchProperties();
+  }, [isDirectNavigation, isPaused, refetchProperties, calculateViewportRadius]);
+  
+  // ========================================
+  // 6️⃣ TODOS LOS HOOKS - useMemo
+  // ========================================
+  const debouncedLoadProperties = useMemo(
+    () => debounce(loadPropertiesInViewport, 250),
+    [loadPropertiesInViewport]
+  );
+  
+  const handleZoomChanged = useCallback(() => {
+    if (mapRef.current) {
+      const zoom = mapRef.current.getZoom();
+      if (zoom !== undefined) {
+        currentZoomRef.current = zoom;
+        setMapZoom(zoom);
+        debouncedLoadProperties();
+      }
+    }
+  }, [debouncedLoadProperties]);
+  
+  const properties = useMemo(() => {
+    return propertiesGeoJSON?.features
+      ?.map((feature: any) => ({
+        id: feature.properties.id,
+        title: feature.properties.title,
+        price: feature.properties.price,
+        bedrooms: feature.properties.bedrooms,
+        bathrooms: feature.properties.bathrooms,
+        area: feature.properties.area,
+        property_type: feature.properties.property_type,
+        images: feature.properties.images,
+        latitude: feature.geometry.coordinates[1],
+        longitude: feature.geometry.coordinates[0],
+        distance_km: feature.properties.distance_km
+      })) || [];
+  }, [propertiesGeoJSON]);
+  
+  const memoizedCenter = useMemo(() => {
+    return initialCenter || { lat: 6.2476, lng: -75.5658 };
+  }, [initialCenter]);
+  
+  const mapOptions = useMemo(() => ({
+    mapTypeId:
+      mapType === "satellite"
+        ? google.maps.MapTypeId.HYBRID
+        : google.maps.MapTypeId.ROADMAP,
+    zoomControl: false,
+    streetViewControl: false,
+    mapTypeControl: false,
+    fullscreenControl: false,
+    rotateControl: false,
+    gestureHandling: "greedy",
+    draggable: true,
+    disableDefaultUI: true,
+    clickableIcons: false,
+    keyboardShortcuts: false,
+    heading: heading,
+    tilt: isVehicleMode && hasStartedNavigation ? 60 : 0
+  }), [mapType, heading, isVehicleMode, hasStartedNavigation]);
+  
+  // ========================================
+  // 7️⃣ TODOS LOS HOOKS - useEffect
+  // ========================================
+  useEffect(() => {
+    if (userLocation && !searchCenter) {
+      setSearchCenter(userLocation);
+    }
+  }, [userLocation, searchCenter]);
+
+  useEffect(() => {
+    if (!isManualRadiusChange.current) {
+      const newRadius = zoomToRadius(mapZoom);
+      setSearchRadius(newRadius);
+    }
+    isManualRadiusChange.current = false;
+  }, [mapZoom]);
+
+  // ========================================
+  // 8️⃣ FUNCIONES REGULARES (no hooks)
+  // ========================================
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
     const R = 6371; // Radio de la Tierra en km
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -327,116 +477,6 @@ const NavigationMap = ({
     // 1 millón o más → M con 1 decimal
     return `$${(price / 1_000_000).toFixed(1)}M`;
   };
-
-  // Fetch properties using new API - Sistema de recarga dinámica
-  const {
-    data: propertiesGeoJSON,
-    refetch: refetchProperties
-  } = useQuery({
-    queryKey: ['navigation-properties', mapBounds, searchRadius, filters],
-    queryFn: async () => {
-      if (!searchCenter || isDirectNavigation) return null;
-
-      try {
-        let params: any = {
-          lat: searchCenter.lat,
-          lon: searchCenter.lng,
-          radius: searchRadius,
-          priceMax: filters.maxPrice,
-          type: filters.propertyType || 'all',
-          listingType: filters.listingType || 'rent'
-        };
-        
-        // Si hay bounds, enviarlos al edge function
-        if (mapBounds) {
-          const ne = mapBounds.getNorthEast();
-          const sw = mapBounds.getSouthWest();
-          
-          params = {
-            ...params,
-            neLat: ne.lat(),
-            neLng: ne.lng(),
-            swLat: sw.lat(),
-            swLng: sw.lng()
-          };
-        }
-        
-        const geojson = await getCachedNearbyProperties(params);
-        return geojson;
-      } catch (error) {
-        console.error('Error fetching nearby properties:', error);
-        return null;
-      }
-    },
-    enabled: !!searchCenter && !isPaused && !isDirectNavigation,
-    refetchInterval: false,
-    staleTime: 5000,
-    gcTime: 300000
-  });
-  
-  // Función de recarga dinámica (DESPUÉS de refetchProperties)
-  const loadPropertiesInViewport = useCallback(async () => {
-    if (!mapRef.current || isDirectNavigation || isPaused) return;
-    
-    const bounds = mapRef.current.getBounds();
-    if (!bounds) return;
-    
-    const ne = bounds.getNorthEast();
-    const sw = bounds.getSouthWest();
-    const center = bounds.getCenter();
-    
-    const radiusMeters = calculateViewportRadius(ne, sw);
-    
-    console.log('Loading properties in viewport:', {
-      ne: { lat: ne.lat(), lng: ne.lng() },
-      sw: { lat: sw.lat(), lng: sw.lng() },
-      radius: radiusMeters
-    });
-    
-    setSearchCenter({ lat: center.lat(), lng: center.lng() });
-    setMapBounds(bounds);
-    setSearchRadius(radiusMeters);
-    
-    refetchProperties();
-  }, [isDirectNavigation, isPaused, refetchProperties, calculateViewportRadius]);
-  
-  // 🔥 PASO 2: Debounced version para suavizar recarga
-  const debouncedLoadProperties = useMemo(
-    () => debounce(loadPropertiesInViewport, 250),
-    [loadPropertiesInViewport]
-  );
-  
-  // Manejar cambios en el zoom del mapa
-  const handleZoomChanged = useCallback(() => {
-    if (mapRef.current) {
-      const zoom = mapRef.current.getZoom();
-      if (zoom !== undefined) {
-        currentZoomRef.current = zoom; // 🔥 PASO 8: Usar ref
-        setMapZoom(zoom);
-        debouncedLoadProperties(); // 🔥 PASO 2: Con debounce
-      }
-    }
-  }, [debouncedLoadProperties]);
-
-
-
-  // 🔥 PASO 6: Memoizar propiedades para evitar re-renders
-  const properties = useMemo(() => {
-    return propertiesGeoJSON?.features
-      ?.map((feature: any) => ({
-        id: feature.properties.id,
-        title: feature.properties.title,
-        price: feature.properties.price,
-        bedrooms: feature.properties.bedrooms,
-        bathrooms: feature.properties.bathrooms,
-        area: feature.properties.area,
-        property_type: feature.properties.property_type,
-        images: feature.properties.images,
-        latitude: feature.geometry.coordinates[1],
-        longitude: feature.geometry.coordinates[0],
-        distance_km: feature.properties.distance_km
-      })) || [];
-  }, [propertiesGeoJSON]);
 
   // Establecer centro inicial solo una vez
   useEffect(() => {
@@ -889,32 +929,7 @@ const NavigationMap = ({
     );
   }
   
-    
-    // 🔥 PASO 3: Memoizar center y options para evitar re-renders
-    const memoizedCenter = useMemo(() => {
-      return initialCenter || { lat: 6.2476, lng: -75.5658 };
-    }, [initialCenter]);
-    
-    const mapOptions = useMemo(() => ({
-      mapTypeId:
-        mapType === "satellite"
-          ? google.maps.MapTypeId.HYBRID
-          : google.maps.MapTypeId.ROADMAP,
-      zoomControl: false,
-      streetViewControl: false,
-      mapTypeControl: false,
-      fullscreenControl: false,
-      rotateControl: false,
-      gestureHandling: "greedy",
-      draggable: true,
-      disableDefaultUI: true,
-      clickableIcons: false,
-      keyboardShortcuts: false,
-      heading: heading,
-      tilt: isVehicleMode && hasStartedNavigation ? 60 : 0
-    }), [mapType, heading, isVehicleMode, hasStartedNavigation]);
-    
-    return <div className="relative w-full h-full">
+  return <div className="relative w-full h-full">
   <GoogleMap
     mapContainerStyle={{
       width: "100%",
