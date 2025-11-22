@@ -79,10 +79,10 @@ export const SavedPropertiesReview = ({
             center={userLocation}
             radius={2000}
             options={{
-              fillColor: '#22c55e',
-              fillOpacity: 0.1,
-              strokeColor: '#22c55e',
-              strokeOpacity: 0.4,
+              fillColor: 'hsl(158, 24%, 33%)',
+              fillOpacity: 0.15,
+              strokeColor: 'hsl(158, 24%, 33%)',
+              strokeOpacity: 0.5,
               strokeWeight: 2
             }}
           />
@@ -93,7 +93,7 @@ export const SavedPropertiesReview = ({
             icon={{
               path: google.maps.SymbolPath.CIRCLE,
               scale: 10,
-              fillColor: '#22c55e',
+              fillColor: 'hsl(158, 24%, 33%)',
               fillOpacity: 1,
               strokeColor: 'white',
               strokeWeight: 3
@@ -109,7 +109,7 @@ export const SavedPropertiesReview = ({
               icon={{
                 path: google.maps.SymbolPath.BACKWARD_CLOSED_ARROW,
                 scale: 6,
-                fillColor: selectedProperty?.id === property.id ? '#8b5cf6' : '#3b82f6',
+                fillColor: selectedProperty?.id === property.id ? 'hsl(22, 100%, 51%)' : 'hsl(158, 24%, 33%)',
                 fillOpacity: 1,
                 strokeColor: 'white',
                 strokeWeight: 2,
@@ -169,7 +169,7 @@ export const SavedPropertiesReview = ({
                   )}
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-lg font-bold text-primary">
+                  <span className="text-lg font-bold text-[hsl(158,24%,33%)]">
                     ${property.price.toLocaleString()}
                   </span>
                   <Button 

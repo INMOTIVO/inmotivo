@@ -20,38 +20,38 @@ export const DrivingModeOverlay = ({
       {/* Ícono de carro animado */}
       <div className="relative mb-8">
         <div className="absolute inset-0 flex items-center justify-center">
-          <div
-            className="w-32 h-32 rounded-full bg-primary/20 animate-ping"
-            style={{ animationDuration: "2s" }}
-          />
+        <div
+          className="w-32 h-32 rounded-full bg-[hsl(158,24%,33%)]/20 animate-ping"
+          style={{ animationDuration: "2s" }}
+        />
         </div>
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-28 h-28 rounded-full bg-primary/30 animate-pulse" />
+          <div className="w-28 h-28 rounded-full bg-[hsl(158,24%,33%)]/30 animate-pulse" />
         </div>
 
-        <div className="relative z-10 w-24 h-24 rounded-full bg-primary flex items-center justify-center shadow-2xl">
+        <div className="relative z-10 w-24 h-24 rounded-full bg-[hsl(158,24%,33%)] flex items-center justify-center shadow-2xl">
           <Car
-            className="w-14 h-14 text-primary-foreground animate-bounce"
+            className="w-14 h-14 text-[hsl(192,24%,92%)] animate-bounce"
             style={{ animationDuration: "1.5s" }}
           />
         </div>
       </div>
 
       {/* Información */}
-      <Card className="p-6 text-center max-w-sm mx-4 border-primary/20">
+      <Card className="p-6 text-center max-w-sm mx-4 border-[hsl(158,24%,33%)]/20 shadow-[0_4px_20px_rgba(66,104,89,0.15)]">
         <h2 className="text-2xl font-bold mb-2">Modo Conducción Activo</h2>
         <p className="text-muted-foreground mb-4">Pantalla bloqueada por seguridad</p>
 
         <div className="flex justify-around items-center gap-6 mt-6">
           <div className="text-center">
-            <div className="text-3xl font-bold text-primary">{Math.round(speed)}</div>
+            <div className="text-3xl font-bold text-[hsl(158,24%,33%)]">{Math.round(speed)}</div>
             <div className="text-sm text-muted-foreground">km/h</div>
           </div>
 
           <div className="h-12 w-px bg-border" />
 
           <div className="text-center">
-            <div className="text-3xl font-bold text-primary">{propertiesCount}</div>
+            <div className="text-3xl font-bold text-[hsl(158,24%,33%)]">{propertiesCount}</div>
             <div className="text-sm text-muted-foreground">Guardadas</div>
           </div>
         </div>
@@ -65,7 +65,7 @@ export const DrivingModeOverlay = ({
           {onCancel && (
             <button
               onClick={onCancel}
-              className="w-full py-2 rounded-xl bg-red-600 text-white font-semibold shadow"
+              className="w-full py-2 rounded-xl bg-[hsl(22,100%,51%)] hover:bg-[hsl(22,100%,46%)] text-white font-semibold shadow-lg transition-all"
             >
               Detener
             </button>
@@ -75,9 +75,9 @@ export const DrivingModeOverlay = ({
       </Card>
 
       <div className="mt-8 flex items-center gap-2">
-        <div className="w-3 h-3 rounded-full bg-primary animate-pulse" />
-        <div className="w-3 h-3 rounded-full bg-primary animate-pulse" style={{ animationDelay: "0.3s" }} />
-        <div className="w-3 h-3 rounded-full bg-primary animate-pulse" style={{ animationDelay: "0.6s" }} />
+        <div className="w-3 h-3 rounded-full bg-[hsl(158,24%,33%)] animate-pulse" />
+        <div className="w-3 h-3 rounded-full bg-[hsl(158,24%,33%)] animate-pulse" style={{ animationDelay: "0.3s" }} />
+        <div className="w-3 h-3 rounded-full bg-[hsl(158,24%,33%)] animate-pulse" style={{ animationDelay: "0.6s" }} />
       </div>
 
     </div>
