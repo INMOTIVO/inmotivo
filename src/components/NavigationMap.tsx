@@ -94,14 +94,22 @@ const NavigationMap = ({
   const lastHeadingUpdate = useRef<number>(0);
   const smoothHeading = useRef<number>(0);
   const handleStopAndShowSaved = () => {
-    // 1. Apagar modo conducción (como cancelar)
-    handleCancelDriving();
+    // 1. Guardar las propiedades ANTES de limpiar
+    const savedProperties = [...collectedProperties];
+    
+    // 2. Apagar modo conducción SIN limpiar propiedades aún
+    handleCancelDriving(false);
 
-    // 2. Mostrar las propiedades guardadas
-    if (collectedProperties.length > 0) {
+    // 3. Mostrar las propiedades guardadas
+    if (savedProperties.length > 0) {
       setShowCollectedProperties(true);
+      toast.success(`${savedProperties.length} propiedades encontradas en tu recorrido`);
     } else {
       toast.info("No se detectaron propiedades en tu recorrido");
+      // Ahora sí limpiar todo
+      travelDistance.current = 0;
+      collectedPropertyIds.current.clear();
+      setCollectedProperties([]);
     }
   };
 
@@ -238,7 +246,7 @@ const NavigationMap = ({
     return 1000;
   };
   
-  const handleCancelDriving = () => {
+  const handleCancelDriving = (shouldClearProperties = true) => {
     setIsDriving(false);
     setIsNavigationMode(false);
     setHasStartedNavigation(false);
@@ -246,10 +254,12 @@ const NavigationMap = ({
     setIsAtWheel(false);
     setIsUserPanning(false);
 
-    // Limpiar todo
-    travelDistance.current = 0;
-    collectedPropertyIds.current.clear();
-    setCollectedProperties([]);
+    // Solo limpiar propiedades si se indica explícitamente
+    if (shouldClearProperties) {
+      travelDistance.current = 0;
+      collectedPropertyIds.current.clear();
+      setCollectedProperties([]);
+    }
 
     toast.error("Modo conducción cancelado", {
       duration: 2500,
@@ -529,8 +539,9 @@ const NavigationMap = ({
           lastFetchPosition.current = newLocation;
         }
         
-        // Limitar a 2km de registro
-        if (travelDistance.current > 2) {
+        // Limitar a 10km de registro (aumentado desde 2km)
+        if (travelDistance.current > 10) {
+          toast.info("Límite de recorrido alcanzado (10km). Reiniciando registro.");
           collectedPropertyIds.current.clear();
           setCollectedProperties([]);
           travelDistance.current = 0;
@@ -561,17 +572,25 @@ const NavigationMap = ({
           : 0;
         
         if (timeBelow >= 120) { // 2 minutos = 120 segundos
+          const savedProperties = [...collectedProperties];
+          
           setIsDriving(false);
           setIsNavigationMode(false);
           setIsVehicleMode(false);
+          setIsAtWheel(false);
           
-          toast.info("Modo conducción desactivado", {
+          toast.info("Modo conducción detenido", {
             description: "Velocidad reducida detectada",
             duration: 3000
           });
           
-          if (collectedProperties.length > 0) {
+          if (savedProperties.length > 0) {
             setShowCollectedProperties(true);
+          } else {
+            // Solo limpiar si no hay propiedades que mostrar
+            travelDistance.current = 0;
+            collectedPropertyIds.current.clear();
+            setCollectedProperties([]);
           }
         }
       }
@@ -1475,7 +1494,7 @@ const NavigationMap = ({
             </div>
               {isUsingCurrentLocation && hasStartedNavigation && (
                 <button
-                  onClick={handleCancelDriving}
+                  onClick={() => handleCancelDriving()}
                   className="
                     px-3 py-1.5 rounded-lg 
                     text-[12px] font-semibold 
@@ -1634,6 +1653,7 @@ const NavigationMap = ({
             setCollectedProperties([]);
             collectedPropertyIds.current.clear();
             travelDistance.current = 0;
+            toast.success("Propiedades guardadas cerradas");
           }}
         />
       )}
