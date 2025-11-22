@@ -93,7 +93,18 @@ const NavigationMap = ({
   const isManualRadiusChange = useRef(false);
   const lastHeadingUpdate = useRef<number>(0);
   const smoothHeading = useRef<number>(0);
-  
+  const handleStopAndShowSaved = () => {
+    // 1. Apagar modo conducción (como cancelar)
+    handleCancelDriving();
+
+    // 2. Mostrar las propiedades guardadas
+    if (collectedProperties.length > 0) {
+      setShowCollectedProperties(true);
+    } else {
+      toast.info("No se detectaron propiedades en tu recorrido");
+    }
+  };
+
   // Estados para detección de velocidad y modo vehículo
   const [currentSpeed, setCurrentSpeed] = useState<number>(0);
   const [isVehicleMode, setIsVehicleMode] = useState(false);
@@ -227,6 +238,31 @@ const NavigationMap = ({
     return 1000;
   };
   
+  const handleCancelDriving = () => {
+    setIsDriving(false);
+    setIsNavigationMode(false);
+    setHasStartedNavigation(false);
+    setIsVehicleMode(false);
+    setIsAtWheel(false);
+    setIsUserPanning(false);
+
+    // Limpiar todo
+    travelDistance.current = 0;
+    collectedPropertyIds.current.clear();
+    setCollectedProperties([]);
+
+    toast.error("Modo conducción cancelado", {
+      duration: 2500,
+    });
+
+    // Reiniciar el mapa a vista normal
+    if (mapRef.current) {
+      mapRef.current.setHeading(0);
+      mapRef.current.setTilt(0);
+      mapRef.current.setZoom(16);
+    }
+  };
+
   useEffect(() => {
     if (userLocation && !searchCenter) {
       setSearchCenter(userLocation);
@@ -924,109 +960,12 @@ const NavigationMap = ({
                 position: "relative",
               }}
             >
-              {/* Pulse rings - solo en modo pasivo */}
-              {!isDriving && (
-                <>
-                  <div
-                    style={{
-                      position: "absolute",
-                      width: "60px",
-                      height: "60px",
-                      top: "-10px",
-                      borderRadius: "50%",
-                      background: "rgba(34, 197, 94, 0.3)",
-                      animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
-                    }}
-                  />
-                  <div
-                    style={{
-                      position: "absolute",
-                      width: "50px",
-                      height: "50px",
-                      top: "-5px",
-                      borderRadius: "50%",
-                      background: "rgba(34, 197, 94, 0.4)",
-                      animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite 0.5s",
-                    }}
-                  />
-                </>
-              )}
 
               {/* ========================================= */}
               {/* ICONO DINÁMICO: PASIVO vs ACTIVO         */}
               {/* ========================================= */}
               
-              {!isDriving && !hasStartedNavigation ? (
-                // 🟢 ICONO PASIVO: Círculo verde con punto morado
-                <svg
-                  width="48"
-                  height="48"
-                  viewBox="0 0 48 48"
-                  fill="none"
-                  style={{
-                    filter: "drop-shadow(0 4px 12px rgba(0, 197, 109, 0.4))",
-                    position: "relative",
-                    zIndex: 10,
-                    transition: "all 0.3s ease",
-                  }}
-                >
-                  {/* Círculo exterior verde */}
-                  <circle
-                    cx="24"
-                    cy="24"
-                    r="18"
-                    fill="#00C56D"
-                    stroke="white"
-                    strokeWidth="3"
-                  />
-                  {/* Punto interior morado */}
-                  <circle
-                    cx="24"
-                    cy="24"
-                    r="6"
-                    fill="#8b5cf6"
-                    style={{
-                      animation: "pulse 2s ease-in-out infinite"
-                    }}
-                  />
-                </svg>
-              ) : (
-                // 🔵 ICONO ACTIVO: Flecha de navegación
-                <svg
-                  width="42"
-                  height="42"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  style={{
-                    filter: "drop-shadow(0 8px 20px rgba(34, 197, 94, 0.7))",
-                    position: "relative",
-                    zIndex: 10,
-                    transform: `rotate(${heading}deg)`,
-                    transition: "transform 0.3s ease-out",
-                  }}
-                >
-                  {/* Sombra */}
-                  <path
-                    d="M12 2L4 20L12 16L20 20L12 2Z"
-                    fill="rgba(0,0,0,0.2)"
-                    transform="translate(0, 1)"
-                  />
-                  {/* Flecha principal */}
-                  <path
-                    d="M12 2L4 20L12 16L20 20L12 2Z"
-                    fill="url(#arrowGradient)"
-                    stroke="white"
-                    strokeWidth="2"
-                    strokeLinejoin="round"
-                  />
-                  <defs>
-                    <linearGradient id="arrowGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#22c55e" />
-                      <stop offset="100%" stopColor="#16a34a" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-              )}
+
             </div>
 
             <style>{`
@@ -1534,6 +1473,19 @@ const NavigationMap = ({
                 {isPaused ? 'Reanudar' : 'Detener'}
               </button>
             </div>
+              {isUsingCurrentLocation && hasStartedNavigation && (
+                <button
+                  onClick={handleCancelDriving}
+                  className="
+                    px-3 py-1.5 rounded-lg 
+                    text-[12px] font-semibold 
+                    bg-gray-800 text-white 
+                    shadow ml-2
+                  "
+                >
+                  Cancelar
+                </button>
+              )}
 
 
             {/* === RADIO compactado - Solo en modo navegación === */}
@@ -1663,11 +1615,14 @@ const NavigationMap = ({
 
       {/* Overlay de modo conducción - SOLO si está al volante */}
       {isVehicleMode && isUsingCurrentLocation && isAtWheel && (
-        <DrivingModeOverlay 
-          speed={currentSpeed}
-          propertiesCount={collectedProperties.length}
-        />
+      <DrivingModeOverlay
+        speed={currentSpeed}
+        propertiesCount={collectedProperties.length}
+        onCancel={handleStopAndShowSaved}
+      />
+
       )}
+
 
       {/* Pantalla de revisión de propiedades guardadas */}
       {showCollectedProperties && (
