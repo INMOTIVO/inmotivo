@@ -65,6 +65,8 @@ const NavigationMap = ({
     lng: number;
   } | null>(null);
   
+  const [initialCenter, setInitialCenter] = useState<{ lat: number; lng: number } | null>(null);
+  
   const [mapType, setMapType] = useState<'roadmap' | 'satellite'>('roadmap');
 
   const [showLayersMenu, setShowLayersMenu] = useState(false);
@@ -374,6 +376,19 @@ const NavigationMap = ({
       distance_km: feature.properties.distance_km
     })) || [];
 
+  // Establecer centro inicial solo una vez
+  useEffect(() => {
+    if (initialCenter) return; // Ya establecido
+    
+    if (hasManualLocation) {
+      // Ubicación manual desde URL
+      setInitialCenter({ lat: Number(manualLat), lng: Number(manualLng) });
+    } else if (userLocation) {
+      // Ubicación GPS del usuario
+      setInitialCenter(userLocation);
+    }
+  }, [userLocation, hasManualLocation, manualLat, manualLng, initialCenter]);
+
   // Track user location and speed - Optimizado para móvil
   useEffect(() => {
     let watchId: number;
@@ -561,10 +576,14 @@ const NavigationMap = ({
       }
 
       
-    // CONTROL DEL MAPA (solo en modo navegación activa)
-    if (mapRef.current) {
-      // Solo recentrar automáticamente si está navegando
-      if (!isUserPanning && isDriving && hasStartedNavigation) {
+    // CONTROL DEL MAPA - Solo en modo navegación activa
+    if (mapRef.current && isUsingCurrentLocation) {
+      // Solo recentrar automáticamente si TODAS estas condiciones se cumplen:
+      // 1. NO está arrastrando manualmente
+      // 2. Está en modo conducción
+      // 3. Ha iniciado navegación
+      // 4. Está usando ubicación GPS actual (no manual)
+      if (!isUserPanning && isDriving && hasStartedNavigation && isUsingCurrentLocation) {
         const lastPos = mapRef.current.getCenter();
         const dist = lastPos
           ? calculateDistance(lastPos.lat(), lastPos.lng(), newLocation.lat, newLocation.lng)
@@ -804,11 +823,7 @@ const NavigationMap = ({
       height: "100%",
     }}
 
-  center={
-    hasManualLocation
-      ? { lat: Number(manualLat), lng: Number(manualLng) } // ⬅ SI SELECCIONÓ OTRA ZONA
-      : userLocation || { lat: 6.2476, lng: -75.5658 }     // ⬅ MODO ACTUAL
-  }
+  center={initialCenter || { lat: 6.2476, lng: -75.5658 }}
 
     onDragStart={() => {
       setIsUserPanning(true);
@@ -849,22 +864,21 @@ const NavigationMap = ({
 
     onZoomChanged={handleZoomChanged}
 
-    // 🔥🔥🔥 ACTUALIZAR CENTRO DE BÚSQUEDA AL ARRASTRAR
+    // ACTUALIZAR CENTRO DE BÚSQUEDA AL ARRASTRAR
     onIdle={() => {
-      if (isVehicleMode) return; // No actualizar mientras conduces
+      // NO actualizar si está en navegación activa
+      if (isDriving && hasStartedNavigation && isUsingCurrentLocation) return;
+      
       if (!mapRef.current) return;
 
       const c = mapRef.current.getCenter();
       if (!c) return;
 
-      // En modo manual (ubicación seleccionada), SIEMPRE actualizar centro al arrastrar
-      // En modo GPS, solo actualizar si el usuario lo movió manualmente
-      if (!isUsingCurrentLocation || isUserPanning) {
-        setSearchCenter({
-          lat: c.lat(),
-          lng: c.lng(),
-        });
-      }
+      // Actualizar centro de búsqueda basado en viewport actual
+      setSearchCenter({
+        lat: c.lat(),
+        lng: c.lng(),
+      });
     }}
 
     options={{
@@ -1230,6 +1244,24 @@ const NavigationMap = ({
         >
           −
         </button>
+
+        {/* Botón de centrar en mi ubicación - Solo visible si tiene GPS */}
+        {userLocation && isUsingCurrentLocation && (
+          <Button
+            onClick={() => {
+              if (mapRef.current && userLocation) {
+                mapRef.current.panTo(userLocation);
+                mapRef.current.setZoom(17);
+                toast.success("Mapa centrado en tu ubicación");
+              }
+            }}
+            size="icon"
+            className="h-12 w-12 bg-white/90 backdrop-blur-sm hover:bg-white shadow-[0_2px_10px_rgba(0,0,0,0.15)] border border-gray-200"
+            title="Centrar en mi ubicación"
+          >
+            <MapPin className="h-5 w-5 text-primary" />
+          </Button>
+        )}
 
         {/* === BOTÓN DE CAPAS (debajo del menos) === */}
         <button
