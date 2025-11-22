@@ -24,7 +24,12 @@ const Hero = () => {
   // Estados para el campo "Dónde"
   const [searchWhere, setSearchWhere] = useState("");
   const [showLocationSuggestions, setShowLocationSuggestions] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number; address: string; isCurrentLocation?: boolean } | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<{
+    lat: number;
+    lng: number;
+    address: string;
+    isCurrentLocation?: boolean;
+  } | null>(null);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [userLocationName, setUserLocationName] = useState<string>("");
 
@@ -72,9 +77,9 @@ const Hero = () => {
           clearTimeout(timeoutId);
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
-          
+
           console.log("GPS coordinates obtained:", { lat, lng, accuracy: position.coords.accuracy });
-          
+
           setUserLocation({ lat, lng });
 
           try {
@@ -82,16 +87,16 @@ const Hero = () => {
               `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=es`,
             );
             const data = await response.json();
-            
+
             console.log("Nominatim response:", data);
-            
+
             const address = data.address;
             const municipalityName = address.city || address.town || address.municipality || "";
             const sectorName = address.suburb || address.neighbourhood || "";
             const locationName = sectorName ? `${municipalityName}, ${sectorName}` : municipalityName;
-            
+
             console.log("Location name:", locationName);
-            
+
             setLocation(locationName);
             setUserLocationName(locationName);
           } catch (error) {
@@ -105,7 +110,7 @@ const Hero = () => {
           clearTimeout(timeoutId);
           console.error("Geolocation error:", error);
           setLoadingLocation(false);
-          
+
           if (error.code === error.PERMISSION_DENIED) {
             toast.error("Debes permitir el acceso a tu ubicación para usar esta función");
           } else if (error.code === error.POSITION_UNAVAILABLE) {
@@ -117,8 +122,8 @@ const Hero = () => {
         {
           enableHighAccuracy: true,
           timeout: 10000,
-          maximumAge: 0
-        }
+          maximumAge: 0,
+        },
       );
     }
   }, []);
@@ -162,43 +167,40 @@ const Hero = () => {
       setShowLocationSuggestions(false);
     } else {
       setLoadingLocation(true);
-      
+
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
           setUserLocation({ lat, lng });
-          
+
           try {
             const response = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=es`
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=es`,
             );
             const data = await response.json();
             const address = data.address;
             const municipalityName = address.city || address.town || address.municipality || "";
             const sectorName = address.suburb || address.neighbourhood || "";
-            const locationName = sectorName 
-              ? `${municipalityName}, ${sectorName}` 
-              : municipalityName;
-            
+            const locationName = sectorName ? `${municipalityName}, ${sectorName}` : municipalityName;
+
             setUserLocationName(locationName);
             setLocation(locationName);
-            
-            setSelectedLocation({ 
-              lat, 
-              lng, 
-              address: locationName, 
-              isCurrentLocation: true 
+
+            setSelectedLocation({
+              lat,
+              lng,
+              address: locationName,
+              isCurrentLocation: true,
             });
             setSearchWhere(locationName);
-            
           } catch (error) {
             console.error("Error getting location name:", error);
-            setSelectedLocation({ 
-              lat, 
-              lng, 
-              address: "Tu ubicación actual", 
-              isCurrentLocation: true 
+            setSelectedLocation({
+              lat,
+              lng,
+              address: "Tu ubicación actual",
+              isCurrentLocation: true,
             });
             setSearchWhere("Tu ubicación actual");
           } finally {
@@ -214,8 +216,8 @@ const Hero = () => {
         {
           enableHighAccuracy: true,
           timeout: 10000,
-          maximumAge: 0
-        }
+          maximumAge: 0,
+        },
       );
     }
   };
@@ -694,19 +696,17 @@ const Hero = () => {
                     const lat = position.coords.latitude;
                     const lng = position.coords.longitude;
                     setUserLocation({ lat, lng });
-                    
+
                     try {
                       const response = await fetch(
-                        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=es`
+                        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=es`,
                       );
                       const data = await response.json();
                       const address = data.address;
                       const municipalityName = address.city || address.town || address.municipality || "";
                       const sectorName = address.suburb || address.neighbourhood || "";
-                      const locationName = sectorName 
-                        ? `${municipalityName}, ${sectorName}` 
-                        : municipalityName;
-                      
+                      const locationName = sectorName ? `${municipalityName}, ${sectorName}` : municipalityName;
+
                       setLocation(locationName);
                       setUserLocationName(locationName);
                       toast.success("Ubicación actualizada");
@@ -722,14 +722,12 @@ const Hero = () => {
                     toast.error("No se pudo actualizar tu ubicación");
                     setLoadingLocation(false);
                   },
-                  { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                  { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
                 );
               }}
               className="text-white/60 hover:text-white transition-colors"
               title="Actualizar ubicación"
-            >
-              🔄
-            </button>
+            ></button>
           </div>
         )}
 
