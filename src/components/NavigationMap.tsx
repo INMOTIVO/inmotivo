@@ -52,112 +52,82 @@ const NavigationMap = ({
   onStopNavigation,
   searchCriteria = '',
   isDirectNavigation = false,
-  isUsingCurrentLocation = true // Default true para retrocompatibilidad
+  isUsingCurrentLocation = true
 }: NavigationMapProps) => {
-  // Load Google Maps first (must be before any other hooks)
+  // ========================================
+  // 1️⃣ TODOS LOS HOOKS - useState
+  // ========================================
   const { isLoaded } = useGoogleMapsLoader();
-  
   const navigate = useNavigate();
-  const [transportMode, setTransportMode] = useState<'driving' | 'walking'>('driving');
-  const mapRef = useRef<google.maps.Map | null>(null);
-  const [userLocation, setUserLocation] = useState<{
-    lat: number;
-    lng: number;
-  } | null>(null);
-  
-  const [initialCenter, setInitialCenter] = useState<{ lat: number; lng: number } | null>(null);
-  
-  const [mapType, setMapType] = useState<'roadmap' | 'satellite'>('roadmap');
-
-  const [showLayersMenu, setShowLayersMenu] = useState(false);
-
-  const trafficLayerRef = useRef<google.maps.TrafficLayer | null>(null);
-
   const location = useLocation();
-  const params = new URLSearchParams(location.search);
-
-  const manualLat = params.get("lat");
-  const manualLng = params.get("lng");
-
-  const hasManualLocation = manualLat && manualLng;
-
-
+  
+  const [transportMode, setTransportMode] = useState<'driving' | 'walking'>('driving');
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number; } | null>(null);
+  const [initialCenter, setInitialCenter] = useState<{ lat: number; lng: number } | null>(null);
+  const [mapType, setMapType] = useState<'roadmap' | 'satellite'>('roadmap');
+  const [showLayersMenu, setShowLayersMenu] = useState(false);
   const [heading, setHeading] = useState<number>(0);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [editSearchQuery, setEditSearchQuery] = useState(searchCriteria);
   const [searchRadius, setSearchRadius] = useState<number>(200);
   const [isPaused, setIsPaused] = useState(false);
-  const previousPropertiesCount = useRef<number>(0);
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
   const [mapZoom, setMapZoom] = useState<number>(18);
-  const isManualRadiusChange = useRef(false);
-  const lastHeadingUpdate = useRef<number>(0);
-  const smoothHeading = useRef<number>(0);
-  const handleStopAndShowSaved = () => {
-    // 1. Guardar las propiedades ANTES de limpiar
-    const savedProperties = [...collectedProperties];
-    
-    // 2. Apagar modo conducción SIN limpiar propiedades aún
-    handleCancelDriving(false);
-
-    // 3. Mostrar las propiedades guardadas
-    if (savedProperties.length > 0) {
-      setShowCollectedProperties(true);
-      toast.success(`${savedProperties.length} propiedades encontradas en tu recorrido`);
-    } else {
-      toast.info("No se detectaron propiedades en tu recorrido");
-      // Ahora sí limpiar todo
-      travelDistance.current = 0;
-      collectedPropertyIds.current.clear();
-      setCollectedProperties([]);
-    }
-  };
-
-  // Estados para detección de velocidad y modo vehículo
   const [currentSpeed, setCurrentSpeed] = useState<number>(0);
   const [isVehicleMode, setIsVehicleMode] = useState(false);
   const [collectedProperties, setCollectedProperties] = useState<any[]>([]);
   const [showCollectedProperties, setShowCollectedProperties] = useState(false);
-  const previousLocation = useRef<{ lat: number; lng: number; time: number } | null>(null);
-  const collectedPropertyIds = useRef<Set<string>>(new Set());
-  const travelDistance = useRef<number>(0);
   const [routeDistance, setRouteDistance] = useState<string | null>(null);
   const [routeDuration, setRouteDuration] = useState<string | null>(null);
   const [searchCenter, setSearchCenter] = useState<{ lat: number; lng: number } | null>(null);
-  
-  // Estados de navegación (nuevos)
   const [isDriving, setIsDriving] = useState(false);
   const [isNavigationMode, setIsNavigationMode] = useState(false);
   const [hasStartedNavigation, setHasStartedNavigation] = useState(false);
   const [initialUserLocation, setInitialUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-  
-  // Cola de velocidades para calcular promedio de 2 minutos (cambio de 3 a 2)
-  const speedSamples = useRef<{ speed: number; timestamp: number }[]>([]);
   const [avgSpeed2Min, setAvgSpeed2Min] = useState<number>(0);
   const [showDrivingModal, setShowDrivingModal] = useState(false);
-  
-  // Nuevos estados para sistema de recarga dinámica
   const [mapBounds, setMapBounds] = useState<google.maps.LatLngBounds | null>(null);
-  const [isAtWheel, setIsAtWheel] = useState(false); // ¿Estás conduciendo?
+  const [isAtWheel, setIsAtWheel] = useState(false);
   const [showWheelModal, setShowWheelModal] = useState(false);
-  const lastFetchPosition = useRef<{ lat: number; lng: number } | null>(null);
-  
-  // 🔥 PASO 1: Sistema de detección de interacción del usuario
   const [isUserInteracting, setIsUserInteracting] = useState(false);
-  const interactionTimeout = useRef<any>(null);
+  const [isUserPanning, setIsUserPanning] = useState(false);
   
-  // 🔥 PASO 8: Refs para evitar re-renders
+  // ========================================
+  // 2️⃣ TODOS LOS HOOKS - useRef
+  // ========================================
+  const mapRef = useRef<google.maps.Map | null>(null);
+  const trafficLayerRef = useRef<google.maps.TrafficLayer | null>(null);
+  const previousPropertiesCount = useRef<number>(0);
+  const isManualRadiusChange = useRef(false);
+  const lastHeadingUpdate = useRef<number>(0);
+  const smoothHeading = useRef<number>(0);
+  const previousLocation = useRef<{ lat: number; lng: number; time: number } | null>(null);
+  const collectedPropertyIds = useRef<Set<string>>(new Set());
+  const travelDistance = useRef<number>(0);
+  const speedSamples = useRef<{ speed: number; timestamp: number }[]>([]);
+  const lastFetchPosition = useRef<{ lat: number; lng: number } | null>(null);
+  const interactionTimeout = useRef<any>(null);
   const currentZoomRef = useRef<number>(18);
   const currentCenterRef = useRef<{ lat: number; lng: number } | null>(null);
-
-  // 🔥 PASO 1: Handlers de interacción del usuario
+  const userPanTimeout = useRef<any>(null);
+  
+  // ========================================
+  // 3️⃣ VARIABLES DERIVADAS (no hooks)
+  // ========================================
+  const params = new URLSearchParams(location.search);
+  const manualLat = params.get("lat");
+  const manualLng = params.get("lng");
+  const hasManualLocation = manualLat && manualLng;
+  
+  // ========================================
+  // 4️⃣ TODOS LOS HOOKS - useCallback
+  // ========================================
   const handleDragStart = useCallback(() => {
     setIsUserInteracting(true);
     if (interactionTimeout.current) clearTimeout(interactionTimeout.current);
   }, []);
 
   const handleIdle = useCallback(() => {
-    // Esperar 300ms después de que el usuario suelta el mapa
     interactionTimeout.current = setTimeout(() => {
       setIsUserInteracting(false);
     }, 300);
@@ -169,10 +139,61 @@ const NavigationMap = ({
     }
   }, [isUserInteracting]);
 
-  // Memoizar funciones para evitar re-renders
   const handlePropertyClick = useCallback((propertyId: string) => {
     navigate(`/property/${propertyId}`);
   }, [navigate]);
+  
+  const calculateViewportRadius = useCallback((
+    ne: google.maps.LatLng, 
+    sw: google.maps.LatLng
+  ): number => {
+    const width = calculateDistance(ne.lat(), sw.lng(), ne.lat(), ne.lng());
+    const height = calculateDistance(ne.lat(), ne.lng(), sw.lat(), ne.lng());
+    const diagonal = Math.sqrt(width * width + height * height);
+    const radiusKm = (diagonal / 2) * 1.2;
+    const radiusMeters = radiusKm * 1000;
+    return Math.round(radiusMeters);
+  }, []);
+  
+  const handleCancelDriving = useCallback((shouldClearProperties = true) => {
+    setIsDriving(false);
+    setIsNavigationMode(false);
+    setHasStartedNavigation(false);
+    setIsVehicleMode(false);
+    setIsAtWheel(false);
+    setIsUserPanning(false);
+
+    if (shouldClearProperties) {
+      travelDistance.current = 0;
+      collectedPropertyIds.current.clear();
+      setCollectedProperties([]);
+    }
+
+    toast.error("Modo conducción cancelado", {
+      duration: 2500,
+    });
+
+    if (mapRef.current) {
+      mapRef.current.setHeading(0);
+      mapRef.current.setTilt(0);
+      mapRef.current.setZoom(16);
+    }
+  }, []);
+  
+  const handleStopAndShowSaved = useCallback(() => {
+    const savedProperties = [...collectedProperties];
+    handleCancelDriving(false);
+
+    if (savedProperties.length > 0) {
+      setShowCollectedProperties(true);
+      toast.success(`${savedProperties.length} propiedades encontradas en tu recorrido`);
+    } else {
+      toast.info("No se detectaron propiedades en tu recorrido");
+      travelDistance.current = 0;
+      collectedPropertyIds.current.clear();
+      setCollectedProperties([]);
+    }
+  }, [collectedProperties, handleCancelDriving]);
   
   // Función para calcular distancia entre dos puntos (Haversine)
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
@@ -250,19 +271,7 @@ const NavigationMap = ({
     return icons[propertyType?.toLowerCase()] || icons['default'];
   };
 
-  // Calcular radio dinámico del viewport
-  const calculateViewportRadius = useCallback((
-    ne: google.maps.LatLng, 
-    sw: google.maps.LatLng
-  ): number => {
-    const width = calculateDistance(ne.lat(), sw.lng(), ne.lat(), ne.lng());
-    const height = calculateDistance(ne.lat(), ne.lng(), sw.lat(), ne.lng());
-    const diagonal = Math.sqrt(width * width + height * height);
-    const radiusKm = (diagonal / 2) * 1.2;
-    const radiusMeters = radiusKm * 1000;
-    return Math.round(radiusMeters);
-  }, []);
-  
+
   // Convertir zoom a radio de búsqueda (legacy)
   const zoomToRadius = (zoom: number): number => {
     if (zoom >= 19) return 100;
@@ -273,38 +282,11 @@ const NavigationMap = ({
     return 1000;
   };
   
-  const handleCancelDriving = (shouldClearProperties = true) => {
-    setIsDriving(false);
-    setIsNavigationMode(false);
-    setHasStartedNavigation(false);
-    setIsVehicleMode(false);
-    setIsAtWheel(false);
-    setIsUserPanning(false);
-
-    // Solo limpiar propiedades si se indica explícitamente
-    if (shouldClearProperties) {
-      travelDistance.current = 0;
-      collectedPropertyIds.current.clear();
-      setCollectedProperties([]);
-    }
-
-    toast.error("Modo conducción cancelado", {
-      duration: 2500,
-    });
-
-    // Reiniciar el mapa a vista normal
-    if (mapRef.current) {
-      mapRef.current.setHeading(0);
-      mapRef.current.setTilt(0);
-      mapRef.current.setZoom(16);
-    }
-  };
-
   useEffect(() => {
     if (userLocation && !searchCenter) {
       setSearchCenter(userLocation);
     }
-  }, [userLocation]);
+  }, [userLocation, searchCenter]);
 
   // Sincronizar radio con zoom cuando no sea cambio manual
   useEffect(() => {
@@ -314,8 +296,6 @@ const NavigationMap = ({
     }
     isManualRadiusChange.current = false;
   }, [mapZoom]);
-  const [isUserPanning, setIsUserPanning] = useState(false);
-  const userPanTimeout = useRef<any>(null);
 
   // Manejar cambios manuales en el radio
   const handleManualRadiusChange = (value: number) => {
