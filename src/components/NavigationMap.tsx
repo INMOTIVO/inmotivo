@@ -943,19 +943,7 @@ const NavigationMap = ({
                       }}
                     >
                       {/* Círculo exterior verde */}
-                      <circle cx="24" cy="24" r="18" fill="#00C56D" stroke="white" strokeWidth="3" />
-                      {/* Punto interior morado */}
-                      <circle
-                        cx="24"
-                        cy="24"
-                        r="6"
-                        fill="#8b5cf6"
-                        style={{
-                          animation: "pulse 2s ease-in-out infinite",
-                        }}
-                      />
-                    </svg>
-                  ) : (
+
                     // 🔵 ICONO ACTIVO: Flecha de navegación
                     <svg
                       width="42"
