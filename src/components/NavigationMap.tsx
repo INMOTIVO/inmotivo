@@ -1255,23 +1255,7 @@ const NavigationMap = ({
           −
         </button>
 
-        {/* Botón de centrar en mi ubicación - Solo visible si tiene GPS */}
-        {userLocation && isUsingCurrentLocation && (
-          <Button
-            onClick={() => {
-              if (mapRef.current && userLocation) {
-                mapRef.current.panTo(userLocation);
-                mapRef.current.setZoom(17);
-                toast.success("Mapa centrado en tu ubicación");
-              }
-            }}
-            size="icon"
-            className="h-12 w-12 bg-white/90 backdrop-blur-sm hover:bg-white shadow-[0_2px_10px_rgba(0,0,0,0.15)] border border-gray-200"
-            title="Centrar en mi ubicación"
-          >
-            <MapPin className="h-5 w-5 text-primary" />
-          </Button>
-        )}
+
 
         {/* Botón de centrar en ubicación manual - Solo visible si hay ubicación manual */}
         {hasManualLocation && manualLat && manualLng && (
