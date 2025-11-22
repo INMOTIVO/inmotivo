@@ -380,12 +380,15 @@ const NavigationMap = ({
   useEffect(() => {
     if (initialCenter) return; // Ya establecido
     
-    if (hasManualLocation) {
-      // Ubicación manual desde URL
+    // PRIORIDAD 1: Ubicación manual desde URL
+    if (hasManualLocation && manualLat && manualLng) {
       setInitialCenter({ lat: Number(manualLat), lng: Number(manualLng) });
-    } else if (userLocation) {
-      // Ubicación GPS del usuario
+      console.log("Centro inicial: Ubicación manual", { lat: manualLat, lng: manualLng });
+    } 
+    // PRIORIDAD 2: Ubicación GPS del usuario
+    else if (userLocation) {
       setInitialCenter(userLocation);
+      console.log("Centro inicial: GPS del usuario", userLocation);
     }
   }, [userLocation, hasManualLocation, manualLat, manualLng, initialCenter]);
 
@@ -1053,6 +1056,55 @@ const NavigationMap = ({
     )}
 
     {/* ======================= */}
+    {/* MANUAL LOCATION MARKER  */}
+    {/* ======================= */}
+    {hasManualLocation && manualLat && manualLng && (
+      <OverlayView
+        position={{ lat: Number(manualLat), lng: Number(manualLng) }}
+        mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+      >
+        <div
+          style={{
+            position: "relative",
+            transform: "translate(-50%, -100%)",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              position: "relative",
+            }}
+          >
+            {/* PIN de ubicación manual - estilo moderno */}
+            <svg
+              width="48"
+              height="48"
+              viewBox="0 0 24 24"
+              fill="none"
+              style={{
+                filter: "drop-shadow(0 4px 12px rgba(255, 91, 4, 0.5))",
+                position: "relative",
+                zIndex: 10,
+              }}
+            >
+              {/* Pin principal */}
+              <path
+                d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"
+                fill="#FF5B04"
+                stroke="white"
+                strokeWidth="2"
+              />
+              {/* Punto interior blanco */}
+              <circle cx="12" cy="9" r="3" fill="white" />
+            </svg>
+          </div>
+        </div>
+      </OverlayView>
+    )}
+
+    {/* ======================= */}
     {/* DIRECCIONES */}
     {/* ======================= */}
     {isDirectNavigation && directions && (
@@ -1260,6 +1312,28 @@ const NavigationMap = ({
             title="Centrar en mi ubicación"
           >
             <MapPin className="h-5 w-5 text-primary" />
+          </Button>
+        )}
+
+        {/* Botón de centrar en ubicación manual - Solo visible si hay ubicación manual */}
+        {hasManualLocation && manualLat && manualLng && (
+          <Button
+            onClick={() => {
+              if (mapRef.current) {
+                const manualLocation = { 
+                  lat: Number(manualLat), 
+                  lng: Number(manualLng) 
+                };
+                mapRef.current.panTo(manualLocation);
+                mapRef.current.setZoom(17);
+                toast.success("Mapa centrado en la ubicación seleccionada");
+              }
+            }}
+            size="icon"
+            className="h-12 w-12 bg-white/90 backdrop-blur-sm hover:bg-white shadow-[0_2px_10px_rgba(0,0,0,0.15)] border border-gray-200"
+            title="Centrar en ubicación seleccionada"
+          >
+            <MapPin className="h-5 w-5 text-accent" fill="#FF5B04" />
           </Button>
         )}
 
