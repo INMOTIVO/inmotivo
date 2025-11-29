@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import Navbar from '@/components/Navbar';
-import { Loader2, MapPin, ArrowLeft } from 'lucide-react';
+import { Loader2, MapPin, ArrowLeft, CheckCircle } from 'lucide-react';
 import MediaUpload from '@/components/MediaUpload';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -563,35 +563,47 @@ const CreateProperty = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Latitud</Label>
-                  <Input type="number" step="0.000001" value={formData.latitude} onChange={e => setFormData({
-                  ...formData,
-                  latitude: parseFloat(e.target.value)
-                })} />
+              {/* Coordenadas - mostrar éxito o botón según estado */}
+              {(formData.latitude !== 6.2442 || formData.longitude !== -75.5812) ? (
+                <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700">
+                  <CheckCircle className="h-5 w-5 flex-shrink-0" />
+                  <span className="text-sm">
+                    Coordenadas obtenidas: {formData.latitude.toFixed(4)}, {formData.longitude.toFixed(4)}
+                  </span>
                 </div>
-                <div>
-                  <Label>Longitud</Label>
-                  <Input type="number" step="0.000001" value={formData.longitude} onChange={e => setFormData({
-                  ...formData,
-                  longitude: parseFloat(e.target.value)
-                })} />
-                </div>
-              </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Latitud</Label>
+                      <Input type="number" step="0.000001" value={formData.latitude} onChange={e => setFormData({
+                      ...formData,
+                      latitude: parseFloat(e.target.value)
+                      })} />
+                    </div>
+                    <div>
+                      <Label>Longitud</Label>
+                      <Input type="number" step="0.000001" value={formData.longitude} onChange={e => setFormData({
+                      ...formData,
+                      longitude: parseFloat(e.target.value)
+                      })} />
+                    </div>
+                  </div>
 
-              <Button type="button" variant="outline" onClick={getCoordinatesFromAddress} className="w-full" disabled={loadingCoordinates || !formData.address || !formData.city || !isLoaded}>
-                {loadingCoordinates ? <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Obteniendo coordenadas...
-                  </> : <>
-                    <MapPin className="mr-2 h-4 w-4" />
-                    Obtener coordenadas desde dirección
-                  </>}
-              </Button>
-              {(!formData.address || !formData.city) && <p className="text-xs text-muted-foreground">
-                  Completa la dirección y ciudad para obtener las coordenadas
-                </p>}
+                  <Button type="button" variant="outline" onClick={getCoordinatesFromAddress} className="w-full" disabled={loadingCoordinates || !formData.address || !formData.city || !isLoaded}>
+                    {loadingCoordinates ? <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Obteniendo coordenadas...
+                      </> : <>
+                        <MapPin className="mr-2 h-4 w-4" />
+                        Obtener coordenadas desde dirección
+                      </>}
+                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    Si escribiste la dirección manualmente, haz clic para obtener las coordenadas
+                  </p>
+                </>
+              )}
             </CardContent>
           </Card>
 
