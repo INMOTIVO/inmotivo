@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
 
+const RECOVERY_MODE_KEY = 'inmotivo_password_recovery_mode';
+
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -9,11 +11,45 @@ export const useAuth = () => {
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
 
   useEffect(() => {
-    // Set up auth state listener
+    // LAYER 1: Check sessionStorage for persisted recovery mode
+    const storedRecoveryMode = sessionStorage.getItem(RECOVERY_MODE_KEY);
+    if (storedRecoveryMode === 'true') {
+      console.log('🔑 Recovery mode detected from sessionStorage');
+      setIsPasswordRecovery(true);
+    }
+
+    // LAYER 2: Check URL params for mode=recovery
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.get('mode');
+    if (mode === 'recovery') {
+      console.log('🔑 Recovery mode detected from URL param');
+      sessionStorage.setItem(RECOVERY_MODE_KEY, 'true');
+      setIsPasswordRecovery(true);
+    }
+
+    // LAYER 3: Check hash for recovery tokens (Supabase uses hash for tokens)
+    const hash = window.location.hash;
+    if (hash) {
+      const hashParams = new URLSearchParams(hash.replace('#', ''));
+      const type = hashParams.get('type');
+      const accessToken = hashParams.get('access_token');
+      
+      if (type === 'recovery' || (accessToken && type === 'recovery')) {
+        console.log('🔑 Recovery mode detected from URL hash');
+        sessionStorage.setItem(RECOVERY_MODE_KEY, 'true');
+        setIsPasswordRecovery(true);
+      }
+    }
+
+    // LAYER 4: Set up auth state listener to detect PASSWORD_RECOVERY event
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        // Detect PASSWORD_RECOVERY event to show new password form
+        console.log('🔐 Auth event:', event);
+        
+        // Detect PASSWORD_RECOVERY event
         if (event === 'PASSWORD_RECOVERY') {
+          console.log('🔑 PASSWORD_RECOVERY event received');
+          sessionStorage.setItem(RECOVERY_MODE_KEY, 'true');
           setIsPasswordRecovery(true);
         }
         
@@ -59,6 +95,8 @@ export const useAuth = () => {
   };
 
   const signOut = async () => {
+    // Clear recovery mode on sign out
+    sessionStorage.removeItem(RECOVERY_MODE_KEY);
     const { error } = await supabase.auth.signOut();
     return { error };
   };
@@ -77,13 +115,22 @@ export const useAuth = () => {
     });
     
     if (!error) {
+      // Clear recovery mode after successful password update
+      sessionStorage.removeItem(RECOVERY_MODE_KEY);
       setIsPasswordRecovery(false);
+      
+      // Clean up URL params
+      const url = new URL(window.location.href);
+      url.searchParams.delete('mode');
+      url.hash = '';
+      window.history.replaceState({}, '', url.pathname);
     }
     
     return { error };
   };
 
   const clearPasswordRecoveryMode = () => {
+    sessionStorage.removeItem(RECOVERY_MODE_KEY);
     setIsPasswordRecovery(false);
   };
 
