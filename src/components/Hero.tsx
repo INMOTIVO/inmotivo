@@ -20,6 +20,11 @@ const Hero = () => {
   const [location, setLocation] = useState("");
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  // refs
+  const whereContainerRef = useRef<HTMLDivElement | null>(null);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
+
+  const [openUp, setOpenUp] = useState(false);
 
   // Estados para el campo "Dónde"
   const [searchWhere, setSearchWhere] = useState("");
@@ -30,7 +35,10 @@ const Hero = () => {
     address: string;
     isCurrentLocation?: boolean;
   } | null>(null);
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [userLocation, setUserLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
   const [userLocationName, setUserLocationName] = useState<string>("");
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -62,6 +70,56 @@ const Hero = () => {
       visibleTextRef.current.style.height = ta.style.height;
     }
   };
+  useEffect(() => {
+    if (!showLocationSuggestions) return;
+
+    const calculatePosition = () => {
+      const containerRect = whereContainerRef.current?.getBoundingClientRect();
+      const dropdownEl = dropdownRef.current;
+
+      // Medidas de seguridad por si algo falta
+      if (!containerRect || !dropdownEl) {
+        setOpenUp(false);
+        return;
+      }
+
+      // Altura real del dropdown cuando está renderizado
+      const dropdownHeight = Math.min(dropdownEl.scrollHeight, 320); // tope por si hay muchas opciones
+
+      const spaceBelow = window.innerHeight - containerRect.bottom; // px debajo del input
+      const spaceAbove = containerRect.top; // px arriba del input
+
+      // Debug opcional:
+      // console.log({ spaceAbove, spaceBelow, dropdownHeight });
+
+      // Regla: si no cabe abajo (con un margen de 16px) y sí cabe arriba -> abrir arriba.
+      const margin = 16;
+      if (spaceBelow < dropdownHeight + margin && spaceAbove > dropdownHeight + margin) {
+        setOpenUp(true);
+      } else if (spaceBelow >= dropdownHeight + margin) {
+        setOpenUp(false);
+      } else if (spaceAbove >= dropdownHeight + margin) {
+        setOpenUp(true);
+      } else {
+        // si no cabe ni arriba ni abajo, abrir hacia donde haya más espacio (mejor opción)
+        setOpenUp(spaceAbove > spaceBelow);
+      }
+    };
+
+    // Calcula justo después del render del dropdown
+    // timeout 0 para esperar paint
+    const t = setTimeout(calculatePosition, 0);
+
+    // Recalcula al redimensionar o scrollear (y cuando cambia viewport por teclado)
+    window.addEventListener("resize", calculatePosition);
+    window.addEventListener("scroll", calculatePosition, true);
+
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener("resize", calculatePosition);
+      window.removeEventListener("scroll", calculatePosition, true);
+    };
+  }, [showLocationSuggestions, predictions]); // recalcula cuando aparece el dropdown o cambian predicciones
 
   // Detectar ubicación automáticamente
   useEffect(() => {
@@ -78,7 +136,11 @@ const Hero = () => {
           const lat = position.coords.latitude;
           const lng = position.coords.longitude;
 
-          console.log("GPS coordinates obtained:", { lat, lng, accuracy: position.coords.accuracy });
+          console.log("GPS coordinates obtained:", {
+            lat,
+            lng,
+            accuracy: position.coords.accuracy,
+          });
 
           setUserLocation({ lat, lng });
 
@@ -630,13 +692,13 @@ const Hero = () => {
                     {/* DROPDOWN */}
                     {showLocationSuggestions && (
                       <div
-                        className="
-                      absolute left-0 right-0 mt-2 z-[200]
-                      bg-white rounded-xl shadow-2xl border border-gray-200
-                      max-h-80 overflow-y-auto
-                      location-suggestions-container
-                    "
+                        ref={dropdownRef}
+                        className={cn(
+                          "absolute left-0 right-0 z-[200] bg-white rounded-xl shadow-2xl border border-gray-200 max-h-80 overflow-y-auto location-suggestions-container transition-transform",
+                          openUp ? "bottom-full mb-2 origin-bottom" : "top-full mt-2 origin-top",
+                        )}
                       >
+                        {/* OPCIÓN: USAR UBICACIÓN ACTUAL */}
                         <div
                           onMouseDown={(e) => {
                             e.preventDefault(); // Prevenir que el input pierda el foco
@@ -648,6 +710,7 @@ const Hero = () => {
                           <span className="font-semibold text-green-700">Usar mi ubicación actual</span>
                         </div>
 
+                        {/* LISTA DE PREDICCIONES */}
                         {predictions.map((s) => (
                           <div
                             key={s.place_id}
