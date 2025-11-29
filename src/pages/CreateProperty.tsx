@@ -11,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import Navbar from '@/components/Navbar';
-import { Upload, X, Loader2, MapPin, ArrowLeft, Star } from 'lucide-react';
+import { Loader2, MapPin, ArrowLeft } from 'lucide-react';
+import MediaUpload from '@/components/MediaUpload';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { useGoogleMapsPlaces } from '@/hooks/useGoogleMapsPlaces';
@@ -41,7 +42,6 @@ const CreateProperty = () => {
     loading: authLoading
   } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [uploadingImages, setUploadingImages] = useState(false);
   const [loadingCoordinates, setLoadingCoordinates] = useState(false);
   const [loadingCurrentLocation, setLoadingCurrentLocation] = useState(false);
   const [images, setImages] = useState<string[]>([]);
@@ -173,59 +173,6 @@ const CreateProperty = () => {
       toast.error('Error al cargar la propiedad');
       navigate('/dashboard');
     }
-  };
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-    if (images.length + files.length > 10) {
-      toast.error('Máximo 10 imágenes permitidas');
-      return;
-    }
-    setUploadingImages(true);
-    try {
-      const uploadedUrls: string[] = [];
-      for (const file of Array.from(files)) {
-        if (file.size > 5 * 1024 * 1024) {
-          toast.error(`${file.name} es muy grande (máx 5MB)`);
-          continue;
-        }
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${user?.id}/${Math.random()}.${fileExt}`;
-        const {
-          data,
-          error
-        } = await supabase.storage.from('property-images').upload(fileName, file);
-        if (error) throw error;
-        const {
-          data: {
-            publicUrl
-          }
-        } = supabase.storage.from('property-images').getPublicUrl(data.path);
-        uploadedUrls.push(publicUrl);
-      }
-      setImages([...images, ...uploadedUrls]);
-      toast.success(`${uploadedUrls.length} imágenes subidas`);
-    } catch (error) {
-      console.error('Error uploading images:', error);
-      toast.error('Error al subir imágenes');
-    } finally {
-      setUploadingImages(false);
-    }
-  };
-  const removeImage = (index: number) => {
-    const newImages = images.filter((_, i) => i !== index);
-    setImages(newImages);
-
-    // Ajustar el índice de la portada si es necesario
-    if (index === coverImageIndex) {
-      setCoverImageIndex(0);
-    } else if (index < coverImageIndex) {
-      setCoverImageIndex(coverImageIndex - 1);
-    }
-  };
-  const setCoverImage = (index: number) => {
-    setCoverImageIndex(index);
-    toast.success('Foto de portada actualizada');
   };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -722,65 +669,22 @@ const CreateProperty = () => {
             </CardContent>
           </Card>
 
-          {/* Fotos */}
+          {/* Fotos y Videos */}
           <Card>
             <CardHeader>
-              <CardTitle>Fotos de la propiedad *</CardTitle>
+              <CardTitle>Fotos y videos de la propiedad *</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="images">
-                  Sube hasta 10 imágenes en formato horizontal (máx 5MB c/u)
-                </Label>
-                <div className="mt-2">
-                  <label htmlFor="images" className="flex items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-accent">
-                    {uploadingImages ? <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /> : <div className="text-center">
-                        <Upload className="h-8 w-8 mx-auto text-muted-foreground" />
-                        <p className="mt-2 text-sm text-muted-foreground">
-                          Click para subir imágenes
-                        </p>
-                      </div>}
-                  </label>
-                  <Input id="images" type="file" multiple accept="image/*" onChange={handleImageUpload} className="hidden" disabled={uploadingImages} />
-                </div>
-                <div className="mt-2 flex items-center gap-2 text-sm">
-                  <span className="text-muted-foreground">¿No sabes cómo subir fotos?</span>
-                  <button
-                    type="button"
-                    onClick={() => window.open('https://www.youtube.com/watch?v=INSTRUCTIVO_VIDEO_ID', '_blank')}
-                    className="text-primary hover:underline font-medium"
-                  >
-                    Ver instructivo →
-                  </button>
-                </div>
-              </div>
-
-              {images.length > 0 && <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">
-                    Click en la estrella para marcar como foto de portada
-                  </p>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {images.map((url, index) => <div key={index} className="relative group">
-                        <img src={url} alt={`Foto ${index + 1}`} className="w-full h-32 object-cover rounded-lg" />
-                        
-                        {/* Indicador de portada */}
-                        {index === coverImageIndex && <div className="absolute top-2 left-2 bg-primary text-primary-foreground px-2 py-1 rounded-md text-xs font-semibold flex items-center gap-1">
-                            <Star className="h-3 w-3 fill-current" />
-                            Portada
-                          </div>}
-                        
-                        {/* Botón para marcar como portada */}
-                        <Button type="button" variant="secondary" size="icon" className={`absolute top-2 left-2 transition-opacity ${index === coverImageIndex ? 'opacity-0' : 'opacity-0 group-hover:opacity-100'}`} onClick={() => setCoverImage(index)} title="Marcar como portada">
-                          <Star className="h-4 w-4" />
-                        </Button>
-                        
-                        {/* Botón eliminar */}
-                        <Button type="button" variant="destructive" size="icon" className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => removeImage(index)}>
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>)}
-                  </div>
-                </div>}
+            <CardContent>
+              <MediaUpload
+                userId={user?.id}
+                media={images}
+                setMedia={setImages}
+                coverIndex={coverImageIndex}
+                setCoverIndex={setCoverImageIndex}
+                maxFiles={10}
+                maxImageSizeMB={5}
+                maxVideoSizeMB={100}
+              />
             </CardContent>
           </Card>
 
