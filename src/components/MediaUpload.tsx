@@ -35,7 +35,7 @@ const MediaUpload = ({
   setCoverIndex,
   maxFiles = 10,
   maxImageSizeMB = 5,
-  maxVideoSizeMB = 100
+  maxVideoSizeMB = 500
 }: MediaUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
