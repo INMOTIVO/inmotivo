@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, KeyRound } from "lucide-react";
 import { z } from "zod";
 
 const signInSchema = z.object({
@@ -28,20 +28,36 @@ const signUpSchema = z.object({
   path: ["confirmPassword"],
 });
 
+const newPasswordSchema = z.object({
+  password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres").max(100, "Contraseña demasiado larga"),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Las contraseñas no coinciden",
+  path: ["confirmPassword"],
+});
+
 const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user, loading: authLoading, signIn, signUp, resetPassword } = useAuth();
+  const { user, loading: authLoading, signIn, signUp, resetPassword, isPasswordRecovery, updatePassword } = useAuth();
   const { isAdmin, loading: roleLoading } = useRole();
   const [loading, setLoading] = useState(false);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const defaultTab = searchParams.get('tab') || 'signin';
 
+  // State for new password form (password recovery)
+  const [newPasswordData, setNewPasswordData] = useState({
+    password: "",
+    confirmPassword: "",
+  });
+
   // Redirect logged-in users based on their role
+  // BUT NOT if they are in password recovery mode
   useEffect(() => {
     const redirectUser = async () => {
-      if (authLoading || roleLoading || !user) return;
+      // Don't redirect if in password recovery mode
+      if (authLoading || roleLoading || !user || isPasswordRecovery) return;
 
       // Check if user is admin
       if (isAdmin) {
@@ -64,7 +80,7 @@ const Auth = () => {
     };
 
     redirectUser();
-  }, [user, authLoading, roleLoading, isAdmin, navigate]);
+  }, [user, authLoading, roleLoading, isAdmin, navigate, isPasswordRecovery]);
 
   const [signInData, setSignInData] = useState({
     email: "",
@@ -179,6 +195,91 @@ const Auth = () => {
 
     setLoading(false);
   };
+
+  // Handler for updating password after recovery
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate input
+    const result = newPasswordSchema.safeParse(newPasswordData);
+    if (!result.success) {
+      toast.error(result.error.errors[0].message);
+      return;
+    }
+    
+    setLoading(true);
+    const { error } = await updatePassword(newPasswordData.password);
+
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("¡Contraseña actualizada exitosamente!");
+      setNewPasswordData({ password: "", confirmPassword: "" });
+      // After password update, the useEffect will handle redirection
+    }
+
+    setLoading(false);
+  };
+
+  // If in password recovery mode, show the new password form
+  if (isPasswordRecovery) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-accent/20 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <Card>
+            <CardHeader className="text-center">
+              <div className="flex justify-center mb-4">
+                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                  <KeyRound className="w-8 h-8 text-primary" />
+                </div>
+              </div>
+              <CardTitle className="text-2xl">Establecer nueva contraseña</CardTitle>
+              <CardDescription>
+                Ingresa tu nueva contraseña para completar la recuperación de tu cuenta
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleUpdatePassword} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="new-password">Nueva contraseña</Label>
+                  <Input
+                    id="new-password"
+                    type="password"
+                    placeholder="Mínimo 6 caracteres"
+                    value={newPasswordData.password}
+                    onChange={(e) => setNewPasswordData({
+                      ...newPasswordData, 
+                      password: e.target.value
+                    })}
+                    required
+                    minLength={6}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-new-password">Confirmar contraseña</Label>
+                  <Input
+                    id="confirm-new-password"
+                    type="password"
+                    placeholder="Repite tu nueva contraseña"
+                    value={newPasswordData.confirmPassword}
+                    onChange={(e) => setNewPasswordData({
+                      ...newPasswordData, 
+                      confirmPassword: e.target.value
+                    })}
+                    required
+                    minLength={6}
+                  />
+                </div>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading ? "Actualizando..." : "Actualizar contraseña"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary/10 via-background to-accent/20 flex items-center justify-center p-4">
