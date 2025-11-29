@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useRole } from "@/hooks/useRole";
+import { useProfileTypes } from "@/hooks/useProfileTypes";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,8 +11,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ArrowLeft, KeyRound } from "lucide-react";
+import { ArrowLeft, KeyRound, AlertCircle } from "lucide-react";
 import { z } from "zod";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const signInSchema = z.object({
   email: z.string().email("Email inválido").max(255, "Email demasiado largo"),
@@ -41,10 +43,15 @@ const Auth = () => {
   const [searchParams] = useSearchParams();
   const { user, loading: authLoading, signIn, signUp, resetPassword, isPasswordRecovery, updatePassword } = useAuth();
   const { isAdmin, loading: roleLoading } = useRole();
+  const { isOwner, isTenant, isBuyer, setPendingType, loading: profileTypesLoading } = useProfileTypes();
   const [loading, setLoading] = useState(false);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const defaultTab = searchParams.get('tab') || 'signin';
+  
+  // State for existing user flow
+  const [showExistingUserAlert, setShowExistingUserAlert] = useState(false);
+  const [pendingUserType, setPendingUserType] = useState<"owner" | "tenant" | "buyer" | null>(null);
 
   // State for new password form (password recovery)
   const [newPasswordData, setNewPasswordData] = useState({
@@ -52,12 +59,12 @@ const Auth = () => {
     confirmPassword: "",
   });
 
-  // Redirect logged-in users based on their role
+  // Redirect logged-in users based on their profile types
   // BUT NOT if they are in password recovery mode
   useEffect(() => {
     const redirectUser = async () => {
-      // Don't redirect if in password recovery mode
-      if (authLoading || roleLoading || !user || isPasswordRecovery) return;
+      // Don't redirect if in password recovery mode or still loading
+      if (authLoading || roleLoading || profileTypesLoading || !user || isPasswordRecovery) return;
 
       // Check if user is admin
       if (isAdmin) {
@@ -65,14 +72,8 @@ const Auth = () => {
         return;
       }
 
-      // Check user type from profile
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('user_type')
-        .eq('id', user.id)
-        .single();
-
-      if (profile?.user_type === 'owner') {
+      // Redirect based on profile types (prioritize owner)
+      if (isOwner) {
         navigate('/dashboard');
       } else {
         navigate('/profile');
@@ -80,7 +81,7 @@ const Auth = () => {
     };
 
     redirectUser();
-  }, [user, authLoading, roleLoading, isAdmin, navigate, isPasswordRecovery]);
+  }, [user, authLoading, roleLoading, profileTypesLoading, isAdmin, isOwner, navigate, isPasswordRecovery]);
 
   const [signInData, setSignInData] = useState({
     email: "",
@@ -114,25 +115,7 @@ const Auth = () => {
       setLoading(false);
     } else {
       toast.success("¡Sesión iniciada exitosamente!");
-      
-      // Fetch user profile to check user type
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('user_type')
-          .eq('id', user.id)
-          .single();
-        
-        // Redirect based on user type
-        if (profile?.user_type === 'owner') {
-          navigate("/dashboard");
-        } else {
-          navigate("/profile");
-        }
-      } else {
-        navigate("/");
-      }
+      // The useEffect will handle redirection based on profile types
       setLoading(false);
     }
   };
@@ -157,9 +140,21 @@ const Auth = () => {
     );
 
     if (error) {
-      toast.error(error.message);
+      // Check if user already exists
+      if (error.message.includes("already registered") || 
+          error.message.includes("User already registered") ||
+          error.message.includes("already been registered")) {
+        // Show alert to login and add role
+        setShowExistingUserAlert(true);
+        setPendingUserType(signUpData.userType);
+        // Pre-fill sign-in email
+        setSignInData(prev => ({ ...prev, email: signUpData.email }));
+        toast.info("Este correo ya tiene una cuenta. Inicia sesión para agregar este rol.");
+      } else {
+        toast.error(error.message);
+      }
     } else {
-      toast.success("¡Cuenta creada exitosamente! Ya puedes iniciar sesión.");
+      toast.success("¡Cuenta creada exitosamente!");
       // Redirect based on user type
       if (signUpData.userType === "owner") {
         navigate("/dashboard");
@@ -169,6 +164,17 @@ const Auth = () => {
     }
 
     setLoading(false);
+  };
+
+  const handleLoginToAddRole = () => {
+    if (pendingUserType) {
+      // Store the pending type in sessionStorage for after login
+      setPendingType(pendingUserType);
+    }
+    setShowExistingUserAlert(false);
+    // Switch to sign-in tab programmatically
+    const signinTab = document.querySelector('[value="signin"]') as HTMLButtonElement;
+    if (signinTab) signinTab.click();
   };
 
   const handleResetPassword = async (e: React.FormEvent) => {
@@ -384,6 +390,29 @@ const Auth = () => {
               </TabsContent>
 
               <TabsContent value="signup">
+                {showExistingUserAlert && (
+                  <Alert className="mb-4 border-amber-500 bg-amber-50">
+                    <AlertCircle className="h-4 w-4 text-amber-600" />
+                    <AlertDescription className="text-amber-800">
+                      <p className="font-medium mb-2">Este correo ya tiene una cuenta</p>
+                      <p className="text-sm mb-3">
+                        Puedes iniciar sesión para agregar el rol de{" "}
+                        <strong>
+                          {pendingUserType === "owner" ? "Propietario" : 
+                           pendingUserType === "buyer" ? "Comprador" : "Arrendatario"}
+                        </strong>{" "}
+                        a tu cuenta existente.
+                      </p>
+                      <Button 
+                        size="sm" 
+                        onClick={handleLoginToAddRole}
+                        className="w-full"
+                      >
+                        Iniciar sesión y agregar rol
+                      </Button>
+                    </AlertDescription>
+                  </Alert>
+                )}
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signup-name">Nombre completo</Label>
@@ -403,9 +432,10 @@ const Auth = () => {
                     <select
                       id="signup-usertype"
                       value={signUpData.userType}
-                      onChange={(e) =>
-                        setSignUpData({ ...signUpData, userType: e.target.value as "owner" | "tenant" | "buyer" })
-                      }
+                      onChange={(e) => {
+                        setSignUpData({ ...signUpData, userType: e.target.value as "owner" | "tenant" | "buyer" });
+                        setShowExistingUserAlert(false); // Hide alert when changing type
+                      }}
                       className="w-full px-3 py-2 border rounded-md bg-background text-foreground"
                       required
                     >

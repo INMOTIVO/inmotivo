@@ -6,12 +6,15 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { useRole } from "@/hooks/useRole";
+import { useProfileTypes } from "@/hooks/useProfileTypes";
 import { supabase } from "@/integrations/supabase/client";
 import HelpCenter from "./HelpCenter";
+
 const HomeMenu = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isAdmin } = useRole();
+  const { isOwner } = useProfileTypes();
   const [isOpen, setIsOpen] = useState(false);
   const [showHelpCenter, setShowHelpCenter] = useState(false);
   const [userProfile, setUserProfile] = useState<{ full_name?: string; avatar_url?: string } | null>(null);
@@ -36,31 +39,24 @@ const HomeMenu = () => {
 
     fetchUserProfile();
   }, [user]);
+
   const handleNavigation = (path: string) => {
     setIsOpen(false);
     navigate(path);
   };
+
   const handleHelpCenter = () => {
     setIsOpen(false);
     setShowHelpCenter(true);
   };
 
-  const handleAvatarClick = async () => {
+  const handleAvatarClick = () => {
     if (isAdmin) {
       navigate('/admin');
+    } else if (isOwner) {
+      navigate('/dashboard');
     } else {
-      // Check user type from profile
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('user_type')
-        .eq('id', user?.id)
-        .single();
-
-      if (profile?.user_type === 'owner') {
-        navigate('/dashboard');
-      } else {
-        navigate('/profile');
-      }
+      navigate('/profile');
     }
   };
 

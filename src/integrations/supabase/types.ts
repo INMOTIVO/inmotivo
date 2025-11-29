@@ -294,6 +294,27 @@ export type Database = {
         }
         Relationships: []
       }
+      profile_types: {
+        Row: {
+          created_at: string | null
+          id: string
+          type: Database["public"]["Enums"]["profile_type"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          type: Database["public"]["Enums"]["profile_type"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          type?: Database["public"]["Enums"]["profile_type"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -562,6 +583,13 @@ export type Database = {
     }
     Functions: {
       generate_property_code: { Args: never; Returns: string }
+      has_profile_type: {
+        Args: {
+          _type: Database["public"]["Enums"]["profile_type"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -572,6 +600,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "provider" | "user"
+      profile_type: "owner" | "tenant" | "buyer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -700,6 +729,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "provider", "user"],
+      profile_type: ["owner", "tenant", "buyer"],
     },
   },
 } as const
