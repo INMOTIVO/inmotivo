@@ -6,11 +6,17 @@ export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
 
   useEffect(() => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        // Detect PASSWORD_RECOVERY event to show new password form
+        if (event === 'PASSWORD_RECOVERY') {
+          setIsPasswordRecovery(true);
+        }
+        
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -58,20 +64,39 @@ export const useAuth = () => {
   };
 
   const resetPassword = async (email: string) => {
-    const redirectUrl = `${window.location.origin}/auth`;
+    const redirectUrl = `${window.location.origin}/auth?mode=recovery`;
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: redirectUrl,
     });
     return { error };
   };
 
+  const updatePassword = async (newPassword: string) => {
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword
+    });
+    
+    if (!error) {
+      setIsPasswordRecovery(false);
+    }
+    
+    return { error };
+  };
+
+  const clearPasswordRecoveryMode = () => {
+    setIsPasswordRecovery(false);
+  };
+
   return {
     user,
     session,
     loading,
+    isPasswordRecovery,
     signUp,
     signIn,
     signOut,
     resetPassword,
+    updatePassword,
+    clearPasswordRecoveryMode,
   };
 };
