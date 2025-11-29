@@ -183,3 +183,26 @@ All colors MUST be HSL.
 .animate-blink {
   animation: blink 0.85s step-end infinite;
 }
+
+/* Prevenir zoom en inputs en iOS Safari */
+@supports (-webkit-touch-callout: none) {
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+  
+  input:focus, textarea:focus, select:focus {
+    font-size: 16px !important;
+  }
+}
+
+/* Mejorar comportamiento de scroll con teclado en mobile */
+@media (max-width: 767px) {
+  .search-capsule-container {
+    scroll-margin-top: 100px;
+  }
+  
+  input, textarea {
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
