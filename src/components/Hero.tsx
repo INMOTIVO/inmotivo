@@ -454,7 +454,7 @@ const Hero = () => {
                       ref={visibleTextRef}
                       className="
                     absolute inset-0 whitespace-pre-wrap break-words
-                    pl-1 pr-10 text-base md:text-sm leading-[1.4rem]
+                    pl-1 pr-10 text-xs leading-[1.4rem]
                     pointer-events-none select-none
                     flex items-center
                   "
@@ -503,7 +503,7 @@ const Hero = () => {
                   relative z-10 w-full bg-transparent 
                   text-transparent 
                   ${isRecording ? "caret-green-500" : "caret-transparent"}
-                  text-base md:text-sm
+                  text-xs
                   leading-[1.4rem]
                   placeholder:text-gray-400 placeholder-transparent 
                   border-0 resize-none focus-visible:ring-0 
@@ -558,7 +558,7 @@ const Hero = () => {
                     <div
                       className="
                     absolute inset-0 whitespace-pre-wrap break-words
-                    pl-1 pr-10 text-base md:text-sm leading-[1.4rem]
+                    pl-1 pr-10 text-xs leading-[1.4rem]
                     pointer-events-none select-none
                     flex items-center
                   "
@@ -613,7 +613,7 @@ const Hero = () => {
                     <textarea
                       className="
                     relative z-10 w-full bg-transparent text-transparent
-                    text-base md:text-sm
+                    text-xs
                     border-0 resize-none focus-visible:ring-0 p-0
                     min-h-[28px] max-h-[80px]
                   "
