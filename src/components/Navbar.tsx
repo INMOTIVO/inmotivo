@@ -4,11 +4,13 @@ import { Menu, LogOut, Home, Shield, Heart, User } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useRole } from "@/hooks/useRole";
+import { useProfileTypes } from "@/hooks/useProfileTypes";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+
 const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -19,6 +21,7 @@ const Navbar = () => {
   const {
     isAdmin
   } = useRole();
+  const { isOwner } = useProfileTypes();
   const [isOpen, setIsOpen] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const isAdminPage = location.pathname === '/admin';
@@ -32,7 +35,7 @@ const Navbar = () => {
       if (!user) return null;
       const {
         data
-      } = await supabase.from("profiles").select("full_name, user_type").eq("id", user.id).single();
+      } = await supabase.from("profiles").select("full_name").eq("id", user.id).single();
       return data;
     },
     enabled: !!user
@@ -55,7 +58,7 @@ const Navbar = () => {
     },
     enabled: !!user
   });
-  const isOwner = profile?.user_type === 'owner';
+
   const handleSignOut = async () => {
     const {
       error

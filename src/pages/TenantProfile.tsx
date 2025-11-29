@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
+import { useProfileTypes, ProfileType } from '@/hooks/useProfileTypes';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import Navbar from '@/components/Navbar';
@@ -10,30 +11,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Heart, MessageSquare, Mail, MapPin, Calendar, Truck, Sofa, Home, Wrench, Zap, Sparkles, Paintbrush, KeyRound } from 'lucide-react';
+import { Heart, MessageSquare, Mail, MapPin, Calendar, Truck, Sofa, Home, Wrench, Zap, Sparkles, Paintbrush, KeyRound, Plus, Check, UserCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { toast } from 'sonner';
 
 const TenantProfile = () => {
   const { user, loading } = useAuth();
   const { isAdmin, loading: roleLoading } = useRole();
+  const { types, isOwner, isTenant, isBuyer, addType, loading: profileTypesLoading } = useProfileTypes();
   const navigate = useNavigate();
-
-  // Fetch user profile to check user type
-  const { data: userTypeData } = useQuery({
-    queryKey: ['user-type', user?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('user_type')
-        .eq('id', user!.id)
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!user,
-  });
+  const [addingRole, setAddingRole] = useState<ProfileType | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -47,12 +35,21 @@ const TenantProfile = () => {
     }
   }, [isAdmin, loading, roleLoading, navigate]);
 
-  // Redirect owners to dashboard
-  useEffect(() => {
-    if (userTypeData && userTypeData.user_type === 'owner') {
-      navigate('/dashboard');
+  // Handle adding a new role
+  const handleAddRole = async (roleType: ProfileType) => {
+    setAddingRole(roleType);
+    const { error } = await addType(roleType);
+    if (error) {
+      toast.error(`Error al agregar rol: ${error.message}`);
+    } else {
+      toast.success(`Rol de ${roleType === 'owner' ? 'Propietario' : roleType === 'buyer' ? 'Comprador' : 'Arrendatario'} agregado exitosamente`);
+      // If added owner role, redirect to dashboard
+      if (roleType === 'owner') {
+        navigate('/dashboard');
+      }
     }
-  }, [userTypeData, navigate]);
+    setAddingRole(null);
+  };
 
   // Fetch user profile
   const { data: profile } = useQuery({
@@ -133,7 +130,7 @@ const TenantProfile = () => {
   });
 
 
-  if (loading || !user) {
+  if (loading || profileTypesLoading || !user) {
     return <div className="min-h-screen flex items-center justify-center">
       <p>Cargando...</p>
     </div>;
@@ -146,13 +143,21 @@ const TenantProfile = () => {
     return `${currency} ${price.toLocaleString('es-CO')}`;
   };
 
+  const getRoleLabel = (type: ProfileType) => {
+    switch (type) {
+      case 'owner': return 'Propietario';
+      case 'tenant': return 'Arrendatario';
+      case 'buyer': return 'Comprador';
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-background to-secondary/20">
       <Navbar />
       
       <main className="flex-1 container mx-auto px-4 py-8 mt-20">
         <div className="mb-8">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1 className="text-4xl font-bold mb-2">Mi Perfil</h1>
               <p className="text-muted-foreground">
@@ -165,6 +170,66 @@ const TenantProfile = () => {
               </p>
             )}
           </div>
+
+          {/* Roles Section */}
+          <Card className="mt-6">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <UserCircle className="h-5 w-5 text-primary" />
+                <CardTitle className="text-lg">Mis Roles</CardTitle>
+              </div>
+              <CardDescription>
+                Puedes tener múltiples roles en la plataforma
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2 mb-4">
+                {types.map((type) => (
+                  <Badge key={type} variant="default" className="text-sm py-1 px-3">
+                    <Check className="h-3 w-3 mr-1" />
+                    {getRoleLabel(type)}
+                  </Badge>
+                ))}
+              </div>
+              
+              {/* Add roles buttons */}
+              <div className="flex flex-wrap gap-2">
+                {!isOwner && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleAddRole('owner')}
+                    disabled={addingRole === 'owner'}
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    {addingRole === 'owner' ? 'Agregando...' : 'Agregar rol Propietario'}
+                  </Button>
+                )}
+                {!isTenant && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleAddRole('tenant')}
+                    disabled={addingRole === 'tenant'}
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    {addingRole === 'tenant' ? 'Agregando...' : 'Agregar rol Arrendatario'}
+                  </Button>
+                )}
+                {!isBuyer && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => handleAddRole('buyer')}
+                    disabled={addingRole === 'buyer'}
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    {addingRole === 'buyer' ? 'Agregando...' : 'Agregar rol Comprador'}
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <Tabs defaultValue="favorites" className="space-y-6">

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useRole } from '@/hooks/useRole';
+import { useProfileTypes, ProfileType } from '@/hooks/useProfileTypes';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,7 +13,7 @@ import { Label } from '@/components/ui/label';
 import Navbar from '@/components/Navbar';
 import PropertiesManagementTable from '@/components/PropertiesManagementTable';
 import { MessagesDialog } from '@/components/MessagesDialog';
-import { Plus, Home, MessageCircle, Edit, Trash2, Eye, ArrowLeft } from 'lucide-react';
+import { Plus, Home, MessageCircle, Edit, Trash2, Eye, ArrowLeft, Check, UserCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -101,6 +102,7 @@ const ProviderDashboard = () => {
     isAdmin,
     loading: roleLoading
   } = useRole();
+  const { types, isOwner, isTenant, isBuyer, addType, loading: profileTypesLoading } = useProfileTypes();
   const navigate = useNavigate();
   const [properties, setProperties] = useState<Property[]>([]);
   const [messages, setMessages] = useState<ContactMessage[]>([]);
@@ -109,6 +111,7 @@ const ProviderDashboard = () => {
   const [savingProfile, setSavingProfile] = useState(false);
   const [showPropertiesView, setShowPropertiesView] = useState<'all' | 'available' | 'draft' | 'suspended' | null>(null);
   const [messagesDialogOpen, setMessagesDialogOpen] = useState(false);
+  const [addingRole, setAddingRole] = useState<ProfileType | null>(null);
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
@@ -116,6 +119,27 @@ const ProviderDashboard = () => {
       phone: ''
     }
   });
+
+  // Handle adding a new role
+  const handleAddRole = async (roleType: ProfileType) => {
+    setAddingRole(roleType);
+    const { error } = await addType(roleType);
+    if (error) {
+      toast.error(`Error al agregar rol: ${error.message}`);
+    } else {
+      toast.success(`Rol de ${roleType === 'owner' ? 'Propietario' : roleType === 'buyer' ? 'Comprador' : 'Arrendatario'} agregado exitosamente`);
+    }
+    setAddingRole(null);
+  };
+
+  const getRoleLabel = (type: ProfileType) => {
+    switch (type) {
+      case 'owner': return 'Propietario';
+      case 'tenant': return 'Arrendatario';
+      case 'buyer': return 'Comprador';
+    }
+  };
+
   useEffect(() => {
     if (!loading && !roleLoading) {
       if (!user) {
@@ -234,7 +258,7 @@ const ProviderDashboard = () => {
       toast.error('Error al eliminar propiedad');
     }
   };
-  if (loading || roleLoading || loadingData) {
+  if (loading || roleLoading || profileTypesLoading || loadingData) {
     return <div className="min-h-screen">
         <Navbar />
         <div className="container mx-auto px-4 pt-24">
@@ -280,6 +304,63 @@ const ProviderDashboard = () => {
             Nueva Propiedad
           </Button>
         </div>
+
+        {/* Roles Section */}
+        <Card className="mb-8">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <UserCircle className="h-5 w-5 text-primary" />
+              <CardTitle className="text-lg">Mis Roles</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {types.map((type) => (
+                <Badge key={type} variant="default" className="text-sm py-1 px-3">
+                  <Check className="h-3 w-3 mr-1" />
+                  {getRoleLabel(type)}
+                </Badge>
+              ))}
+            </div>
+            
+            {/* Add roles buttons */}
+            <div className="flex flex-wrap gap-2">
+              {!isOwner && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleAddRole('owner')}
+                  disabled={addingRole === 'owner'}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  {addingRole === 'owner' ? 'Agregando...' : 'Agregar rol Propietario'}
+                </Button>
+              )}
+              {!isTenant && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleAddRole('tenant')}
+                  disabled={addingRole === 'tenant'}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  {addingRole === 'tenant' ? 'Agregando...' : 'Agregar rol Arrendatario'}
+                </Button>
+              )}
+              {!isBuyer && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleAddRole('buyer')}
+                  disabled={addingRole === 'buyer'}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  {addingRole === 'buyer' ? 'Agregando...' : 'Agregar rol Comprador'}
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
