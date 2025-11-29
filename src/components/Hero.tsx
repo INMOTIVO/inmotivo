@@ -572,7 +572,7 @@ const Hero = () => {
                         </>
                       ) : (
                         <>
-                          <span className="text-gray-400">¿Dónde lo buscas?</span>
+                          <span className="text-xs text-gray-400">¿Dónde lo buscas?</span>
                           {activeField === "donde" && (
                             <span className="inline-block w-[2px] h-[16px] bg-gray-700 ml-[1px] animate-blink align-text-bottom"></span>
                           )}
