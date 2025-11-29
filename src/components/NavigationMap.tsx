@@ -74,6 +74,7 @@ const NavigationMap = ({
   const [directions, setDirections] = useState<google.maps.DirectionsResult | null>(null);
   const [mapZoom, setMapZoom] = useState<number>(18);
   const [currentSpeed, setCurrentSpeed] = useState<number>(0);
+  const [smoothedSpeed, setSmoothedSpeed] = useState<number>(0); // Para suavizado EMA
   const [isVehicleMode, setIsVehicleMode] = useState(false);
   const [collectedProperties, setCollectedProperties] = useState<any[]>([]);
   const [showCollectedProperties, setShowCollectedProperties] = useState(false);
@@ -504,7 +505,8 @@ const NavigationMap = ({
   useEffect(() => {
     let watchId: number;
     let lastUpdate = 0;
-    const UPDATE_INTERVAL = isVehicleMode ? 1200 : 2000;
+    const UPDATE_INTERVAL = isVehicleMode ? 800 : 1500; // Reducido para actualizaciones más fluidas
+    const SMOOTHING_FACTOR = 0.3; // Factor de suavizado EMA (0-1, menor = más suave)
 
     watchId = navigator.geolocation.watchPosition(
       (position) => {
@@ -519,39 +521,60 @@ const NavigationMap = ({
           lng: position.coords.longitude,
         };
 
-        // Calcular velocidad y heading desde movimiento
-        let speed = 0;
+        // =========================
+        // CÁLCULO DE VELOCIDAD CORREGIDO
+        // =========================
+        let rawSpeed = 0;
         let calculatedHeading = heading;
 
-        // =========================
-        // CÁLCULO DE MOVIMIENTO
-        // =========================
-        if (previousLocation.current) {
-          const timeDiff = (now - previousLocation.current.time) / 1000 / 3600; // en horas
-          const distance = calculateDistance(
+        // PRIORIDAD 1: Usar velocidad nativa del GPS (más precisa)
+        const gpsSpeed = position.coords.speed; // en m/s (puede ser null)
+        
+        if (gpsSpeed !== null && gpsSpeed >= 0) {
+          // Convertir m/s → km/h (multiplicar por 3.6)
+          rawSpeed = gpsSpeed * 3.6;
+        } 
+        // FALLBACK: Calcular manualmente si GPS no proporciona velocidad
+        else if (previousLocation.current) {
+          const timeDiffHours = (now - previousLocation.current.time) / 1000 / 3600;
+          const distanceKm = calculateDistance(
             previousLocation.current.lat,
             previousLocation.current.lng,
             newLocation.lat,
             newLocation.lng,
-          ); // en km
-
-          speed = distance / timeDiff; // km/h
-          setCurrentSpeed(speed);
-
-          // Agregar velocidad al historial (solo últimos 2 minutos)
-          speedSamples.current.push({ speed, timestamp: now });
-          const twoMinutesAgo = now - 2 * 60 * 1000;
-          speedSamples.current = speedSamples.current.filter((entry) => entry.timestamp >= twoMinutesAgo);
-
-          if (speedSamples.current.length > 0) {
-            const totalSpeed = speedSamples.current.reduce((sum, entry) => sum + entry.speed, 0);
-            const avg = totalSpeed / speedSamples.current.length;
-            setAvgSpeed2Min(avg);
+          );
+          
+          if (timeDiffHours > 0) {
+            rawSpeed = distanceKm / timeDiffHours;
           }
+        }
 
-          // =========================
-          // CÁLCULO DE HEADING
-          // =========================
+        // Limitar a velocidad máxima razonable (0-250 km/h)
+        const clampedSpeed = Math.min(Math.max(rawSpeed, 0), 250);
+
+        // Aplicar suavizado exponencial (EMA) para evitar saltos bruscos
+        setSmoothedSpeed(prevSmoothed => {
+          const newSmoothedSpeed = SMOOTHING_FACTOR * clampedSpeed + (1 - SMOOTHING_FACTOR) * prevSmoothed;
+          // Actualizar currentSpeed con el valor suavizado
+          setCurrentSpeed(newSmoothedSpeed);
+          return newSmoothedSpeed;
+        });
+
+        // Agregar velocidad al historial (solo últimos 2 minutos)
+        speedSamples.current.push({ speed: clampedSpeed, timestamp: now });
+        const twoMinutesAgo = now - 2 * 60 * 1000;
+        speedSamples.current = speedSamples.current.filter((entry) => entry.timestamp >= twoMinutesAgo);
+
+        if (speedSamples.current.length > 0) {
+          const totalSpeed = speedSamples.current.reduce((sum, entry) => sum + entry.speed, 0);
+          const avg = totalSpeed / speedSamples.current.length;
+          setAvgSpeed2Min(avg);
+        }
+
+        // =========================
+        // CÁLCULO DE HEADING
+        // =========================
+        if (previousLocation.current) {
           const dLat = newLocation.lat - previousLocation.current.lat;
           const dLng = newLocation.lng - previousLocation.current.lng;
 
@@ -581,8 +604,15 @@ const NavigationMap = ({
           }
 
           // =========================
-          // ACUMULAR DISTANCIA (CORREGIDO)
+          // ACUMULAR DISTANCIA
           // =========================
+          const distance = calculateDistance(
+            previousLocation.current.lat,
+            previousLocation.current.lng,
+            newLocation.lat,
+            newLocation.lng,
+          );
+
           if (isVehicleMode) {
             travelDistance.current += distance;
 
