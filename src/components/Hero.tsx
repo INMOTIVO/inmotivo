@@ -359,19 +359,22 @@ const Hero = () => {
     const handleFocus = () => {
       setTimeout(() => {
         const activeElement = document.activeElement as HTMLElement;
-        if (activeElement && (activeElement === textareaRef.current || activeElement.closest('.location-suggestions-container'))) {
-          activeElement.scrollIntoView({ 
-            behavior: 'smooth', 
-            block: 'center',
-            inline: 'nearest'
+        if (
+          activeElement &&
+          (activeElement === textareaRef.current || activeElement.closest(".location-suggestions-container"))
+        ) {
+          activeElement.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+            inline: "nearest",
           });
         }
       }, 300);
     };
 
     if (window.innerWidth < 768) {
-      window.addEventListener('focusin', handleFocus);
-      return () => window.removeEventListener('focusin', handleFocus);
+      window.addEventListener("focusin", handleFocus);
+      return () => window.removeEventListener("focusin", handleFocus);
     }
   }, []);
 
@@ -427,7 +430,10 @@ const Hero = () => {
           {/* Gradiente animado del borde - responsive */}
           <div className="absolute -inset-1 bg-gradient-to-r from-primary via-blue-500 to-primary md:rounded-[28px] rounded-2xl blur-sm opacity-75 animate-pulse" />
 
-          <div className="relative bg-white md:rounded-[28px] rounded-2xl shadow-2xl p-3 md:p-2 flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-2 search-capsule-container" style={{ touchAction: 'manipulation' }}>
+          <div
+            className="relative bg-white md:rounded-[28px] rounded-2xl shadow-2xl p-3 md:p-2 flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-2 search-capsule-container"
+            style={{ touchAction: "manipulation" }}
+          >
             {/* Fila 1 Mobile: Qué + Micrófono */}
             <div className="md:flex-1 md:border-r border-gray-200">
               {/* Sección QUÉ */}
@@ -480,7 +486,7 @@ const Hero = () => {
                         </>
                       ) : (
                         <>
-                          <span className="text-gray-400">Describe la propiedad que buscas</span>
+                          <span className="text-xs text-gray-400">Describe la propiedad que buscas</span>
 
                           {/* CURSOR DESPUÉS DEL PLACEHOLDER */}
                           {activeField === "que" && (
