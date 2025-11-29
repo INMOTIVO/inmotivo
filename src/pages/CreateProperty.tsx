@@ -43,6 +43,7 @@ const CreateProperty = () => {
   const [loading, setLoading] = useState(false);
   const [uploadingImages, setUploadingImages] = useState(false);
   const [loadingCoordinates, setLoadingCoordinates] = useState(false);
+  const [loadingCurrentLocation, setLoadingCurrentLocation] = useState(false);
   const [images, setImages] = useState<string[]>([]);
   const [coverImageIndex, setCoverImageIndex] = useState(0);
   const [errors, setErrors] = useState<Partial<Record<keyof PropertyFormData, string>>>({});
@@ -347,6 +348,87 @@ const CreateProperty = () => {
       setLoadingCoordinates(false);
     }
   };
+
+  const handleUseCurrentLocation = async () => {
+    if (!navigator.geolocation) {
+      toast.error('Tu navegador no soporta geolocalización');
+      return;
+    }
+
+    setLoadingCurrentLocation(true);
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+
+        try {
+          // Reverse geocoding con Nominatim (mismo servicio que Hero)
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=es`
+          );
+          const data = await response.json();
+
+          const address = data.address;
+          
+          // Extraer componentes de dirección
+          const streetName = address.road || address.street || '';
+          const houseNumber = address.house_number || '';
+          const fullStreet = houseNumber ? `${streetName} ${houseNumber}` : streetName;
+          
+          const city = address.city || address.town || address.municipality || 'Medellín';
+          const neighborhood = address.suburb || address.neighbourhood || address.quarter || '';
+
+          // Actualizar formulario con todos los campos
+          setFormData(prev => ({
+            ...prev,
+            address: fullStreet || data.display_name?.split(',')[0] || '',
+            city: city,
+            neighborhood: neighborhood,
+            latitude: lat,
+            longitude: lng
+          }));
+
+          // Notificar campos completados
+          const autoFilledFields = [];
+          if (fullStreet) autoFilledFields.push('dirección');
+          if (city) autoFilledFields.push('ciudad');
+          if (neighborhood) autoFilledFields.push('barrio');
+          autoFilledFields.push('coordenadas');
+          
+          toast.success(`Se completó automáticamente: ${autoFilledFields.join(', ')}`);
+          
+        } catch (error) {
+          console.error('Error en reverse geocoding:', error);
+          // Fallback: al menos llenar coordenadas
+          setFormData(prev => ({
+            ...prev,
+            latitude: lat,
+            longitude: lng
+          }));
+          toast.warning('Se obtuvieron las coordenadas pero no la dirección. Completa manualmente.');
+        } finally {
+          setLoadingCurrentLocation(false);
+        }
+      },
+      (error) => {
+        setLoadingCurrentLocation(false);
+        
+        if (error.code === error.PERMISSION_DENIED) {
+          toast.error('Debes permitir el acceso a tu ubicación para usar esta función');
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          toast.error('No se pudo determinar tu ubicación. Intenta de nuevo.');
+        } else if (error.code === error.TIMEOUT) {
+          toast.error('El tiempo de espera se agotó. Intenta de nuevo.');
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
+  };
   if (authLoading) {
     return <div className="min-h-screen">
         <Navbar />
@@ -480,6 +562,29 @@ const CreateProperty = () => {
                 ...formData,
                 address: e.target.value
               })} placeholder="Empieza a escribir la dirección..." disabled={!isLoaded} />
+                
+                {/* Botón "Usar mi ubicación actual" */}
+                <div className="flex items-center gap-2 mt-2">
+                  <button
+                    type="button"
+                    onClick={handleUseCurrentLocation}
+                    disabled={loadingCurrentLocation}
+                    className="text-sm text-primary hover:underline flex items-center gap-1 disabled:opacity-50"
+                  >
+                    {loadingCurrentLocation ? (
+                      <>
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Obteniendo ubicación...
+                      </>
+                    ) : (
+                      <>
+                        <MapPin className="h-3 w-3" />
+                        Usar mi ubicación actual
+                      </>
+                    )}
+                  </button>
+                </div>
+                
                 {!isLoaded && <p className="text-xs text-muted-foreground mt-1">
                     Cargando autocompletado...
                   </p>}
