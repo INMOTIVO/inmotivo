@@ -346,12 +346,34 @@ const Hero = () => {
     cancelRecording();
   };
 
-  // ⬇️ AGREGA ESTO AQUÍ (ANTES del return)
+  // Auto-focus solo en desktop para evitar salto de teclado en mobile
   useEffect(() => {
-    if (activeField === "que") {
+    const isMobile = window.innerWidth < 768;
+    if (activeField === "que" && !isMobile) {
       textareaRef.current?.focus();
     }
   }, [activeField]);
+
+  // Manejar scroll suave cuando el teclado aparece en mobile
+  useEffect(() => {
+    const handleFocus = () => {
+      setTimeout(() => {
+        const activeElement = document.activeElement as HTMLElement;
+        if (activeElement && (activeElement === textareaRef.current || activeElement.closest('.location-suggestions-container'))) {
+          activeElement.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center',
+            inline: 'nearest'
+          });
+        }
+      }, 300);
+    };
+
+    if (window.innerWidth < 768) {
+      window.addEventListener('focusin', handleFocus);
+      return () => window.removeEventListener('focusin', handleFocus);
+    }
+  }, []);
 
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-visible bg-gradient-to-br from-gray-50 to-gray-100">
@@ -405,7 +427,7 @@ const Hero = () => {
           {/* Gradiente animado del borde - responsive */}
           <div className="absolute -inset-1 bg-gradient-to-r from-primary via-blue-500 to-primary md:rounded-[28px] rounded-2xl blur-sm opacity-75 animate-pulse" />
 
-          <div className="relative bg-white md:rounded-[28px] rounded-2xl shadow-2xl p-3 md:p-2 flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-2">
+          <div className="relative bg-white md:rounded-[28px] rounded-2xl shadow-2xl p-3 md:p-2 flex flex-col md:flex-row items-stretch md:items-center gap-3 md:gap-2 search-capsule-container" style={{ touchAction: 'manipulation' }}>
             {/* Fila 1 Mobile: Qué + Micrófono */}
             <div className="md:flex-1 md:border-r border-gray-200">
               {/* Sección QUÉ */}
@@ -426,7 +448,7 @@ const Hero = () => {
                       ref={visibleTextRef}
                       className="
                     absolute inset-0 whitespace-pre-wrap break-words
-                    pl-1 pr-10 text-[12px] md:text-sm leading-[1.4rem]
+                    pl-1 pr-10 text-base md:text-sm leading-[1.4rem]
                     pointer-events-none select-none
                     flex items-center
                   "
@@ -475,7 +497,7 @@ const Hero = () => {
                   relative z-10 w-full bg-transparent 
                   text-transparent 
                   ${isRecording ? "caret-green-500" : "caret-transparent"}
-                  text-[12px] md:text-sm
+                  text-base md:text-sm
                   leading-[1.4rem]
                   placeholder:text-gray-400 placeholder-transparent 
                   border-0 resize-none focus-visible:ring-0 
@@ -489,6 +511,10 @@ const Hero = () => {
                       spellCheck={true}
                       lang="es"
                       autoCorrect="on"
+                      inputMode="text"
+                      enterKeyHint="next"
+                      autoComplete="off"
+                      autoCapitalize="sentences"
                     />
                   </div>
                 </div>
@@ -526,7 +552,7 @@ const Hero = () => {
                     <div
                       className="
                     absolute inset-0 whitespace-pre-wrap break-words
-                    pl-1 pr-10 text-[12px] md:text-sm leading-[1.4rem]
+                    pl-1 pr-10 text-base md:text-sm leading-[1.4rem]
                     pointer-events-none select-none
                     flex items-center
                   "
@@ -552,13 +578,12 @@ const Hero = () => {
                     <input
                       type="text"
                       className="
-                    absolute inset-0 z-20 w-full h-full opacity-0 cursor-text
+                    absolute inset-0 z-20 w-full h-full opacity-0 cursor-text text-base
                   "
                       value={searchWhere}
                       onChange={(e) => {
                         setSearchWhere(e.target.value);
                         getPredictions(e.target.value);
-                        // NO cerrar dropdown automáticamente en onChange
                       }}
                       onFocus={() => {
                         if (!searchQuery.trim()) {
@@ -566,20 +591,23 @@ const Hero = () => {
                           return;
                         }
                         setActiveField("donde");
-                        // Siempre mostrar dropdown al enfocar (para permitir "Usar mi ubicación actual")
                         setShowLocationSuggestions(true);
                       }}
                       onBlur={() => setActiveField(null)}
                       spellCheck={true}
                       lang="es"
                       autoCorrect="on"
+                      inputMode="text"
+                      enterKeyHint="search"
+                      autoComplete="off"
+                      autoCapitalize="words"
                     />
 
                     {/* TEXTAREA FALSA (altura dinámica) */}
                     <textarea
                       className="
                     relative z-10 w-full bg-transparent text-transparent
-                    text-[12px] md:text-sm
+                    text-base md:text-sm
                     border-0 resize-none focus-visible:ring-0 p-0
                     min-h-[28px] max-h-[80px]
                   "
